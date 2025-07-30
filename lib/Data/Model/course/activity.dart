@@ -14,7 +14,7 @@ class ActivityX {
   final String videoDuration;
   final String downloadUrl;
   final String cmId;
-  final String quizId;
+  final String? quizId;
 
   ActivityX({
     required this.name,
@@ -46,14 +46,13 @@ class ActivityX {
         videoDuration: json[NameX.videoDuration].toStrDefaultX(""),
         downloadUrl: json[NameX.downloadUrl].toStrDefaultX(""),
         cmId: json[NameX.cmId].toStrX,
-        quizId: json[NameX.quizId].toStrX,
+        quizId: json[NameX.quizId].toStrNullableX,
       ),
       requiredDataKeys: [
         NameX.activityName,
         NameX.completionPercent,
         NameX.isOpen,
         NameX.isCompleted,
-        NameX.quizId,
       ],
     );
   }

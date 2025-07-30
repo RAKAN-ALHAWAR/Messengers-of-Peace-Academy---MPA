@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Ui/Screen/Home/view/sectinos/levels_progress.dart';
 import '../../../Widget/Basic/Utils/future_builder.dart';
 import '../../../Widget/widget.dart';
@@ -31,6 +32,7 @@ class HomeView extends GetView<HomeController> {
         /// Build body
         child: (_) {
           return SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: StyleX.vPaddingApp),
             child: Column(
               children: [
                 /// Level progress card

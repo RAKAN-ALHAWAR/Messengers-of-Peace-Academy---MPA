@@ -311,4 +311,5 @@ const Map<String, String> arGeneral = {
       "مبارك، لقد اجتزت الاختبار بنجاح",
   "You can now proceed to the next lesson": "يمكنك الآن الانتقال للدرس التالي",
   "Go to next lesson": "الانتقال للدرس التالي",
+  "Lessons": "درس",
 };

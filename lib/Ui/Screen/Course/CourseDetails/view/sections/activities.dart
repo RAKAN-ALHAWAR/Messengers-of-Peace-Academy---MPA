@@ -121,26 +121,27 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
                   ).fadeAnimation100,
 
                 /// Lesson item quiz
-                LessonItemOnAccordion(
-                  icon: IconX.quiz,
-                  name:
-                      TranslationX.getLanguageCode == "ar"
-                          ? "${"Test".tr} ${controller.course.value!.activities[i].topicName}"
-                          : "${controller.course.value!.activities[i].topicName} ${"Test".tr}",
-                  // isCompleted: controller.course.value!.activities[i].isCompleted,
-                  isCompleted:
-                      controller
-                          .course
-                          .value!
-                          .activities[i]
-                          .completionPercent >=
-                      100,
-                  onTap: () {
-                    controller.onTapLessonQuiz(
-                      controller.course.value!.activities[i],
-                    );
-                  },
-                ).fadeAnimation100,
+                if (controller.course.value!.activities[i].quizId != null)
+                  LessonItemOnAccordion(
+                    icon: IconX.quiz,
+                    name:
+                        TranslationX.getLanguageCode == "ar"
+                            ? "${"Test".tr} ${controller.course.value!.activities[i].topicName}"
+                            : "${controller.course.value!.activities[i].topicName} ${"Test".tr}",
+                    // isCompleted: controller.course.value!.activities[i].isCompleted,
+                    isCompleted:
+                        controller
+                            .course
+                            .value!
+                            .activities[i]
+                            .completionPercent >=
+                        100,
+                    onTap: () {
+                      controller.onTapLessonQuiz(
+                        controller.course.value!.activities[i],
+                      );
+                    },
+                  ).fadeAnimation100,
 
                 /// Check if there is a summary file
                 if (controller

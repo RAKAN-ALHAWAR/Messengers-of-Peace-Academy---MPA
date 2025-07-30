@@ -321,4 +321,5 @@ const Map<String, String> phGeneral = {
   "You can now proceed to the next lesson":
       "Maaari ka nang magpatuloy sa susunod na aralin",
   "Go to next lesson": "Pumunta sa susunod na aralin",
+  "Lessons": "Mga Aralin",
 };

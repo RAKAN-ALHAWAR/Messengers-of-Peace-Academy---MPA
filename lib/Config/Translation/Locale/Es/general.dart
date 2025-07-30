@@ -325,4 +325,5 @@ const Map<String, String> esGeneral = {
   "You can now proceed to the next lesson":
       "Ahora puedes pasar a la siguiente lección",
   "Go to next lesson": "Ir a la siguiente lección",
+  "Lessons": "Lecciones",
 };

@@ -21,7 +21,7 @@ class MeetingsSection extends GetView<HomeController> {
           padding: EdgeInsets.only(
             left: StyleX.hPaddingApp,
             right: StyleX.hPaddingApp,
-            bottom: 28,
+            bottom: 12,
           ),
           child:
               Row(

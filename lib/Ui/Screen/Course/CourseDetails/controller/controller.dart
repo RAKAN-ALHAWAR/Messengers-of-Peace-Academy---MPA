@@ -18,6 +18,7 @@ class CourseDetailsController extends GetxController {
   //============================================================================
   // Variables
 
+  bool isLoading = false;
   String courseId = Get.arguments;
   Rx<CourseX?> course = Rx<CourseX?>(null);
 
@@ -83,15 +84,23 @@ class CourseDetailsController extends GetxController {
 
   /// Navigate to lesson quiz
   void onTapLessonQuiz(ActivityX activity) {
-    Get.toNamed(RouteNameX.testInfo, arguments: [activity.quizId, courseId]);
+    if (activity.isOpen) {
+      Get.toNamed(RouteNameX.testInfo, arguments: [activity.quizId, courseId]);
+    }
   }
 
   /// Download lesson summary
   Future<void> onTapLessonSummary(ActivityX activity) async {
+    if (isLoading) return;
+
     /// Download lesson summary
-    await DownloadFileFormUrl.download(
-      activity.downloadUrl,
-      "${course.value?.name}_${activity.name}",
-    );
+    try {
+      isLoading = true;
+      await DownloadFileFormUrl.download(
+        activity.downloadUrl,
+        "${course.value?.name}_${activity.name}",
+      );
+    } catch (_) {}
+    isLoading = false;
   }
 }

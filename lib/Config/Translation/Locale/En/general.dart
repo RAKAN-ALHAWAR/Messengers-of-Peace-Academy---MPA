@@ -320,4 +320,5 @@ const Map<String, String> enGeneral = {
   "You can now proceed to the next lesson":
       "You can now proceed to the next lesson",
   "Go to next lesson": "Go to next lesson",
+  "Lessons": "Lessons",
 };
