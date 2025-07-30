@@ -1,0 +1,60 @@
+part of '../error.dart';
+
+class ErrorTitlesX {
+  static String getTitle(int errorCode) {
+    return _errorTitles[errorCode] ?? _errorTitles[ErrorCodesX.unexpected]!;
+  }
+
+  static final Map<int, String> _errorTitles = {
+    ErrorCodesX.unexpected: 'An unexpected error occurred',
+    ErrorCodesX.vpnRequired: 'VPN required',
+    ErrorCodesX.vpnMustBeEnabled: 'VPN must be enabled',
+    ErrorCodesX.noInternetConnection: 'No internet connection',
+    ErrorCodesX.invalidURL: 'Invalid URL',
+    ErrorCodesX.multipleChoices: 'Multiple choices conflict',
+    ErrorCodesX.movedPermanently: 'Moved permanently',
+    ErrorCodesX.found: 'Found at another location',
+    ErrorCodesX.seeOther: 'See other',
+    ErrorCodesX.notModified: 'Not modified',
+    ErrorCodesX.useProxy: 'Use proxy for access',
+    ErrorCodesX.temporaryRedirect: 'Temporary redirect',
+    ErrorCodesX.permanentRedirect: 'Permanent redirect',
+    ErrorCodesX.badRequest: 'Bad request',
+    ErrorCodesX.unauthorized: 'Unauthorized',
+    ErrorCodesX.forbidden: 'Forbidden',
+    ErrorCodesX.notFound: 'Not found',
+    ErrorCodesX.methodNotAllowed: 'Method not allowed',
+    ErrorCodesX.notAcceptable: 'Not acceptable',
+    ErrorCodesX.requestTimeout: 'Request timeout',
+    ErrorCodesX.conflict: 'Conflict',
+    ErrorCodesX.gone: 'Resource gone',
+    ErrorCodesX.lengthRequired: 'Length required',
+    ErrorCodesX.preconditionFailed: 'Precondition failed',
+    ErrorCodesX.payloadTooLarge: 'Payload too large',
+    ErrorCodesX.uriTooLong: 'URI too long',
+    ErrorCodesX.unsupportedMediaType: 'Unsupported media type',
+    ErrorCodesX.rangeNotSatisfiable: 'Range not satisfiable',
+    ErrorCodesX.expectationFailed: 'Expectation failed',
+    ErrorCodesX.imATeapot: "I'm a teapot",
+    ErrorCodesX.misdirectedRequest: 'Misdirected request',
+    ErrorCodesX.unprocessableEntity: 'Unprocessable entity',
+    ErrorCodesX.locked: 'Locked',
+    ErrorCodesX.failedDependency: 'Failed dependency',
+    ErrorCodesX.upgradeRequired: 'Upgrade required',
+    ErrorCodesX.preconditionRequired: 'Precondition required',
+    ErrorCodesX.tooManyRequests: 'Too many requests',
+    ErrorCodesX.requestHeaderFieldsTooLarge: 'Request header fields too large',
+    ErrorCodesX.unavailableForLegalReasons: 'Unavailable for legal reasons',
+    ErrorCodesX.internalServerError: 'Internal server error',
+    ErrorCodesX.notImplemented: 'Not implemented',
+    ErrorCodesX.badGateway: 'Bad gateway',
+    ErrorCodesX.serviceUnavailable: 'Service unavailable',
+    ErrorCodesX.gatewayTimeout: 'Gateway timeout',
+    ErrorCodesX.httpVersionNotSupported: 'HTTP version not supported',
+    ErrorCodesX.variantAlsoNegotiates: 'Variant also negotiates',
+    ErrorCodesX.insufficientStorage: 'Insufficient storage',
+    ErrorCodesX.loopDetected: 'Loop detected',
+    ErrorCodesX.notExtended: 'Not extended',
+    ErrorCodesX.networkAuthenticationRequired: 'Network authentication required'
+  };
+}

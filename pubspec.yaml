@@ -1,0 +1,144 @@
+#====================================================================
+# Project Info
+name: messengersofpeace
+description: "A new Flutter project."
+version: 1.0.0+1
+
+#====================================================================
+# Flutter Version
+
+environment:
+  sdk: ^3.7.2
+
+#====================================================================
+# Dependencies
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  #-------------------------------------
+  ## Basic
+  get: any
+  intl: any
+
+  #-------------------------------------
+  ## Network
+  http: any
+  url_launcher: any
+
+  #-------------------------------------
+  ## Locale Data
+  hive: any
+  path_provider: any
+
+  ##-------------------------------------
+  ## Icons
+  cupertino_icons: any
+
+  ##-------------------------------------
+  ## Image
+  image_picker: any
+  image_network: any
+
+  ##-------------------------------------
+  ## Auth
+  google_sign_in: ^6.3.0
+
+  ##-------------------------------------
+  ## Meeting
+  flutter_inappwebview: any
+  permission_handler: any
+
+  ##-------------------------------------
+  ## Html
+  flutter_widget_from_html_core: any
+
+  ##-------------------------------------
+  ## File Downloads
+  dio: any
+
+  ##-------------------------------------
+  ## Video Player
+  video_player: any
+  youtube_player_flutter: any
+
+  ##-------------------------------------
+  ## Other
+  yaml: ^3.1.3
+  plugin_platform_interface: ^2.1.8
+  flutter_advanced_segment: any
+  share_plus: any
+  percent_indicator: ^4.2.5
+
+#====================================================================
+# Dev Dependencies
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+  flutter_native_splash: any
+
+#====================================================================
+# Splash Screen
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/images/splash/splash.png
+  color_dark: "#090F10"
+  image_dark: assets/images/splash/splash-dark.png
+  android_12:
+    color: "#FFFFFF"
+    image: assets/images/splash/splash.png
+    color_dark: "#090F10"
+    image_dark: assets/images/splash/splash-dark.png
+  fullscreen: true
+  android: true
+  ios: true
+
+#  flutter pub run flutter_native_splash:create
+
+#====================================================================
+# Assets
+
+flutter:
+  uses-material-design: true
+  #-------------------------------------
+  ## Images & Icons
+
+  assets:
+    # pubspec.yaml: It must be present to access package data, application name and version
+    - pubspec.yaml
+    - assets/fonts/
+    - assets/images/
+    - assets/images/auth/
+    - assets/images/logos/
+    - assets/images/badges/
+    - assets/images/other/
+
+  #-------------------------------------
+  ## Fonts
+
+  fonts:
+    - family: IBMPlexSansArabic
+      fonts:
+        - asset: assets/fonts/IBMPlexSansArabic-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/IBMPlexSansArabic-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/IBMPlexSansArabic-Light.ttf
+          weight: 300
+        - asset: assets/fonts/IBMPlexSansArabic-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/IBMPlexSansArabic-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/IBMPlexSansArabic-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/IBMPlexSansArabic-Bold.ttf
+          weight: 700
+
+    - family: Icon_x
+      fonts:
+        - asset: assets/fonts/Icon_x.ttf

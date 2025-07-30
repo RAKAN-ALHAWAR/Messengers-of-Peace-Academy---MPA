@@ -1,0 +1,50 @@
+const Map<String, String> enUniversities = {
+  "Umm Al-Qura University": "Umm Al-Qura University",
+  "King Saud University": "King Saud University",
+  "Islamic University of Madinah": "Islamic University of Madinah",
+  "King Fahd University of Petroleum and Minerals":
+      "King Fahd University of Petroleum and Minerals",
+  "King AbdulAziz University": "King AbdulAziz University",
+  "Al-Imam Muhammad Ibn Saud Islamic University":
+      "Al-Imam Muhammad Ibn Saud Islamic University",
+  "King Faisal University": "King Faisal University",
+  "King Khalid University": "King Khalid University",
+  "Prince Sultan University": "Prince Sultan University",
+  "Arab Open University": "Arab Open University",
+  "Al Madinah International University": "Al Madinah International University",
+  "Al Yamamah University": "Al Yamamah University",
+  "Qassim University": "Qassim University",
+  "Taibah University": "Taibah University",
+  "Taif University": "Taif University",
+  "King Saud bin Abdulaziz University for Health Sciences":
+      "King Saud bin Abdulaziz University for Health Sciences",
+  "Al Baha University": "Al Baha University",
+  "University of Ha'il": "University of Ha'il",
+  "Al Jouf University": "Al Jouf University",
+  "Jazan University": "Jazan University",
+  "Najran University": "Najran University",
+  "University of Tabuk": "University of Tabuk",
+  "Princess Nora bint Abdulrahman University":
+      "Princess Nora bint Abdulrahman University",
+  "King Abdullah University of Science and Technology":
+      "King Abdullah University of Science and Technology",
+  "Alfaisal University": "Alfaisal University",
+  "Northern Borders University": "Northern Borders University",
+  "Prince Mohammad Bin Fahd University": "Prince Mohammad Bin Fahd University",
+  "Fahad Bin Sultan University": "Fahad Bin Sultan University",
+  "Dar Al Uloom university": "Dar Al Uloom university",
+  "Dammam university": "Dammam university",
+  "Al Kharj university": "Al Kharj university",
+  "Shaqra University": "Shaqra University",
+  "Majmaah University": "Majmaah University",
+  "University of Bisha": "University of Bisha",
+  "Dar Al Uloom University": "Dar Al Uloom University",
+  "Effat University": "Effat University",
+  "Dar Al-Hekma University": "Dar Al-Hekma University",
+  "University of Hafr Al Batin": "University of Hafr Al Batin",
+  "Imam Abdulrahman Bin Faisal University":
+      "Imam Abdulrahman Bin Faisal University",
+  "University of Jeddah": "University of Jeddah",
+  "Prince Sattam Bin Abdulaziz University":
+      "Prince Sattam Bin Abdulaziz University",
+};
