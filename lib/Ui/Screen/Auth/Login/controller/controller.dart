@@ -101,7 +101,11 @@ class LoginController extends GetxController {
       } catch (e) {
         /// Set Error
         buttonStateGoogle.value = ButtonStateEX.failed;
-        ToastX.error(message: e);
+        if (e.toString().contains("PlatformException(")) {
+          ToastX.error(message: "Something wrong");
+        } else {
+          ToastX.error(message: e);
+        }
 
         /// Set Loading to false
         isLoading.value = false;

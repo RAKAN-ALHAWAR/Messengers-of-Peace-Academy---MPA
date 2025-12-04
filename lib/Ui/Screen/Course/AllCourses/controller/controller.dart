@@ -55,9 +55,7 @@ class AllCoursesController extends GetxController {
 
   /// Navigate to course details
   void onCourseTap(MiniCourseX course) {
-    if (course.isOpen) {
-      Get.toNamed(RouteNameX.courseDetails, arguments: course.id);
-    }
+    Get.toNamed(RouteNameX.courseDetails, arguments: course.id);
   }
 
   /// Get course count name

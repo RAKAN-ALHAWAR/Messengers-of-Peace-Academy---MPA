@@ -18,7 +18,8 @@ class CurrentLevelSection extends GetView<HomeController> {
         children: [
           /// Current level label
           LabelX(
-            "${"Your courses at current level".tr} (${controller.currentLevel.value.name})",
+            "Your courses at current level",
+            hint: "(${controller.currentLevel.value.name})",
             marginBottom: 12,
           ).fadeAnimation350.marginSymmetric(horizontal: StyleX.hPaddingApp),
 

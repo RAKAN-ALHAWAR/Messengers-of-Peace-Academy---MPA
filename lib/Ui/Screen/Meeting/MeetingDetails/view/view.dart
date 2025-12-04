@@ -53,7 +53,6 @@ class MeetingDetailsView extends GetView<MeetingDetailsController> {
                   'EEEE ,d MMMM y',
                   TranslationX.getLanguageCode,
                 ).format(controller.meeting.datetime),
-                isPrimary: true,
               ).fadeAnimation200,
 
               /// Spacer

@@ -28,6 +28,7 @@ class ForgotPasswordResetView extends GetView<ForgotPasswordResetController> {
                 hint: 'New Password',
                 textInputType: TextInputType.visiblePassword,
                 textInputAction: TextInputAction.next,
+                isPassword: true,
                 margin: EdgeInsets.only(bottom: 12),
               ).fadeAnimation200,
 
@@ -37,6 +38,7 @@ class ForgotPasswordResetView extends GetView<ForgotPasswordResetController> {
                 hint: 'Confirm new password',
                 textInputType: TextInputType.visiblePassword,
                 textInputAction: TextInputAction.done,
+                isPassword: true,
                 margin: EdgeInsets.only(bottom: 12),
                 validate: (val) {
                   return ValidatorX.rePassword(val, controller.password.text);

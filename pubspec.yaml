@@ -16,6 +16,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   #-------------------------------------
   ## Basic
@@ -117,6 +119,7 @@ flutter:
     - assets/images/logos/
     - assets/images/badges/
     - assets/images/other/
+    - assets/images/splash/
 
   #-------------------------------------
   ## Fonts

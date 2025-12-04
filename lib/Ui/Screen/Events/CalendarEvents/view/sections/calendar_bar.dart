@@ -70,30 +70,27 @@ class CalendarBarSection extends GetView<CalendarController> {
               Row(
                 children: [
                   /// Previous week button
-                  GestureDetector(
+                  InkResponse(
                     onTap: controller.onPreviousWeek,
                     child: Padding(
-                      padding: const EdgeInsets.all(4.0),
+                      padding: const EdgeInsets.all(10.0),
                       child: Icon(
                         Icons.arrow_back_ios,
                         color: Colors.white,
-                        size: 16,
+                        size: 18,
                       ),
                     ),
                   ),
 
-                  /// Spacer
-                  SizedBox(width: 8),
-
                   /// Next week button
-                  GestureDetector(
+                  InkResponse(
                     onTap: controller.onNextWeek,
                     child: Padding(
-                      padding: const EdgeInsets.all(4.0),
+                      padding: const EdgeInsets.all(10.0),
                       child: Icon(
                         Icons.arrow_forward_ios,
                         color: Colors.white,
-                        size: 16,
+                        size: 18,
                       ),
                     ),
                   ),

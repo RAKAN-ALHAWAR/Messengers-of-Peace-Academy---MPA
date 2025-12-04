@@ -48,6 +48,7 @@ class HomeController extends GetxController {
 
   /// Is initialized
   bool isInit = false;
+  String currentLanguage = TranslationX.getLanguageCode;
 
   //============================================================================
   // Functions
@@ -57,9 +58,13 @@ class HomeController extends GetxController {
     try {
       /// If initialized and last update is after 1 minute, return
       if (isInit &&
-          lastUpdate.isAfter(DateTime.now().subtract(Duration(minutes: 1)))) {
+          lastUpdate.isAfter(DateTime.now().subtract(Duration(minutes: 1))) &&
+          currentLanguage == TranslationX.getLanguageCode) {
         return;
       }
+
+      /// Update current language
+      currentLanguage = TranslationX.getLanguageCode;
 
       /// Get data from database
       await Future.wait<void>([

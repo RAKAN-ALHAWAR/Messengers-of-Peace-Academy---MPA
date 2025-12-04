@@ -23,10 +23,16 @@ class TestInfoController extends GetxController {
 
   /// Get data from database
   Future<void> getData() async {
-    await Future.delayed(Duration(seconds: 4));
-    isInit.value = false;
-    quiz = await DatabaseX.getQuizDetails(quizId: quizId);
-    isInit.value = true;
+    try {
+      await Future.delayed(Duration(seconds: 4));
+      isInit.value = false;
+      quiz = await DatabaseX.getQuizDetails(quizId: quizId);
+      isInit.value = true;
+      print("quiz: ${quiz.toJson()}");
+    } catch (e) {
+      print("quizId: $quizId");
+      print("error getQuizDetails: ${e.toString()}");
+    }
   }
 
   /// Handle start test

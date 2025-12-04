@@ -78,7 +78,7 @@ class ThemeX {
       backgroundColor: Colors.transparent,
       shadowColor: Colors.transparent,
     ),
-    cardTheme: CardTheme(color: ColorX.surfaceContainerLowest),
+    cardTheme: CardThemeData(color: ColorX.surfaceContainerLowest),
     bottomSheetTheme: const BottomSheetThemeData(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.white,
@@ -98,6 +98,32 @@ class ThemeX {
           letterSpacing: 0.15,
         );
       }),
+    ),
+    datePickerTheme: DatePickerThemeData(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      headerBackgroundColor: Colors.white,
+      headerForegroundColor: ColorX.text,
+      dayForegroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+        if (states.contains(WidgetState.selected)) {
+          return Colors.white;
+        }
+        return ColorX.text;
+      }),
+      dayBackgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+        if (states.contains(WidgetState.selected)) {
+          return ColorX.primary;
+        }
+        return Colors.transparent;
+      }),
+      todayForegroundColor: WidgetStateProperty.all(ColorX.primary),
+      todayBackgroundColor: WidgetStateProperty.all(Colors.transparent),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: ColorX.primary,
+        textStyle: const TextStyle(fontWeight: FontWeight.w600),
+      ),
     ),
   );
 
@@ -158,7 +184,7 @@ class ThemeX {
       surfaceContainerLowest: ColorX.surfaceContainerLowestDark,
       onInverseSurface: ColorX.inverseOnSurfaceDark,
     ),
-    cardTheme: CardTheme(color: ColorX.surfaceContainerLowestDark),
+    cardTheme: CardThemeData(color: ColorX.surfaceContainerLowestDark),
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,
       shadowColor: Colors.transparent,
@@ -182,6 +208,32 @@ class ThemeX {
           letterSpacing: 0.15,
         );
       }),
+    ),
+    datePickerTheme: DatePickerThemeData(
+      backgroundColor: ColorX.surfaceContainerLowestDark,
+      surfaceTintColor: Colors.transparent,
+      headerBackgroundColor: ColorX.surfaceContainerLowestDark,
+      headerForegroundColor: ColorX.textDark,
+      dayForegroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+        if (states.contains(WidgetState.selected)) {
+          return Colors.white;
+        }
+        return ColorX.textDark;
+      }),
+      dayBackgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+        if (states.contains(WidgetState.selected)) {
+          return ColorX.primaryDark;
+        }
+        return Colors.transparent;
+      }),
+      todayForegroundColor: WidgetStateProperty.all(ColorX.primaryDark),
+      todayBackgroundColor: WidgetStateProperty.all(Colors.transparent),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: ColorX.primaryDark,
+        textStyle: const TextStyle(fontWeight: FontWeight.w600),
+      ),
     ),
   );
 }

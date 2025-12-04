@@ -98,6 +98,7 @@ class SignUpView extends GetView<SignUpController> {
                 validate: ValidatorX.password,
                 textInputType: TextInputType.visiblePassword,
                 textInputAction: TextInputAction.done,
+                isPassword: true,
                 margin: EdgeInsets.only(bottom: 12),
               ).fadeAnimation250,
 

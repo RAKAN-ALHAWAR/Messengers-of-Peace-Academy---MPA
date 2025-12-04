@@ -24,9 +24,9 @@ class CourseDetailsCompletionPercentageSection
         children: [
           /// Course completion percentage text
           TextX(
-            "${"You have completed".tr} ${controller.course.value!.completionPercent}% ${"of the course.".tr}",
+            "${"You have completed".tr} ${controller.course.value!.completionPercent.toInt()}% ${"of the course.".tr}",
             style: TextStyleX.labelMedium,
-            color: ColorX.onSurfaceVariant,
+            color: ColorX.yellow.shade900,
           ),
 
           /// Spacer
@@ -53,7 +53,7 @@ class CourseDetailsCompletionPercentageSection
 
                   /// Course completion percentage text
                   TextX(
-                    "${controller.course.value!.numCompletionActivities}/${controller.course.value!.activities.length} ${"lesson".tr}",
+                    "${controller.course.value!.numCompletionActivities}/${controller.getUniqueTopicsCount} ${"lesson".tr}",
                     style: TextStyleX.labelMedium,
                     color: ColorX.onSurfaceVariant,
                   ),

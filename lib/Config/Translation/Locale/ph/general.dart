@@ -296,6 +296,7 @@ const Map<String, String> phGeneral = {
       "Paki-fill up ang lahat ng field at i-verify ang katumpakan",
   "Number of questions": "Bilang ng mga tanong",
   "questions": "mga tanong",
+  "question": "tanong",
   "Pass rate": "Antas ng pagpasa",
   "Start the test": "Simulan ang pagsusulit",
   "Next question": "Susunod na tanong",

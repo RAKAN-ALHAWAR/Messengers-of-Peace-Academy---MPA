@@ -39,6 +39,7 @@ class LevelProgressCard extends GetView<HomeController> {
                   decoration: BoxDecoration(
                     gradient: ColorX.goldGradient,
                     borderRadius: BorderRadius.circular(StyleX.radiusLg),
+                    border: Border.all(color: Color(0xFFFEF4D5), width: 2),
                   ),
                   child: Stack(
                     children: [
@@ -121,7 +122,7 @@ class LevelProgressCard extends GetView<HomeController> {
 
                               /// Level progress text
                               TextX(
-                                "${"I have completed".tr} ${controller.currentLevel.value.completionPercent}%"
+                                "${"I have completed".tr} ${controller.currentLevel.value.completionPercent.toInt()}%"
                                 " "
                                 "${"from".tr} ${controller.currentLevel.value.name}",
                                 style: TextStyleX.labelLarge,

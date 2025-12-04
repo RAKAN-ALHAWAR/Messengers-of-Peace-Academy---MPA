@@ -24,6 +24,7 @@ class QuizResultX {
     required this.answers,
   });
   factory QuizResultX.fromJson(Map<String, dynamic> json) {
+    print(json);
     List<Map<String, dynamic>> answers = List<Map<String, dynamic>>.from(
       json[NameX.answers] ?? [],
     );

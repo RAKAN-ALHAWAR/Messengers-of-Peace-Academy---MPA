@@ -8,7 +8,7 @@ import '../../../../../Data/data.dart';
 import '../../../../Widget/Package/otp_pin_field_widget/src/otp_pin_field_state.dart';
 import '../../../../Widget/widget.dart';
 
-class OTPController extends GetxController {
+class OTPController extends GetxController with WidgetsBindingObserver {
   //============================================================================
   // Injection of required controls
 
@@ -38,8 +38,12 @@ class OTPController extends GetxController {
   late GlobalKey<OtpPinFieldState> otpKey;
 
   // Timer
-  late Timer timer;
+  Timer? timer;
   final start = 120.obs;
+
+  // وقت بداية العداد (للاستمرار في الخلفية)
+  DateTime? _timerStartTime;
+  int _initialDuration = 120; // المدة الأولية بالثواني
 
   //============================================================================
   // Functions
@@ -180,10 +184,34 @@ class OTPController extends GetxController {
     }
   }
 
+  /// حساب الوقت المتبقي بناءً على الوقت الفعلي
+  void _updateTimerFromElapsedTime() {
+    if (_timerStartTime == null) return;
+
+    final now = DateTime.now();
+    final elapsed = now.difference(_timerStartTime!).inSeconds;
+    final remaining = _initialDuration - elapsed;
+
+    if (remaining > 0) {
+      start.value = remaining;
+    } else {
+      start.value = _initialDuration;
+      isResendAgain.value = true;
+      timer?.cancel();
+    }
+  }
+
   /// A timer to calculate the time remaining until the code can be re-sent
   startTimer() {
     /// Check if resend again state is false
     if (!isResendAgain.value) {
+      /// إلغاء العداد السابق إن وجد
+      timer?.cancel();
+
+      /// حفظ وقت البدء
+      _timerStartTime = DateTime.now();
+      _initialDuration = start.value;
+
       /// Start timer
       timer = Timer.periodic(const Duration(seconds: 1), (timer) {
         /// Check if start is not 0
@@ -193,6 +221,7 @@ class OTPController extends GetxController {
         } else {
           /// Reset start to 120
           start.value = 120;
+          _initialDuration = 120;
 
           /// Set resend again state to true
           isResendAgain.value = true;
@@ -214,15 +243,48 @@ class OTPController extends GetxController {
     /// Initialize OTP key
     otpKey = GlobalKey<OtpPinFieldState>();
 
+    /// إضافة مراقب دورة حياة التطبيق
+    WidgetsBinding.instance.addObserver(this);
+
     /// Start the counter to resend the code
     startTimer();
   }
 
   @override
   void onClose() {
+    /// إزالة مراقب دورة حياة التطبيق
+    WidgetsBinding.instance.removeObserver(this);
+
     /// Dispose controllers
     otpCode.dispose();
-    timer.cancel();
+    timer?.cancel();
     super.onClose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    /// عند العودة للتطبيق من الخلفية
+    if (state == AppLifecycleState.resumed) {
+      /// تحديث العداد بناءً على الوقت الفعلي المنقضي
+      if (_timerStartTime != null && !isResendAgain.value) {
+        _updateTimerFromElapsedTime();
+
+        /// إعادة تشغيل العداد إذا كان لا يزال هناك وقت متبقي
+        if (start.value > 0 && (timer == null || !timer!.isActive)) {
+          timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+            if (start.value != 0) {
+              start.value--;
+            } else {
+              start.value = 120;
+              _initialDuration = 120;
+              isResendAgain.value = true;
+              timer.cancel();
+            }
+          });
+        }
+      }
+    }
   }
 }

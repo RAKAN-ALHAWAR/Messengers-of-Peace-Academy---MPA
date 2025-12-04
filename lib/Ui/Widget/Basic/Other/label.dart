@@ -8,12 +8,14 @@ class LabelX extends StatelessWidget {
   const LabelX(
     this.label, {
     super.key,
+    this.hint = "",
     this.marginTop = 0,
     this.marginBottom = 0,
     this.isRequired = false,
     this.isOptional = false,
   });
   final String label;
+  final String hint;
   final double marginTop;
   final double marginBottom;
   final bool? isOptional;
@@ -26,7 +28,19 @@ class LabelX extends StatelessWidget {
         Flexible(
           child: Padding(
             padding: EdgeInsets.only(bottom: marginBottom, top: marginTop),
-            child: TextX(label, style: TextStyleX.titleMedium, maxLines: 10),
+            child:
+                hint.isNotEmpty
+                    ? Row(
+                      children: [
+                        TextX(
+                          label,
+                          style: TextStyleX.titleMedium,
+                          maxLines: 10,
+                        ),
+                        TextX(" ${hint.tr}", style: TextStyleX.bodyMedium),
+                      ],
+                    )
+                    : TextX(label, style: TextStyleX.titleMedium, maxLines: 10),
           ),
         ),
         const SizedBox(width: 5),

@@ -36,6 +36,7 @@ class ChangePasswordView extends GetView<ChangePasswordController> {
                         validate: ValidatorX.password,
                         textInputType: TextInputType.visiblePassword,
                         textInputAction: TextInputAction.next,
+                        isPassword: true,
                       ).fadeAnimation200,
 
                       /// New password input
@@ -46,6 +47,7 @@ class ChangePasswordView extends GetView<ChangePasswordController> {
                         textInputType: TextInputType.visiblePassword,
                         textInputAction: TextInputAction.next,
                         color: Get.theme.cardTheme.color,
+                        isPassword: true,
                       ).marginSymmetric(vertical: 10.0).fadeAnimation250,
 
                       /// Confirm new password input
@@ -59,6 +61,7 @@ class ChangePasswordView extends GetView<ChangePasswordController> {
                               val,
                               controller.newPassword.text,
                             ),
+                        isPassword: true,
                       ).fadeAnimation300,
                     ],
                   ),

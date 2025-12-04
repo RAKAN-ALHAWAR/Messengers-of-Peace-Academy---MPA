@@ -37,4 +37,13 @@ class QuestionX {
       ],
     );
   }
+  toJson() {
+    return {
+      NameX.slot: slot,
+      NameX.questionId: id,
+      NameX.questionNumber: number,
+      NameX.questionText: text,
+      NameX.answers: answers,
+    };
+  }
 }

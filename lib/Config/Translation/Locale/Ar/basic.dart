@@ -55,5 +55,8 @@ const Map<String, String> arBasic = {
   "AM": "ص",
   "Try again": "حاول مجدداً",
   "login": "تسجيل",
+  "Select Country Code": "اختر رمز الدولة",
+  "Search by country name or code": "ابحث عن اسم الدولة أو الرمز",
+  "No results found": "لم يتم العثور على نتائج",
   // "":"",
 };

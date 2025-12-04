@@ -295,6 +295,7 @@ const Map<String, String> enGeneral = {
       "Please fill in all fields and verify their accuracy",
   "Number of questions": "Number of questions",
   "questions": "questions",
+  "question": "question",
   "Pass rate": "Pass rate",
   "Start the test": "Start the test",
   "Next question": "Next question",

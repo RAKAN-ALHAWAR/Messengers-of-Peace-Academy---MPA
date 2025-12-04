@@ -58,7 +58,10 @@ class ResendSection extends GetView<OTPController> {
                       child: TextX(
                         "Resend code",
                         style: TextStyleX.bodySmall,
-                        textDecoration: TextDecoration.underline,
+                        textDecoration:
+                            controller.isResendAgain.value
+                                ? TextDecoration.none
+                                : TextDecoration.underline,
                         color:
                             controller.isResendAgain.value
                                 ? Theme.of(context).primaryColor

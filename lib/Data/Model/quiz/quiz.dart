@@ -5,7 +5,7 @@ import 'package:messengersofpeace/Data/data.dart';
 class QuizX {
   final String name;
   final String description;
-  final int timelimit;
+  int timelimit;
   final int attemptsAllowed;
   final String lastAttemptStatus;
   final bool canStart;
@@ -27,17 +27,21 @@ class QuizX {
   factory QuizX.fromJson(Map<String, dynamic> json) {
     return ModelUtilX.checkFromJson(
       json,
-      (json) => QuizX(
-        name: json[NameX.quizName].toStrX,
-        description: json[NameX.quizDescription].toStrX,
-        timelimit: json[NameX.timelimit].toIntX,
-        attemptsAllowed: json[NameX.attemptsAllowed].toIntX,
-        lastAttemptStatus: json[NameX.lastAttemptStatus].toStrX,
-        canStart: json[NameX.canStart].toBoolX,
-        totalQuestions: json[NameX.totalQuestions].toIntX,
-        gradeTotal: json[NameX.gradeTotal].toIntX,
-        gradeToPass: json[NameX.gradeToPass].toIntX,
-      ),
+      (json) {
+        int timelimit = json[NameX.timelimit].toIntX;
+        timelimit = timelimit == 0 ? 120 : timelimit;
+        return QuizX(
+          name: json[NameX.quizName].toStrX,
+          description: json[NameX.quizDescription].toStrX,
+          timelimit: timelimit,
+          attemptsAllowed: json[NameX.attemptsAllowed].toIntX,
+          lastAttemptStatus: json[NameX.lastAttemptStatus].toStrX,
+          canStart: json[NameX.canStart].toBoolX,
+          totalQuestions: json[NameX.totalQuestions].toIntX,
+          gradeTotal: json[NameX.gradeTotal].toIntX,
+          gradeToPass: json[NameX.gradeToPass].toIntX,
+        );
+      },
       requiredDataKeys: [
         NameX.quizName,
         NameX.quizDescription,
@@ -50,5 +54,18 @@ class QuizX {
         NameX.gradeToPass,
       ],
     );
+  }
+  toJson() {
+    return {
+      NameX.quizName: name,
+      NameX.quizDescription: description,
+      NameX.timelimit: timelimit,
+      NameX.attemptsAllowed: attemptsAllowed,
+      NameX.lastAttemptStatus: lastAttemptStatus,
+      NameX.canStart: canStart,
+      NameX.totalQuestions: totalQuestions,
+      NameX.gradeTotal: gradeTotal,
+      NameX.gradeToPass: gradeToPass,
+    };
   }
 }

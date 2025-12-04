@@ -19,29 +19,26 @@ class LoadingView extends GetView<LoadingController> {
         onSuccess: controller.finish,
 
         /// Loading state
-        loading: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            /// Logo
-            Center(
-              child: Column(
-                children: [
-                  Image.asset(ImageX.sponsorLogo, height: 80),
-                  const SizedBox(height: 25),
-                  Image.asset(
-                    context.isDarkMode ? ImageX.logoWhite : ImageX.logo,
-                    height: 40,
-                  ),
-                ],
+        loading: Padding(
+          padding: const EdgeInsets.all(18.0),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              /// Background
+              Image.asset(
+                context.isDarkMode ? ImageX.splashDark : ImageX.splash,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
               ),
-            ),
 
-            /// Spacer
-            const SizedBox(height: 70, width: double.maxFinite),
-
-            /// Loading indicator
-            const CircularProgressIndicator(),
-          ],
+              /// Loading indicator
+              Padding(
+                padding: EdgeInsets.only(top: 300),
+                child: const CircularProgressIndicator(),
+              ),
+            ],
+          ),
         ),
 
         /// On success state

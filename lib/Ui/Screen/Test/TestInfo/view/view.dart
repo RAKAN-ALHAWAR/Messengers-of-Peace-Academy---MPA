@@ -31,9 +31,11 @@ class TestInfoView extends GetView<TestInfoController> {
               padding: StyleX.paddingApp,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   /// Quiz image and name
                   Stack(
+                    alignment: Alignment.center,
                     children: [
                       /// Background of quiz image
                       ShaderMask(
@@ -81,6 +83,7 @@ class TestInfoView extends GetView<TestInfoController> {
 
                       /// Quiz image and name
                       Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           /// Quiz image
                           Image.asset(
@@ -125,7 +128,11 @@ class TestInfoView extends GetView<TestInfoController> {
                           child: StatisticsCardX(
                             title: "Number of questions",
                             value: controller.quiz.totalQuestions.toString(),
-                            subValue: "questions",
+                            subValue:
+                                controller.quiz.totalQuestions == 1 ||
+                                        controller.quiz.totalQuestions >= 11
+                                    ? "question"
+                                    : "questions",
                             icon: IconX.live_help,
                           ),
                         ),
@@ -133,7 +140,8 @@ class TestInfoView extends GetView<TestInfoController> {
                         Expanded(
                           child: StatisticsCardX(
                             title: "Pass rate",
-                            value: controller.quiz.totalQuestions.toString(),
+                            value:
+                                "${(controller.quiz.gradeToPass / controller.quiz.gradeTotal * 100).toInt()}",
                             subValue: "%",
                             icon: IconX.verified,
                           ),
@@ -149,6 +157,7 @@ class TestInfoView extends GetView<TestInfoController> {
                   ButtonX(
                     text: "Start the test",
                     onTap: controller.onStartTest,
+                    disabled: !controller.quiz.canStart,
                   ).fadeAnimation200,
                 ],
               ),

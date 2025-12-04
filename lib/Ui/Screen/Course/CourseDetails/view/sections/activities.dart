@@ -5,6 +5,7 @@ import 'package:percent_indicator/circular_percent_indicator.dart';
 
 import '../../../../../../Config/Translation/translation.dart';
 import '../../../../../../Config/config.dart';
+import '../../../../../../Data/Model/course/activity.dart';
 import '../../../../../Widget/Custom/Other/lesson_item_on_accordion.dart';
 import '../../../../../Widget/widget.dart';
 import '../../controller/controller.dart';
@@ -14,17 +15,34 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
 
   @override
   Widget build(BuildContext context) {
+    // Group activities by topicId
+    final activities = controller.course.value!.activities;
+    final Map<int, List<ActivityX>> groupedActivities = {};
+    final Map<ActivityX, int> activityIndexMap = {};
+
+    for (int i = 0; i < activities.length; i++) {
+      final activity = activities[i];
+      // Use topicId as the grouping key
+      final topicKey = activity.topicId;
+
+      if (!groupedActivities.containsKey(topicKey)) {
+        groupedActivities[topicKey] = [];
+      }
+      groupedActivities[topicKey]!.add(activity);
+      activityIndexMap[activity] = i;
+    }
+
     return Column(
       children: [
-        /// Activities list
-        for (int i = 0; i < controller.course.value!.activities.length; i++)
+        /// Grouped activities list
+        for (var topicEntry in groupedActivities.entries)
           AccordionX(
             height: 78,
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             titleWidget: Row(
               children: [
-                /// Lock icon
-                if (controller.course.value!.activities[i].isOpen == false)
+                /// Lock icon (show if any activity in group is locked)
+                if (topicEntry.value.any((activity) => !activity.isOpen))
                   Center(
                     child: Container(
                       width: 48,
@@ -40,25 +58,25 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
                     ),
                   )
                 else
-                  /// Course completion percentage progress bar
+                  /// Course completion percentage progress bar (average of all activities in group)
                   Center(
                     child: CircularPercentIndicator(
                       radius: 24.0,
                       lineWidth: 5.0,
                       animation: true,
                       percent:
-                          controller
-                              .course
-                              .value!
-                              .activities[i]
-                              .completionPercent /
-                          100,
+                          (topicEntry.value
+                                  .map((a) => a.completionPercent)
+                                  .fold<double>(0.0, (sum, val) => sum + val) /
+                              topicEntry.value.length /
+                              100),
                       circularStrokeCap: CircularStrokeCap.round,
                       progressColor: Theme.of(context).colorScheme.primary,
                       center: TextX(
-                        "%${controller.course.value!.activities[i].completionPercent}",
+                        "%${((topicEntry.value.map((a) => a.completionPercent).fold<double>(0.0, (sum, val) => sum + val) / topicEntry.value.length)).toInt()}",
                         style: TextStyleX.labelMedium,
                         textDirection: TextDirection.ltr,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                       backgroundColor:
                           Theme.of(context).colorScheme.secondaryContainer,
@@ -73,32 +91,30 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    /// Lesson item name
-                    TextX(
-                      "${"Lesson".tr} ${controller.course.value!.activities[i].activityNumber}",
-                      style: TextStyleX.labelLarge,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                    /// Topic name (if available)
+                    if (topicEntry.value.first.topicName.isNotEmpty)
+                      TextX(
+                        topicEntry.value.first.topicName,
+                        style: TextStyleX.titleSmall,
+                      )
+                    else
+                      /// Lesson item name (if no topic name)
+                      TextX(
+                        "${"Lesson".tr} ${topicEntry.value.first.activityNumber}",
+                        style: TextStyleX.labelLarge,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
 
                     /// Spacer
-                    if (controller
-                        .course
-                        .value!
-                        .activities[i]
-                        .topicName
-                        .isNotEmpty)
+                    if (_getLessonsCountInGroup(topicEntry.value) > 0)
                       SizedBox(height: 4),
 
-                    /// Lesson item topic name
-                    if (controller
-                        .course
-                        .value!
-                        .activities[i]
-                        .topicName
-                        .isNotEmpty)
+                    /// Activity count (only count lessons with videos, not quizzes)
+                    if (_getLessonsCountInGroup(topicEntry.value) > 0)
                       TextX(
-                        controller.course.value!.activities[i].topicName,
-                        style: TextStyleX.titleSmall,
+                        "${_getLessonsCountInGroup(topicEntry.value)} ${"Lessons".tr}",
+                        style: TextStyleX.labelMedium,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                   ],
                 ),
@@ -106,67 +122,90 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
             ),
             child: Column(
               children: [
-                /// Lesson item video
-                if (controller.course.value!.activities[i].videoUrl.isNotEmpty)
-                  LessonItemOnAccordion(
-                    icon: IconX.play_arrow_filled,
-                    name: controller.course.value!.activities[i].name,
-                    videoDuration:
-                        controller.course.value!.activities[i].videoDuration,
-                    isCompleted:
-                        controller.course.value!.activities[i].isCompleted,
-                    onTap: () async {
-                      await controller.onTapLessonVideo(i);
-                    },
-                  ).fadeAnimation100,
-
-                /// Lesson item quiz
-                if (controller.course.value!.activities[i].quizId != null)
-                  LessonItemOnAccordion(
-                    icon: IconX.quiz,
-                    name:
-                        TranslationX.getLanguageCode == "ar"
-                            ? "${"Test".tr} ${controller.course.value!.activities[i].topicName}"
-                            : "${controller.course.value!.activities[i].topicName} ${"Test".tr}",
-                    // isCompleted: controller.course.value!.activities[i].isCompleted,
-                    isCompleted:
-                        controller
-                            .course
-                            .value!
-                            .activities[i]
-                            .completionPercent >=
-                        100,
-                    onTap: () {
-                      controller.onTapLessonQuiz(
-                        controller.course.value!.activities[i],
-                      );
-                    },
-                  ).fadeAnimation100,
-
-                /// Check if there is a summary file
-                if (controller
-                    .course
-                    .value!
-                    .activities[i]
-                    .downloadUrl
-                    .isNotEmpty)
-                  /// Lesson item summary
-                  LessonItemOnAccordion(
-                    icon: IconX.description,
-                    name:
-                        TranslationX.getLanguageCode == "ar"
-                            ? "${"Summary File".tr} ${controller.course.value!.activities[i].topicName}"
-                            : "${controller.course.value!.activities[i].topicName} ${"Summary File".tr}",
-                    onTap: () {
-                      controller.onTapLessonSummary(
-                        controller.course.value!.activities[i],
-                      );
-                    },
-                  ).fadeAnimation100,
+                /// All activities in this topic group
+                for (int i = 0; i < topicEntry.value.length; i++)
+                  ..._buildActivityItems(
+                    context,
+                    topicEntry.value[i],
+                    activityIndexMap[topicEntry.value[i]]!,
+                  ),
               ],
             ),
           ).fadeAnimation250,
       ],
     );
+  }
+
+  /// Get count of lessons in a group
+  /// Rules:
+  /// - If there are videos, count the number of videos
+  /// - If no videos but there are files (downloadUrl), count as 1 lesson
+  /// - Quizzes are never counted
+  int _getLessonsCountInGroup(List<ActivityX> activities) {
+    // Count videos (excluding quizzes)
+    final videoCount =
+        activities
+            .where(
+              (activity) =>
+                  activity.videoUrl.isNotEmpty && activity.quizId == null,
+            )
+            .length;
+
+    // If there are videos, return video count
+    if (videoCount > 0) {
+      return videoCount;
+    }
+
+    // Otherwise, no lessons (only quizzes or empty)
+    return 0;
+  }
+
+  /// Build activity items (video, quiz, summary) for a single activity
+  List<Widget> _buildActivityItems(
+    BuildContext context,
+    ActivityX activity,
+    int originalIndex,
+  ) {
+    return [
+      /// Lesson item video
+      if (activity.videoUrl.isNotEmpty)
+        LessonItemOnAccordion(
+          icon: IconX.play_arrow_filled,
+          name: activity.name,
+          videoDuration: activity.videoDuration,
+          isCompleted: activity.isCompleted,
+          onTap: () async {
+            await controller.onTapLessonVideo(originalIndex);
+          },
+        ).fadeAnimation100,
+
+      /// Lesson item quiz
+      if (activity.quizId != null)
+        LessonItemOnAccordion(
+          icon: IconX.quiz,
+          name:
+              TranslationX.getLanguageCode == "ar"
+                  ? "${"Test".tr} ${activity.topicName}"
+                  : "${activity.topicName} ${"Test".tr}",
+          isCompleted: activity.completionPercent >= 100,
+          onTap: () {
+            controller.onTapLessonQuiz(activity);
+          },
+        ).fadeAnimation100,
+
+      /// Check if there is a summary file
+      if (activity.downloadUrl.isNotEmpty)
+        /// Lesson item summary
+        LessonItemOnAccordion(
+          icon: IconX.description,
+          name:
+              TranslationX.getLanguageCode == "ar"
+                  ? "${"Summary File".tr} ${activity.topicName}"
+                  : "${activity.topicName} ${"Summary File".tr}",
+          onTap: () {
+            controller.onTapLessonSummary(activity);
+          },
+        ).fadeAnimation100,
+    ];
   }
 }

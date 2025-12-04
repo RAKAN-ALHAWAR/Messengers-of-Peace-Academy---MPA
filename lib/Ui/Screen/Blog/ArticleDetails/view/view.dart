@@ -47,7 +47,8 @@ class ArticleDetailsView extends GetView<ArticleDetailsController> {
                     controller.blog.imageUrlWithoutWebservice ??
                     controller.blog.imageUrl,
                 width: double.infinity,
-                height: 210,
+                minHeightLoading: 210,
+                fit: BoxFit.cover,
                 radius: StyleX.radiusLg,
                 failed: Container(
                   color: Theme.of(context).colorScheme.surfaceContainerLow,
@@ -61,7 +62,7 @@ class ArticleDetailsView extends GetView<ArticleDetailsController> {
               /// Article content
               HtmlWidgetX(
                 html: controller.blog.summary,
-                textStyle: TextStyleX.labelLarge,
+                textStyle: TextStyleX.bodyLarge,
               ).fadeAnimation250,
             ],
           ),

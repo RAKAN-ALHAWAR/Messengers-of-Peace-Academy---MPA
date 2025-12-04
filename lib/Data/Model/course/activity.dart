@@ -3,6 +3,7 @@ import 'package:messengersofpeace/Core/Helper/model/model.dart';
 import 'package:messengersofpeace/Data/data.dart';
 
 class ActivityX {
+  final int topicId;
   final String name;
   final String topicName;
   final int activityNumber;
@@ -17,6 +18,7 @@ class ActivityX {
   final String? quizId;
 
   ActivityX({
+    required this.topicId,
     required this.name,
     required this.topicName,
     required this.activityNumber,
@@ -35,6 +37,7 @@ class ActivityX {
     return ModelUtilX.checkFromJson(
       json,
       (json) => ActivityX(
+        topicId: json[NameX.topicId].toIntX,
         name: json[NameX.activityName].toStrX,
         topicName: json[NameX.topicName].toStrDefaultX(""),
         activityNumber: json[NameX.activityNumber].toIntDefaultX(1),
@@ -49,6 +52,7 @@ class ActivityX {
         quizId: json[NameX.quizId].toStrNullableX,
       ),
       requiredDataKeys: [
+        NameX.topicId,
         NameX.activityName,
         NameX.completionPercent,
         NameX.isOpen,
@@ -59,6 +63,7 @@ class ActivityX {
 
   Map<String, dynamic> toJson() {
     return {
+      NameX.topicId: topicId,
       NameX.activityName: name,
       NameX.topicName: topicName,
       NameX.activityNumber: activityNumber,

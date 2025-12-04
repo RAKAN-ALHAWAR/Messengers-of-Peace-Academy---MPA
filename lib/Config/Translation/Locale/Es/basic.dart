@@ -55,5 +55,8 @@ const Map<String, String> esBasic = {
   "AM": "AM",
   "Try again": "Try again",
   "login": "Login",
+  "Select Country Code": "Seleccionar código de país",
+  "Search by country name or code": "Buscar por nombre de país o código",
+  "No results found": "No se encontraron resultados",
   // "":"",
 };

@@ -60,9 +60,10 @@ class LoginView extends GetView<LoginController> {
               TextFieldX(
                 controller: controller.password,
                 hint: 'Password',
-                validate: ValidatorX.password,
+                validate: ValidatorX.passwordLogin,
                 textInputType: TextInputType.visiblePassword,
                 textInputAction: TextInputAction.done,
+                isPassword: true,
                 margin: EdgeInsets.only(bottom: 16),
               ).fadeAnimation250,
 

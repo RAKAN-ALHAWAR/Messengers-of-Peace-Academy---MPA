@@ -28,7 +28,7 @@ class GlassX extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: radius ?? BorderRadius.circular(StyleX.radius),
-            border: Border.all(width: 2, color: color.withValues(alpha: 0.7)),
+            border: Border.all(width: 2, color: color.withValues(alpha: 0.4)),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,

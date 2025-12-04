@@ -288,6 +288,7 @@ const Map<String, String> arGeneral = {
       "الرجاء ملء جميع الحقول والتحقق من دقتها",
   "Number of questions": "عدد الأسئلة",
   "questions": "أسئلة",
+  "question": "سؤال",
   "Pass rate": "معدل الاجتياز",
   "Start the test": "بدء الاختبار",
   "Next question": "السؤال التالي",

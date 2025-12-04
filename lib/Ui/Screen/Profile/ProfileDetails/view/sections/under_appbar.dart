@@ -55,7 +55,7 @@ class ProfileDetailsUnderAppbarSection
                           SizedBox(height: 4),
                           TextX(
                             controller.app.user.value.email,
-                            style: TextStyleX.labelMedium,
+                            style: TextStyleX.labelLarge,
                             color: Colors.white,
                           ),
                         ],

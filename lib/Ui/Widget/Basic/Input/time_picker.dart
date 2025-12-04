@@ -22,8 +22,8 @@ class TimeInputX extends StatefulWidget {
     this.timeColor,
     this.inactiveColor,
     this.padding,
-    this.width = 60,
-    this.height = 120,
+    this.width = 66,
+    this.height = 130,
     this.spaceBetweenItems = 12,
   });
 
@@ -71,97 +71,106 @@ class _TimeInputXState extends State<TimeInputX> {
     required Function onDecrease,
     required String label,
   }) {
-    return ContainerX(
-      padding:
-          widget.padding ??
-          const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+    return Material(
       color: ColorX.grey.shade50,
-      width: widget.width,
-      height: widget.height,
-      child: Column(
-        children: [
-          GestureDetector(
-            onTap: () {
-              onIncrease();
-              _notifyChange();
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: Icon(
-                Icons.keyboard_arrow_up,
-                color: Theme.of(context).hintColor,
+      child: Container(
+        padding:
+            widget.padding ??
+            const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+        width: widget.width,
+        height: widget.height,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            InkResponse(
+              onTap: () {
+                onIncrease();
+                _notifyChange();
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(7.0),
+                child: Icon(
+                  Icons.keyboard_arrow_up,
+                  color: Theme.of(context).hintColor,
+                  size: 30,
+                ),
               ),
             ),
-          ),
-          TextX(
-            label,
-            style: TextStyleX.bodyLarge,
-            fontWeight: FontWeight.w500,
-            color: widget.timeColor,
-          ),
-          GestureDetector(
-            onTap: () {
-              onDecrease();
-              _notifyChange();
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: Icon(
-                Icons.keyboard_arrow_down,
-                color: Theme.of(context).hintColor,
+            TextX(
+              label,
+              style: TextStyleX.bodyLarge,
+              fontWeight: FontWeight.w500,
+              color: widget.timeColor,
+            ),
+            InkResponse(
+              onTap: () {
+                onDecrease();
+                _notifyChange();
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(7.0),
+                child: Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Theme.of(context).hintColor,
+                  size: 30,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   // عنصر مخصص لـ AM/PM
   Widget _buildAmPmInput() {
-    return ContainerX(
+    return Container(
       padding:
           widget.padding ??
           const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-      color: Theme.of(context).cardTheme.color,
       width: widget.width,
       height: widget.height,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          GestureDetector(
+          InkResponse(
             onTap: () {
               setState(() {
                 _amPm = 'AM';
                 _notifyChange();
               });
             },
-            child: TextX(
-              'AM',
-              style: TextStyleX.bodyLarge,
-              fontWeight: FontWeight.w500,
-              color:
-                  _amPm == 'AM'
-                      ? widget.activeColor ?? Theme.of(context).primaryColor
-                      : widget.inactiveColor ?? Theme.of(context).hintColor,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextX(
+                'AM',
+                style: TextStyleX.bodyLarge,
+                fontWeight: FontWeight.w500,
+                color:
+                    _amPm == 'AM'
+                        ? widget.activeColor ?? Theme.of(context).primaryColor
+                        : widget.inactiveColor ?? Theme.of(context).hintColor,
+              ),
             ),
           ),
-          const SizedBox(height: 10),
-          GestureDetector(
+          InkResponse(
             onTap: () {
               setState(() {
                 _amPm = 'PM';
                 _notifyChange();
               });
             },
-            child: TextX(
-              'PM',
-              style: TextStyleX.bodyLarge,
-              fontWeight: FontWeight.w500,
-              color:
-                  _amPm == 'PM'
-                      ? widget.activeColor ?? Theme.of(context).primaryColor
-                      : widget.inactiveColor ?? Theme.of(context).hintColor,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextX(
+                'PM',
+                style: TextStyleX.bodyLarge,
+                fontWeight: FontWeight.w500,
+                color:
+                    _amPm == 'PM'
+                        ? widget.activeColor ?? Theme.of(context).primaryColor
+                        : widget.inactiveColor ?? Theme.of(context).hintColor,
+              ),
             ),
           ),
         ],

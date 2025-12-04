@@ -7,6 +7,7 @@ class ImageNetworkX extends StatelessWidget {
     this.color,
     this.backgroundLoading,
     this.height,
+    this.minHeightLoading,
     this.width,
     this.radius = 0,
     this.isFile = false,
@@ -19,6 +20,7 @@ class ImageNetworkX extends StatelessWidget {
   final Widget? empty;
 
   final double? height;
+  final double? minHeightLoading;
   final double? width;
   final BoxFit fit;
   final bool isFile;
@@ -27,26 +29,32 @@ class ImageNetworkX extends StatelessWidget {
   final double radius;
   @override
   Widget build(BuildContext context) {
-    double getPaddingEmpty() => (width ?? height ?? 200) >= 200
-        ? 50.0
-        : (width ?? height ?? 100) >= 100
-        ? 10.0
-        : 2.0;
+    double getPaddingEmpty() =>
+        (width ?? height ?? 200) >= 200
+            ? 50.0
+            : (width ?? height ?? 100) >= 100
+            ? 10.0
+            : 2.0;
 
-    String getImageEmpty() => (width ?? height ?? 160) >= 160
-        ? context.isDarkMode ? ImageX.logoWhite : ImageX.logo
-        : context.isDarkMode ? ImageX.logoWhite : ImageX.logo;
+    String getImageEmpty() =>
+        (width ?? height ?? 160) >= 160
+            ? context.isDarkMode
+                ? ImageX.logoWhite
+                : ImageX.logo
+            : context.isDarkMode
+            ? ImageX.logoWhite
+            : ImageX.logo;
     buildImageType() {
       if (imageUrl.isEmpty) {
         return SizedBox(
           width: width,
           height: height,
-          child: empty ??failed??
+          child:
+              empty ??
+              failed ??
               Padding(
                 padding: EdgeInsets.all(getPaddingEmpty()),
-                child: Image.asset(
-                  getImageEmpty(),
-                ),
+                child: Image.asset(getImageEmpty()),
               ),
         );
       } else if (isFile) {
@@ -56,28 +64,37 @@ class ImageNetworkX extends StatelessWidget {
           width: width,
           fit: fit,
           color: color,
-          errorBuilder: (context, error, stackTrace) => SizedBox(
-            width: width,
-            height: height,
-            child: failed ??empty??
-                Padding(
-                    padding: EdgeInsets.all(getPaddingEmpty()),
-                    child: Image.asset(getImageEmpty())),
-          ),
+          errorBuilder:
+              (context, error, stackTrace) => SizedBox(
+                width: width,
+                height: height,
+                child:
+                    failed ??
+                    empty ??
+                    Padding(
+                      padding: EdgeInsets.all(getPaddingEmpty()),
+                      child: Image.asset(getImageEmpty()),
+                    ),
+              ),
         );
       } else {
-        try{
+        try {
           return Image.network(
             imageUrl,
             height: height,
             width: width,
             fit: fit,
             color: color,
-            frameBuilder: (BuildContext context, Widget child, int? frame,
-                bool? wasSynchronouslyLoaded) {
+            frameBuilder: (
+              BuildContext context,
+              Widget child,
+              int? frame,
+              bool? wasSynchronouslyLoaded,
+            ) {
               if (frame == null) {
                 return Container(
-                  color: backgroundLoading ??
+                  color:
+                      backgroundLoading ??
                       Theme.of(context).colorScheme.onPrimary,
                   width: width,
                   height: height,
@@ -85,22 +102,30 @@ class ImageNetworkX extends StatelessWidget {
               }
               return child;
             },
-            loadingBuilder: (BuildContext context, Widget child,
-                ImageChunkEvent? loadingProgress) {
+            loadingBuilder: (
+              BuildContext context,
+              Widget child,
+              ImageChunkEvent? loadingProgress,
+            ) {
               if (loadingProgress != null) {
                 return Container(
-                  color: backgroundLoading ??
+                  color:
+                      backgroundLoading ??
                       Theme.of(context).colorScheme.onPrimary,
                   width: width,
                   height: height,
+                  constraints: BoxConstraints(
+                    minHeight: minHeightLoading ?? 50,
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Center(
                       child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
-                            : null,
+                        value:
+                            loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
                       ),
                     ),
                   ),
@@ -109,16 +134,20 @@ class ImageNetworkX extends StatelessWidget {
                 return child;
               }
             },
-            errorBuilder: (context, error, stackTrace) => SizedBox(
-              width: width,
-              height: height,
-              child: failed ?? empty??
-                  Padding(
-                      padding: EdgeInsets.all(getPaddingEmpty()),
-                      child: Image.asset(getImageEmpty())),
-            ),
+            errorBuilder:
+                (context, error, stackTrace) => SizedBox(
+                  width: width,
+                  height: height,
+                  child:
+                      failed ??
+                      empty ??
+                      Padding(
+                        padding: EdgeInsets.all(getPaddingEmpty()),
+                        child: Image.asset(getImageEmpty()),
+                      ),
+                ),
           );
-        }catch(_){}
+        } catch (_) {}
       }
     }
 

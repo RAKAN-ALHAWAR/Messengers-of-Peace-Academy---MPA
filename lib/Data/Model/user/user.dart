@@ -57,11 +57,14 @@ class UserX {
   String get gender {
     final genderField = customfields.firstWhere(
       (field) => field.name == NameX.gender,
-      orElse: () => CustomField(name: NameX.gender, value: 'male'),
+      orElse: () => CustomField(name: NameX.gender, value: ''),
     );
+    print(genderField.value);
     return genderField.value.toLowerCase().contains("female")
         ? "female"
-        : "male";
+        : genderField.value.toLowerCase().contains("male")
+        ? "male"
+        : "";
   }
 
   String get age {

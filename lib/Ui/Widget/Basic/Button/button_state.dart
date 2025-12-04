@@ -266,10 +266,17 @@ class _ButtonStateXState extends State<ButtonStateX>
           children: [
             Padding(
               padding: const EdgeInsets.all(4),
-              child: CircularProgressIndicator(
-                backgroundColor: stateColors[widget.state],
-
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              child: Center(
+                child: SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: CircularProgressIndicator(
+                    backgroundColor: stateColors[widget.state],
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Colors.white,
+                    ),
+                  ),
+                ),
               ),
             ),
           ],

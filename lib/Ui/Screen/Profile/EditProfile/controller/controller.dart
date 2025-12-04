@@ -226,7 +226,7 @@ class EditProfileController extends GetxController {
     city: city.text.trim(),
     age: age.value.trim(),
     language: language.value.trim(),
-    gender: gender.value.trim(),
+    gender: gender.value.trim().isNotEmpty ? gender.value.trim() : null,
     whatsappNumber: countryCode.value + whatsapp.text.trim(),
     countryPhoneCode: countryCode.value,
     hearAboutUs: howToFindUs.value.trim(),

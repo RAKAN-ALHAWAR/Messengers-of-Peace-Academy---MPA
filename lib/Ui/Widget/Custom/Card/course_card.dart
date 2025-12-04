@@ -13,7 +13,11 @@ class CourseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     /// Build course card
     return GestureDetector(
-      onTap: () => onTap(course),
+      onTap: () async {
+        // if (course.isOpen) {
+        await onTap(course);
+        // }
+      },
       child: ContainerX(
         width: 290,
         radius: StyleX.radiusLg,
@@ -92,7 +96,7 @@ class CourseCard extends StatelessWidget {
 
                       /// Completion percentage
                       TextX(
-                        "${course.completionPercent}%",
+                        "${course.completionPercent.toInt()}%",
                         style: TextStyleX.labelSmall,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),

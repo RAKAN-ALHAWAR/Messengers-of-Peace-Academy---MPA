@@ -263,8 +263,8 @@ class _TextFieldXState extends State<TextFieldX> {
                         icon: Icon(
                           passwordVisible
                               ? Icons.remove_red_eye
-                              : Icons.remove_red_eye,
-                          color: ColorX.grey.shade300,
+                              : Icons.visibility_off,
+                          color: ColorX.grey.shade400,
                           size: 18,
                         ),
                         onPressed: () {

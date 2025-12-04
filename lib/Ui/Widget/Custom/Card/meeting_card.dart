@@ -69,7 +69,11 @@ class MeetingCardX extends StatelessWidget {
                       isEnded: meeting.isEnded,
                       status: meeting.status,
                     ),
-                  TextX(meeting.name, style: TextStyleX.titleMedium),
+                  TextX(
+                    meeting.name,
+                    maxLines: isSmall ? 1 : 100,
+                    style: TextStyleX.titleMedium,
+                  ),
                   SizedBox(height: 6),
                   TextX(
                     "${"Lecturer".tr}: ${meeting.lecturer}",

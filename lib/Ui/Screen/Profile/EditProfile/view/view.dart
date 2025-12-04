@@ -133,6 +133,7 @@ class EditProfileView extends GetView<EditProfileController> {
                               validate: ValidatorX.email,
                               textInputType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.next,
+                              onlyRead: true,
                               margin: EdgeInsets.only(bottom: 16),
                             ).fadeAnimation200,
 
@@ -145,40 +146,44 @@ class EditProfileView extends GetView<EditProfileController> {
                             ).fadeAnimation200.marginOnly(bottom: 16),
 
                             /// WhatsApp number and country code inputs
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                /// WhatsApp number input
-                                Expanded(
-                                  child: TextFieldX(
-                                    controller: controller.whatsapp,
-                                    hint: "WhatsApp Number",
-                                    validate: ValidatorX.phone,
-                                    textInputType: TextInputType.phone,
-                                    textInputAction: TextInputAction.next,
-                                  ),
-                                ),
-
-                                /// Spacer
-                                SizedBox(width: 8),
-
-                                /// Country code dropdown
-                                SizedBox(
-                                  width: 100,
-                                  height: 65,
-                                  child: Center(
-                                    child: DropdownX(
-                                      value: controller.countryCode.value,
-                                      onlyEnglish: true,
-                                      onChanged: controller.changeCountryCode,
-                                      list:
-                                          controller.phoneCodesList
-                                              .map((e) => e.dialCode)
-                                              .toList(),
+                            Directionality(
+                              textDirection: TextDirection.rtl,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  /// WhatsApp number input
+                                  Expanded(
+                                    child: Directionality(
+                                      textDirection: Directionality.of(context),
+                                      child: TextFieldX(
+                                        controller: controller.whatsapp,
+                                        hint: "WhatsApp Number",
+                                        validate: ValidatorX.phone,
+                                        textInputType: TextInputType.phone,
+                                        textInputAction: TextInputAction.next,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+
+                                  /// Spacer
+                                  SizedBox(width: 8),
+
+                                  /// Country code dropdown
+                                  SizedBox(
+                                    width: 100,
+                                    height: 65,
+                                    child: Center(
+                                      child: SearchableCountryCodeDropdown(
+                                        value: controller.countryCode.value,
+                                        phoneCodesList:
+                                            controller.phoneCodesList,
+                                        onChanged: controller.changeCountryCode,
+                                        onlyEnglish: true,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ).fadeAnimation200.marginOnly(bottom: 16),
 
                             /// Gender label
@@ -221,9 +226,9 @@ class EditProfileView extends GetView<EditProfileController> {
                               marginBottom: 16,
                             ).fadeAnimation250,
 
-                            /// Current city of residence dropdown
+                            /// Country dropdown
                             DropdownX(
-                              hint: "Current City of Residence",
+                              hint: "Country",
                               value: controller.country.value,
                               onChanged: controller.changeCountry,
                               list:
@@ -232,10 +237,10 @@ class EditProfileView extends GetView<EditProfileController> {
                                       .toList(),
                             ).fadeAnimation300.marginOnly(bottom: 16),
 
-                            /// City input
+                            /// Current city of residence dropdown
                             TextFieldX(
                               controller: controller.city,
-                              hint: "City",
+                              hint: "Current City of Residence",
                               validate: ValidatorX.city,
                               textInputType: TextInputType.text,
                               textInputAction: TextInputAction.next,
@@ -276,7 +281,7 @@ class EditProfileView extends GetView<EditProfileController> {
                             TextFieldX(
                               controller: controller.telegramId,
                               hint: "Your Telegram ID",
-                              validate: ValidatorX.required,
+                              // validate: ValidatorX.required,
                               textInputType: TextInputType.text,
                               textInputAction: TextInputAction.next,
                               margin: EdgeInsets.only(bottom: 16),
@@ -286,7 +291,7 @@ class EditProfileView extends GetView<EditProfileController> {
                             TextFieldX(
                               controller: controller.telegramName,
                               hint: "Your Telegram Name",
-                              validate: ValidatorX.required,
+                              // validate: ValidatorX.required,
                               textInputType: TextInputType.text,
                               textInputAction: TextInputAction.next,
                               margin: EdgeInsets.only(bottom: 16),

@@ -46,13 +46,22 @@ class TestQuestionsController extends GetxController {
 
   /// Get data from database
   Future<void> getData() async {
-    /// Get quiz start attempt
-    quizStartAttempt = await DatabaseX.getQuizStartAttempt(quizId: quizId);
+    try {
+      /// Get quiz start attempt
+      quizStartAttempt = await DatabaseX.getQuizStartAttempt(quizId: quizId);
 
-    /// Set start time and end time
-    _startTime = DateTime.now();
-    _endTime = _startTime.add(Duration(minutes: quiz.timelimit ~/ 60));
-    startTimer();
+      selectedAnswers.addAll(
+        quizStartAttempt.questions.map((e) => "").toList(),
+      );
+
+      /// Set start time and end time
+      _startTime = DateTime.now();
+      _endTime = _startTime.add(Duration(seconds: quiz.timelimit));
+      startTimer();
+    } catch (e) {
+      print("quizId: $quizId");
+      print("error getQuizStartAttempt: ${e.toString()}");
+    }
   }
 
   /// Handle change answer
@@ -70,16 +79,25 @@ class TestQuestionsController extends GetxController {
       buttonState.value = ButtonStateEX.loading;
 
       /// Submit question answer
-      await DatabaseX.submitQuizQuestionAnswer(
+      var result = await DatabaseX.submitQuizQuestionAnswer(
         quizId: quizId,
         attemptId: quizStartAttempt.attemptId,
         questionNumber: quizStartAttempt.questions[currentQuestionIndex].slot,
         answerIndex: quizStartAttempt.questions[currentQuestionIndex].answers
             .indexOf(selectedAnswer.value),
       );
+      print("quizid: $quizId");
+      print("attemptid: ${quizStartAttempt.attemptId}");
+      print(
+        "questionnumber: ${quizStartAttempt.questions[currentQuestionIndex].slot}",
+      );
+      print(
+        "answerindex: ${quizStartAttempt.questions[currentQuestionIndex].answers.indexOf(selectedAnswer.value)}",
+      );
+      print("result: $result");
 
       /// Add selected answer to list
-      selectedAnswers.add(selectedAnswer.value);
+      selectedAnswers[currentQuestionIndex] = selectedAnswer.value;
 
       /// Reset selected answer
       selectedAnswer.value = "";
@@ -93,6 +111,7 @@ class TestQuestionsController extends GetxController {
         submitQuiz();
       }
     } catch (e) {
+      print(e);
       buttonState.value = ButtonStateEX.failed;
       await Future.delayed(const Duration(seconds: 2));
     }

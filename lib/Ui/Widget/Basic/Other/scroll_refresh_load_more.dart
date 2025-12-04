@@ -131,8 +131,8 @@ class ScrollRefreshLoadMoreX<T> extends StatefulWidget {
     bool isScrollEnabled = false,
   }) {
     this.isScrollEnabled =
-        this.parentScrollController != null ? true : isScrollEnabled;
-    this.isExpanded = this.parentScrollController != null ? false : isExpanded;
+        parentScrollController != null ? true : isScrollEnabled;
+    this.isExpanded = parentScrollController != null ? false : isExpanded;
   }
 
   @override

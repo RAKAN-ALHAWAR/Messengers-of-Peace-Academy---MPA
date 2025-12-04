@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'Config/Route/route_list.dart';
 import 'Config/Translation/translation.dart';
@@ -73,6 +74,12 @@ class MyApp extends StatelessWidget {
       translations: TranslationX(),
       locale: TranslationX.getLocale,
       fallbackLocale: TranslationX.fallbackLocale,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: TranslationX.locales,
 
       /// Themes
       themeMode: ThemeX.getTheme,

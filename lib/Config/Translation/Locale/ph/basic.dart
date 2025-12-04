@@ -55,5 +55,8 @@ const Map<String, String> phBasic = {
   "AM": "AM",
   "Try again": "Try again",
   "login": "Login",
+  "Select Country Code": "Pumili ng Country Code",
+  "Search by country name or code": "Maghanap ayon sa pangalan ng bansa o code",
+  "No results found": "Walang nahanap na resulta",
   // "":"",
 };

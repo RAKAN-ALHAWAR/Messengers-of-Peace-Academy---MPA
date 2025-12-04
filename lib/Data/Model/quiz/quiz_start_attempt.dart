@@ -47,4 +47,15 @@ class QuizStartAttemptX {
       ],
     );
   }
+  toJson() {
+    return {
+      NameX.attemptId: attemptId,
+      NameX.state: state,
+      NameX.status: status,
+      NameX.totalQuestions: totalQuestions,
+      NameX.questions: questions.map((e) => e.toJson()).toList(),
+      NameX.correctAnswers: correctAnswers,
+      NameX.wrongAnswers: wrongAnswers,
+    };
+  }
 }

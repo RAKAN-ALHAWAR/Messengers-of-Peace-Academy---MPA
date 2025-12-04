@@ -17,6 +17,10 @@ class ImageX {
   static const String sponsorLogo = '${_path}logos/sponsor-color.png';
   static const String sponsorLogoWhite = '${_path}logos/sponsor-white.png';
 
+  // Splash
+  static const String splash = '${_path}splash/splash.png';
+  static const String splashDark = '${_path}splash/splash-dark.png';
+
   /// Auth
   static const String google = '${_path}auth/google.png';
 

@@ -47,13 +47,13 @@ class _TextFieldDateXState extends State<TextFieldDateX> {
   @override
   void initState() {
     initializeDateFormatting(widget.locale.languageCode, null);
-    date = widget.initialDate ?? DateTime.now();
+    date = widget.initialDate;
     if (widget.initialDate != null) {
       widget.controller.text =
           (date != null
               ? (intl.DateFormat(
                 widget.format ?? 'EEEE، d MMMM y',
-                'ar',
+                widget.locale.languageCode,
               ).format(date!)).arabicToEnglishNumbers
               : '');
     }
@@ -81,61 +81,54 @@ class _TextFieldDateXState extends State<TextFieldDateX> {
                 color: Theme.of(context).colorScheme.secondary,
               )
               : null,
-      onTap: () async {
-        FocusScope.of(context).requestFocus(FocusNode());
-        await bottomSheetX(
-          title: widget.titleBottomSheet,
-          child: Column(
-            children: [
-              SizedBox(height: 12),
-              DatePickerX(
-                initialDate: widget.initialDate,
-                firstDate: widget.firstDate,
-                lastDate: widget.lastDate,
-                selectedDate: date,
-                firstDayOfWeek: DateTime.saturday,
-                onDateSelected: (newDate) {
-                  date = newDate;
-                  widget.onChange?.call(date);
-                },
-              ).fadeAnimation200,
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Flexible(
-                    child: ButtonX(
-                      text: "Ok",
-                      onTap: () {
-                        widget.controller.text =
-                            (date != null
-                                ? (intl.DateFormat(
-                                  widget.format ?? 'EEEE، d MMMM y',
-                                  'ar',
-                                ).format(date!)).arabicToEnglishNumbers
-                                : '');
-                        widget.onChange?.call(date);
-                        Get.back();
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: ButtonX.gray(
-                      text: "Reset",
-                      onTap: () {
-                        widget.controller.text = '';
-                        date = null;
-                        widget.onChange?.call(null);
-                        Get.back();
-                      },
-                    ),
-                  ),
-                ],
-              ).fadeAnimation300,
-            ],
-          ),
-        );
-      },
+      onTap:
+          widget.disabled
+              ? null
+              : () async {
+                FocusScope.of(context).requestFocus(FocusNode());
+
+                // Use Flutter's built-in showDatePicker for better date selection
+                final DateTime? picked = await showDatePicker(
+                  context: context,
+                  initialDate: date ?? widget.initialDate ?? DateTime.now(),
+                  firstDate: widget.firstDate ?? DateTime(1900),
+                  lastDate: widget.lastDate ?? DateTime(2100),
+                  locale: widget.locale,
+                  builder: (context, child) {
+                    final theme = Theme.of(context);
+                    final isDark = theme.brightness == Brightness.dark;
+
+                    return Theme(
+                      data: theme.copyWith(
+                        dialogTheme: DialogThemeData(
+                          backgroundColor:
+                              isDark
+                                  ? ColorX.surfaceContainerLowestDark
+                                  : Colors.white,
+                          surfaceTintColor: Colors.transparent,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                      child: child!,
+                    );
+                  },
+                );
+
+                if (picked != null && picked != date) {
+                  setState(() {
+                    date = picked;
+                    widget.controller.text =
+                        (intl.DateFormat(
+                          widget.format ?? 'EEEE، d MMMM y',
+                          widget.locale.languageCode,
+                        ).format(date!)).arabicToEnglishNumbers;
+                    widget.onChange?.call(date);
+                  });
+                }
+              },
     );
   }
 }

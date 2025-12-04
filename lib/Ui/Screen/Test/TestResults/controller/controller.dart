@@ -49,8 +49,16 @@ class TestResultsController extends GetxController {
   // Functions
 
   Future<void> getData() async {
-    await DatabaseX.submitQuiz(attemptId: quizStartAttempt.attemptId);
-    quizResult = await DatabaseX.getQuizResult(quizId: quizId);
+    try {
+      var result = await DatabaseX.submitQuiz(
+        attemptId: quizStartAttempt.attemptId,
+      );
+      print(result);
+      quizResult = await DatabaseX.getQuizResult(quizId: quizId);
+      print(quizResult);
+    } catch (e) {
+      print(e);
+    }
   }
 
   onTapButton() {

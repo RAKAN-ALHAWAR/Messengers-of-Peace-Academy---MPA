@@ -35,8 +35,10 @@ class FunctionX {
 
     if (hours > 0) {
       return "$hours ${"h".tr} $minutes ${"m".tr} $seconds ${"s".tr}";
-    } else {
+    } else if (minutes > 0) {
       return "$minutes ${"m".tr} $seconds ${"s".tr}";
+    } else {
+      return "$seconds ${"s".tr}";
     }
   }
 

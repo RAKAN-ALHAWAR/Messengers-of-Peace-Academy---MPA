@@ -300,6 +300,7 @@ const Map<String, String> esGeneral = {
       "Por favor, completa todos los campos y verifica su exactitud",
   "Number of questions": "Número de preguntas",
   "questions": "preguntas",
+  "question": "pregunta",
   "Pass rate": "Tasa de aprobación",
   "Start the test": "Iniciar la prueba",
   "Next question": "Siguiente pregunta",

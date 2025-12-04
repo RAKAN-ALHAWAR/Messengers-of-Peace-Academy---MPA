@@ -55,5 +55,8 @@ const Map<String, String> enBasic = {
   "AM": "AM",
   "Try again": "Try again",
   "login": "Login",
+  "Select Country Code": "Select Country Code",
+  "Search by country name or code": "Search by country name or code",
+  "No results found": "No results found",
   // "":"",
 };

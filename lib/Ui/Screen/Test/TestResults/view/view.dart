@@ -28,6 +28,7 @@ class TestResultsView extends GetView<TestResultsController> {
                   children: [
                     /// Quiz image and name
                     Stack(
+                      alignment: Alignment.center,
                       children: [
                         /// Background of quiz image
                         ShaderMask(
@@ -75,6 +76,7 @@ class TestResultsView extends GetView<TestResultsController> {
 
                         /// Quiz image and name
                         Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             /// Spacer
                             SizedBox(height: 24),
@@ -371,13 +373,28 @@ class TestResultsView extends GetView<TestResultsController> {
                                         ).colorScheme.onInverseSurface,
                                 borderColor:
                                     controller
+                                                    .quizResult
+                                                    .answers[i]
+                                                    .selectedAnswerIndex ==
+                                                answerIndex &&
+                                            controller
                                                 .quizResult
                                                 .answers[i]
-                                                .selectedAnswerIndex ==
-                                            answerIndex
+                                                .right
                                         ? (context.isDarkMode
                                             ? ColorX.successDark
                                             : ColorX.success)
+                                        : controller
+                                                    .quizResult
+                                                    .answers[i]
+                                                    .selectedAnswerIndex ==
+                                                answerIndex &&
+                                            controller
+                                                    .quizResult
+                                                    .answers[i]
+                                                    .right ==
+                                                false
+                                        ? Theme.of(context).colorScheme.error
                                         : null,
                                 onChanged: (_) {},
                                 child: Padding(
