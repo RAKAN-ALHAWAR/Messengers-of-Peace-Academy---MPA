@@ -36,10 +36,10 @@ class NotificationsController extends GetxController {
       isLoading.value = true;
 
       /// Mark all as read
-      var message = await DatabaseX.readNotifications();
+      await DatabaseX.readNotifications();
 
-      /// Show success toast
-      ToastX.success(message: message);
+      /// Show the localized message instead of the raw backend one
+      ToastX.success(message: "All notifications have been marked as read".tr);
 
       /// Update notifications
       notifications.value =

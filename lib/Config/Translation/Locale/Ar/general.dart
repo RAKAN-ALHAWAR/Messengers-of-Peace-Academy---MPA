@@ -313,4 +313,12 @@ const Map<String, String> arGeneral = {
   "You can now proceed to the next lesson": "يمكنك الآن الانتقال للدرس التالي",
   "Go to next lesson": "الانتقال للدرس التالي",
   "Lessons": "درس",
+  "Your complaint or suggestion has been submitted successfully":
+      "تم إرسال الشكوى أو المقترح بنجاح",
+  "All notifications have been marked as read":
+      "تم تحديد جميع الإشعارات كمقروءة",
+  "File saved to the app folder": "تم حفظ الملف داخل مجلد التطبيق",
+  "Password must be at least 6 characters long":
+      "كلمة المرور يجب ألا تقل عن 6 أحرف",
+  "You must be at least 18 years old": "يجب أن يكون عمرك 18 سنة أو أكثر",
 };

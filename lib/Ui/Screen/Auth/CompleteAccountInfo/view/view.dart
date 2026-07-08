@@ -71,22 +71,22 @@ class CompleteAccountInfoView extends GetView<CompleteAccountInfoController> {
                             // ).fadeAnimation200,
 
                             /// Date of Birth (minimum age: 18)
+                            ///
+                            /// Not prefilled, otherwise a user who never opens
+                            /// the picker would silently be recorded as being
+                            /// exactly 18 years old today
                             TextFieldDateX(
                               hint: "Date of Birth",
                               controller: controller.dateOfBirth,
                               icon: IconX.today,
                               margin: EdgeInsets.only(bottom: 12),
                               validate: ValidatorX.date,
-                              lastDate: DateTime(
-                                DateTime.now().year - 18,
-                                DateTime.now().month,
-                                DateTime.now().day,
-                              ),
-                              initialDate: DateTime(
-                                DateTime.now().year - 18,
-                                DateTime.now().month,
-                                DateTime.now().day,
-                              ),
+                              onChange: controller.onChangeBirthDate,
+                              prefillInitialDate: false,
+                              lastDate:
+                                  CompleteAccountInfoController.maxBirthDate,
+                              initialDate:
+                                  CompleteAccountInfoController.maxBirthDate,
                             ).fadeAnimation200,
 
                             /// Whatsapp number

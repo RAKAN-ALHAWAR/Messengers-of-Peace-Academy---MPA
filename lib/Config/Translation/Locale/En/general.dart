@@ -322,4 +322,12 @@ const Map<String, String> enGeneral = {
       "You can now proceed to the next lesson",
   "Go to next lesson": "Go to next lesson",
   "Lessons": "Lessons",
+  "Your complaint or suggestion has been submitted successfully":
+      "Your complaint or suggestion has been submitted successfully",
+  "All notifications have been marked as read":
+      "All notifications have been marked as read",
+  "File saved to the app folder": "File saved to the app folder",
+  "Password must be at least 6 characters long":
+      "Password must be at least 6 characters long",
+  "You must be at least 18 years old": "You must be at least 18 years old",
 };

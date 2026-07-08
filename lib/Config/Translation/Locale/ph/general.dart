@@ -323,4 +323,13 @@ const Map<String, String> phGeneral = {
       "Maaari ka nang magpatuloy sa susunod na aralin",
   "Go to next lesson": "Pumunta sa susunod na aralin",
   "Lessons": "Mga Aralin",
+  "Your complaint or suggestion has been submitted successfully":
+      "Matagumpay na naisumite ang iyong reklamo o mungkahi",
+  "All notifications have been marked as read":
+      "Namarkahan nang nabasa ang lahat ng abiso",
+  "File saved to the app folder": "Na-save ang file sa folder ng app",
+  "Password must be at least 6 characters long":
+      "Ang password ay dapat hindi bababa sa 6 na karakter",
+  "You must be at least 18 years old":
+      "Dapat ikaw ay hindi bababa sa 18 taong gulang",
 };

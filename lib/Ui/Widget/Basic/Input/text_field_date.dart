@@ -12,6 +12,12 @@ class TextFieldDateX extends StatefulWidget {
   final DateTime? lastDate;
   final DateTime? firstDate;
   final DateTime? initialDate;
+
+  /// Whether [initialDate] is written into the field up front.
+  ///
+  /// Set it to false when the value has to be chosen by the user, so that
+  /// [initialDate] only decides where the date picker opens.
+  final bool prefillInitialDate;
   final String? Function(String?)? validate;
   final Function(DateTime?)? onChange;
   late final Locale locale;
@@ -23,6 +29,7 @@ class TextFieldDateX extends StatefulWidget {
     required this.hint,
     this.validate,
     this.initialDate,
+    this.prefillInitialDate = true,
     this.color,
     this.firstDate,
     this.lastDate,
@@ -47,15 +54,13 @@ class _TextFieldDateXState extends State<TextFieldDateX> {
   @override
   void initState() {
     initializeDateFormatting(widget.locale.languageCode, null);
-    date = widget.initialDate;
-    if (widget.initialDate != null) {
+    if (widget.prefillInitialDate && widget.initialDate != null) {
+      date = widget.initialDate;
       widget.controller.text =
-          (date != null
-              ? (intl.DateFormat(
-                widget.format ?? 'EEEE، d MMMM y',
-                widget.locale.languageCode,
-              ).format(date!)).arabicToEnglishNumbers
-              : '');
+          (intl.DateFormat(
+            widget.format ?? 'EEEE، d MMMM y',
+            widget.locale.languageCode,
+          ).format(date!)).arabicToEnglishNumbers;
     }
     super.initState();
   }

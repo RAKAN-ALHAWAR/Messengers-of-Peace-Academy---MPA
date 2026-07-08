@@ -327,4 +327,13 @@ const Map<String, String> esGeneral = {
       "Ahora puedes pasar a la siguiente lección",
   "Go to next lesson": "Ir a la siguiente lección",
   "Lessons": "Lecciones",
+  "Your complaint or suggestion has been submitted successfully":
+      "Tu queja o sugerencia se ha enviado correctamente",
+  "All notifications have been marked as read":
+      "Todas las notificaciones se han marcado como leídas",
+  "File saved to the app folder":
+      "Archivo guardado en la carpeta de la aplicación",
+  "Password must be at least 6 characters long":
+      "La contraseña debe tener al menos 6 caracteres",
+  "You must be at least 18 years old": "Debes tener al menos 18 años",
 };

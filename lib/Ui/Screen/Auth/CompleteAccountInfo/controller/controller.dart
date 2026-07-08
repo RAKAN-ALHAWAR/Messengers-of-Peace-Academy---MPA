@@ -61,6 +61,22 @@ class CompleteAccountInfoController extends GetxController {
 
   // Text editing controllers
   TextEditingController dateOfBirth = TextEditingController();
+
+  /// The picked date of birth.
+  ///
+  /// [dateOfBirth] only holds the localized display text, which is not
+  /// parsable, so the picked value has to be kept as it is
+  DateTime? birthDate;
+
+  /// The most recent date of birth accepted, users must be 18 or older
+  static DateTime get maxBirthDate => DateTime(
+    DateTime.now().year - 18,
+    DateTime.now().month,
+    DateTime.now().day,
+  );
+
+  /// Store the date picked in the date of birth field
+  void onChangeBirthDate(DateTime? value) => birthDate = value;
   TextEditingController whatsapp = TextEditingController();
   TextEditingController city = TextEditingController();
   TextEditingController howToFindUsOthers = TextEditingController();
@@ -160,7 +176,7 @@ class CompleteAccountInfoController extends GetxController {
     country: country.value.trim(),
     city: city.text.trim(),
     howToFindUsOthers: howToFindUsOthers.text.trim(),
-    birthOfDate: DateTime.tryParse(dateOfBirth.text.trim()),
+    birthOfDate: birthDate,
   );
 
   /// Save and update user data
@@ -169,6 +185,14 @@ class CompleteAccountInfoController extends GetxController {
     if (isLoading.isFalse) {
       /// Check if the form is valid
       if (formKey.currentState!.validate()) {
+        /// Check the age, the picker already limits it but the value is only
+        /// trustworthy once it has actually been picked
+        final birthDateError = ValidatorX.birthDate(birthDate);
+        if (birthDateError != null) {
+          ToastX.error(message: birthDateError);
+          return;
+        }
+
         /// Check if the whatsapp number is valid
         if (country.isEmpty) {
           /// Show error toast

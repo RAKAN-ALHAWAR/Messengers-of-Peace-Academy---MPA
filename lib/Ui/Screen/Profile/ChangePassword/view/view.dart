@@ -30,10 +30,12 @@ class ChangePasswordView extends GetView<ChangePasswordController> {
                   child: Column(
                     children: [
                       /// Old password input
+                      /// Only required and at least 6 characters, the strength
+                      /// rules apply to the new password only
                       TextFieldX(
                         controller: controller.oldPassword,
                         hint: "Old Password",
-                        validate: ValidatorX.password,
+                        validate: ValidatorX.oldPassword,
                         textInputType: TextInputType.visiblePassword,
                         textInputAction: TextInputAction.next,
                         isPassword: true,

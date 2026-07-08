@@ -26,7 +26,10 @@ class CourseDetailsView extends GetView<CourseDetailsController> {
           loading: const CourseDetailsLoading(),
 
           /// Data state
-          child: (_) {
+          ///
+          /// Wrapped in Obx so completing a lesson updates the checkmark, the
+          /// progress and the lock of the next lesson without leaving the page
+          child: (_) => Obx(() {
             /// Empty message
             if (controller.course.value == null) {
               return const EmptyMessage('No course details found');
@@ -112,7 +115,7 @@ class CourseDetailsView extends GetView<CourseDetailsController> {
                 ],
               ),
             );
-          },
+          }),
         ),
       ),
     );

@@ -63,7 +63,7 @@ submitComplaintOrSuggestionSheetX() {
                   if (formKey.currentState!.validate()) {
                     isLoading.value = true;
                     state.value = ButtonStateEX.loading;
-                    var res = await DatabaseX.submitComplaintOrSuggestion(
+                    await DatabaseX.submitComplaintOrSuggestion(
                       name:
                           '${app.user.value.firstname} ${app.user.value.lastname}',
                       email: app.user.value.email,
@@ -71,9 +71,13 @@ submitComplaintOrSuggestionSheetX() {
                       message: messageController.text,
                     );
                     Get.back();
-                    if (res != null) {
-                      ToastX.success(message: res);
-                    }
+
+                    /// Show the localized message instead of the raw backend one
+                    ToastX.success(
+                      message:
+                          "Your complaint or suggestion has been submitted successfully"
+                              .tr,
+                    );
                   } else {
                     autovalidate = AutovalidateMode.always;
                   }

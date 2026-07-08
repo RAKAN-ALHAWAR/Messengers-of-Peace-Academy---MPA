@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
@@ -26,8 +28,24 @@ class CourseDetailsController extends GetxController {
   // Functions
 
   /// Get course data from database
+  ///
+  /// Assign to [course.value], replacing the Rx itself would detach every
+  /// Obx that already subscribed to the original one
   Future<void> getData() async {
-    course = (await DatabaseX.getCourse(courseId: courseId)).obs;
+    course.value = await DatabaseX.getCourse(courseId: courseId);
+  }
+
+  /// Reload the course after a lesson was completed.
+  ///
+  /// The checkmark and the unlocking of the next lesson are both decided by
+  /// the backend (`isCompleted`, `isOpen`), so the course has to be fetched
+  /// again. A failure here must keep the current content on screen.
+  Future<void> _refreshCourse() async {
+    try {
+      await getData();
+    } catch (e) {
+      log("error refreshing course $courseId: $e", name: runtimeType.toString());
+    }
   }
 
   /// Get total lessons count across all topics
@@ -114,8 +132,20 @@ class CourseDetailsController extends GetxController {
             await DatabaseX.completeVideoOfCourse(
               cmId: course.value!.activities[index].cmId,
             );
-          } catch (_) {}
-          course.value!.activities[index].isCompleted = true;
+
+            /// Reload so the checkmark shows and the next lesson unlocks
+            /// without having to leave the screen and come back
+            await _refreshCourse();
+          } catch (e) {
+            log(
+              "error completeVideoOfCourse: $e",
+              name: runtimeType.toString(),
+            );
+
+            /// Keep the local checkmark, the video really was watched
+            course.value!.activities[index].isCompleted = true;
+            course.refresh();
+          }
         }
       }
     }

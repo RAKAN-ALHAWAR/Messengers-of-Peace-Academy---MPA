@@ -157,6 +157,39 @@ class ValidatorX {
     return null;
   }
 
+  /// Verify the current password when changing it.
+  ///
+  /// The old password was created before the strength rules existed and it is
+  /// verified against the server anyway, so only require that it is present
+  /// and not shorter than 6 characters.
+  static String? oldPassword(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Password Required'.tr;
+    } else if (value.trim().length < 6) {
+      return 'Password must be at least 6 characters long'.tr;
+    }
+    return null;
+  }
+
+  /// Verify the date of birth, only users aged 18 or older are accepted
+  static String? birthDate(DateTime? value) {
+    if (value == null) {
+      return 'Date Required'.tr;
+    }
+    final now = DateTime.now();
+    var age = now.year - value.year;
+
+    /// The birthday of this year did not happen yet
+    if (now.month < value.month ||
+        (now.month == value.month && now.day < value.day)) {
+      age--;
+    }
+    if (age < 18) {
+      return 'You must be at least 18 years old'.tr;
+    }
+    return null;
+  }
+
   static String? passwordLogin(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Password Required'.tr;
