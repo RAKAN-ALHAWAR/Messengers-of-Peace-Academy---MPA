@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Core/core.dart';
 import 'package:messengersofpeace/Ui/Animation/fade/fade_animation.dart';
 import '../../../../Widget/widget.dart';
@@ -25,26 +24,26 @@ class LoginView extends GetView<LoginController> {
           child: Column(
             children: [
               /// Google login button
-              ButtonStateX.gray(
-                state: controller.buttonStateGoogle.value,
-                borderColor: Theme.of(context).primaryColor,
-                text: "Login with Google account",
-                colorText: Theme.of(context).primaryColor,
-                icon: Image.asset(ImageX.google, height: 19),
-                onTap: controller.onLoginWithGoogle,
-              ).fadeAnimation200,
+              // ButtonStateX.gray(
+              //   state: controller.buttonStateGoogle.value,
+              //   borderColor: Theme.of(context).primaryColor,
+              //   text: "Login with Google account",
+              //   colorText: Theme.of(context).primaryColor,
+              //   icon: Image.asset(ImageX.google, height: 19),
+              //   onTap: controller.onLoginWithGoogle,
+              // ).fadeAnimation200,
 
               /// Divider with "Or" text
-              Row(
-                children: [
-                  Expanded(child: Divider()),
-                  TextX(
-                    "Or",
-                    style: TextStyleX.labelLarge,
-                  ).marginSymmetric(horizontal: 12),
-                  Expanded(child: Divider()),
-                ],
-              ).fadeAnimation200.marginSymmetric(vertical: 16),
+              // Row(
+              //   children: [
+              //     Expanded(child: Divider()),
+              //     TextX(
+              //       "Or",
+              //       style: TextStyleX.labelLarge,
+              //     ).marginSymmetric(horizontal: 12),
+              //     Expanded(child: Divider()),
+              //   ],
+              // ).fadeAnimation200.marginSymmetric(vertical: 16),
 
               /// Email input field
               TextFieldX(
@@ -54,7 +53,7 @@ class LoginView extends GetView<LoginController> {
                 textInputType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 margin: EdgeInsets.only(bottom: 12),
-              ).fadeAnimation250,
+              ).fadeAnimation200,
 
               /// Password input field
               TextFieldX(

@@ -86,39 +86,39 @@ class CourseDetailsController extends GetxController {
 
   /// Navigate to lesson video
   Future<void> onTapLessonVideo(int index) async {
-    // if (course.value!.activities[index].isOpen) {
-    if (course.value!.activities[index].videoUrl.isEmpty) {
-      ToastX.error(message: "Video is not available");
-    } else {
-      // إضافة مؤقت لحساب مدة مشاهدة الفيديو
-      final DateTime startTime = DateTime.now();
+    if (course.value!.activities[index].isOpen) {
+      if (course.value!.activities[index].videoUrl.isEmpty) {
+        ToastX.error(message: "Video is not available");
+      } else {
+        // إضافة مؤقت لحساب مدة مشاهدة الفيديو
+        final DateTime startTime = DateTime.now();
 
-      await Get.toNamed(
-        RouteNameX.videoPlayer,
-        arguments: course.value!.activities[index].videoUrl,
-      );
+        await Get.toNamed(
+          RouteNameX.videoPlayer,
+          arguments: course.value!.activities[index].videoUrl,
+        );
 
-      // إعادة تعيين اتجاه الشاشة للوضع الرأسي بعد إغلاق الفيديو
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-      ]);
+        // إعادة تعيين اتجاه الشاشة للوضع الرأسي بعد إغلاق الفيديو
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+        ]);
 
-      // حساب مدة المشاهدة
-      final Duration watchDuration = DateTime.now().difference(startTime);
+        // حساب مدة المشاهدة
+        final Duration watchDuration = DateTime.now().difference(startTime);
 
-      // إذا لم يكن الفيديو مكتمل وتمت مشاهدته أكثر من 5 ثواني، يتم تحديث قاعدة البيانات
-      if (!course.value!.activities[index].isCompleted &&
-          watchDuration.inSeconds >= 5) {
-        try {
-          await DatabaseX.completeVideoOfCourse(
-            cmId: course.value!.activities[index].cmId,
-          );
-        } catch (_) {}
-        course.value!.activities[index].isCompleted = true;
+        // إذا لم يكن الفيديو مكتمل وتمت مشاهدته أكثر من 5 ثواني، يتم تحديث قاعدة البيانات
+        if (!course.value!.activities[index].isCompleted &&
+            watchDuration.inSeconds >= 5) {
+          try {
+            await DatabaseX.completeVideoOfCourse(
+              cmId: course.value!.activities[index].cmId,
+            );
+          } catch (_) {}
+          course.value!.activities[index].isCompleted = true;
+        }
       }
     }
-    // }
   }
 
   /// Navigate to lesson quiz

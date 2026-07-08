@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Data/Model/quiz/quiz_start_attempt.dart';
@@ -48,29 +50,35 @@ class TestResultsController extends GetxController {
   //============================================================================
   // Functions
 
+  /// Guard against submitting the same attempt twice when the user retries
+  /// after [getQuizResult] failed, the attempt is already finished by then
+  bool _isSubmitted = false;
+
   Future<void> getData() async {
     try {
-      var result = await DatabaseX.submitQuiz(
-        attemptId: quizStartAttempt.attemptId,
-      );
-      print(result);
+      if (!_isSubmitted) {
+        await DatabaseX.submitQuiz(attemptId: quizStartAttempt.attemptId);
+        _isSubmitted = true;
+      }
       quizResult = await DatabaseX.getQuizResult(quizId: quizId);
-      print(quizResult);
+      isSuccess = quizResult.isSuccess;
     } catch (e) {
-      print(e);
+      log("error submitQuiz / getQuizResult: $e", name: runtimeType.toString());
+
+      /// Rethrow so FutureBuilderX shows the error state
+      /// instead of building the view with an uninitialized [quizResult]
+      rethrow;
     }
   }
 
   onTapButton() {
     if (isSuccess) {
-      /// Close the screen
-      Get.back();
-
-      /// Close course details screen
-      Get.back();
-
-      /// Reopen course details screen for update data
-      Get.toNamed(RouteNameX.courseDetails, arguments: courseId);
+      /// إغلاق شاشة المعلومات وإعادة تحميل بيانات تفاصيل الدورة
+      Get.offNamedUntil(
+        RouteNameX.courseDetails,
+        (route) => route.settings.name == RouteNameX.root,
+        arguments: courseId,
+      );
     } else {
       /// Close the screen and navigate to test info screen
       Get.offAndToNamed(RouteNameX.testInfo, arguments: [quizId, courseId]);

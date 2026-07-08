@@ -14,49 +14,57 @@ class MeetingsSection extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     /// Build meetings section
-    return Column(
-      children: [
-        /// Meetings label and view all button
-        Padding(
-          padding: EdgeInsets.only(
-            left: StyleX.hPaddingApp,
-            right: StyleX.hPaddingApp,
-            bottom: 12,
-          ),
-          child:
-              Row(
-                children: [
-                  /// Meetings label
-                  Expanded(child: LabelX("Upcoming Meetings and Encounters")),
+    return Obx(() {
+      if (controller.meetings.isEmpty) {
+        return SizedBox();
+      } else {
+        return Column(
+          children: [
+            /// Meetings label and view all button
+            Padding(
+              padding: EdgeInsets.only(
+                left: StyleX.hPaddingApp,
+                right: StyleX.hPaddingApp,
+                bottom: 12,
+              ),
+              child:
+                  Row(
+                    children: [
+                      /// Meetings label
+                      Expanded(
+                        child: LabelX("Upcoming Meetings and Encounters"),
+                      ),
 
-                  /// View all button
-                  GestureDetector(
-                    onTap: controller.onAllMeetings,
-                    child: TextX(
-                      "View All",
-                      style: TextStyleX.labelLarge,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ],
-              ).fadeAnimation450,
-        ),
-
-        /// Meetings cards
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: EdgeInsetsDirectional.only(start: StyleX.hPaddingApp),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                /// Meetings cards
-                for (var meeting in controller.meetings.take(3))
-                  MeetingCardX(meeting: meeting, isSmall: true),
-              ],
+                      /// View all button
+                      GestureDetector(
+                        onTap: controller.onAllMeetings,
+                        child: TextX(
+                          "View All",
+                          style: TextStyleX.labelLarge,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ).fadeAnimation450,
             ),
-          ),
-        ).fadeAnimation400,
-      ],
-    );
+
+            /// Meetings cards
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsetsDirectional.only(start: StyleX.hPaddingApp),
+              child: IntrinsicHeight(
+                child: Row(
+                  children: [
+                    /// Meetings cards
+                    for (var meeting in controller.meetings.take(3))
+                      MeetingCardX(meeting: meeting, isSmall: true),
+                  ],
+                ),
+              ),
+            ).fadeAnimation400,
+          ],
+        );
+      }
+    });
   }
 }

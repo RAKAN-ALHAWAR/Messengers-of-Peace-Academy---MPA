@@ -20,6 +20,9 @@ class AppControllerX extends GetxController {
   }
 
   logOut() async {
+    /// Keep the token before clearing it, the backend needs it to
+    /// invalidate the session
+    final token = LocalDataX.token;
     try {
       isLogin.value = false;
       LocalDataX.remove(LocalKeyX.userid);
@@ -27,12 +30,14 @@ class AppControllerX extends GetxController {
       LocalDataX.put(LocalKeyX.route, RouteNameX.login);
       if (Get.currentRoute != RouteNameX.login) {
         await Future.wait([
-          DatabaseX.logout(token: LocalDataX.token),
+          DatabaseX.logout(token: token),
           Future.microtask(() => Get.offAllNamed(RouteNameX.login)),
         ]);
       } else {
-        await DatabaseX.logout(token: LocalDataX.token);
+        await DatabaseX.logout(token: token);
       }
-    } catch (_) {}
+    } catch (_) {
+      /// The local session is already cleared, ignore backend failures
+    }
   }
 }

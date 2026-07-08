@@ -2,13 +2,17 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
+import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../Ui/Widget/widget.dart';
 
 class DownloadFileFormUrl {
   static download(String url, String fileName) async {
+    print("url: $url");
+    print("fileName: $fileName");
     try {
       // Validate download URL
       if (url.isEmpty || !Uri.tryParse(url)!.isAbsolute) {
@@ -58,6 +62,16 @@ class DownloadFileFormUrl {
         title: "Success",
         message: "${"File downloaded successfully".tr}\n$locationMessage",
       );
+
+      try {
+        // حاول فتح الملف مباشرة
+        // try to open the file directly
+        try {
+          await OpenFile.open(filePath);
+        } catch (_) {}
+      } catch (e) {
+        await Share.shareXFiles([XFile(filePath)], text: fileName);
+      }
     } catch (e) {
       String errorMessage = "Download failed".tr;
 

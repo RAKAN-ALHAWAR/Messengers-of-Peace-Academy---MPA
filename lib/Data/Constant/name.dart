@@ -71,6 +71,8 @@ class NameX {
   static const String city = 'city';
   static const String attemptId = 'attemptid';
   static const String state = 'state';
+  static const String attempts = 'attempts';
+  static const String timeStart = 'timestart';
 
   static const String certificates = 'certificates';
   static const String quizzes = 'quizzes';

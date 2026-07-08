@@ -121,15 +121,32 @@ class CalendarController extends GetxController {
     /// Set index color card event
     indexColorCardEvent = 0;
 
-    /// Set events of day
-    eventsOfDay.value =
+    /// Get events of selected day
+    List<EventX> dayEvents =
         events
             .where(
-              (event) => selectedDate.value.isSameDate(
-                DateTime.fromMillisecondsSinceEpoch(event.timeStart * 1000),
-              ),
+              (event) => selectedDate.value.isSameDate(event.dateTimeStart),
             )
             .toList();
+
+    /// إزالة التكرارات بناءً على id و timeStart و name و location
+    /// Remove duplicates based on id, timeStart, name, and location
+    Map<String, EventX> uniqueEvents = {};
+    for (var event in dayEvents) {
+      /// إنشاء مفتاح فريد لكل حدث بناءً على id و timeStart و name و location
+      /// Create unique key for each event based on id, timeStart, name, and location
+      String key =
+          '${event.id}_${event.timeStart}_${event.name}_${event.location}';
+
+      /// إذا لم يكن المفتاح موجوداً، أضف الحدث
+      /// If key doesn't exist, add the event
+      if (!uniqueEvents.containsKey(key)) {
+        uniqueEvents[key] = event;
+      }
+    }
+
+    /// Set events of day without duplicates
+    eventsOfDay.value = uniqueEvents.values.toList();
   }
 
   /// Handle add event

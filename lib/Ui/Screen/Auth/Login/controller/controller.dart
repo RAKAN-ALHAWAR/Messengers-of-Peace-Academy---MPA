@@ -80,15 +80,19 @@ class LoginController extends GetxController {
         }
 
         /// Login with token to database
-        var userid = await DatabaseX.loginByGoogle(token: idToken);
-
-        /// Set user on app controller
-        app.user = (await DatabaseX.getUser(userId: userid)).obs;
-        app.isLogin.value = true;
+        var data = await DatabaseX.loginByGoogle(token: idToken);
 
         /// Set Local Data
-        LocalDataX.put(LocalKeyX.userid, userid);
+        ///
+        /// The token must be stored **before** any authenticated request,
+        /// because it is the `wstoken` used by [DBEndPointX.mainAPI]
+        LocalDataX.put(LocalKeyX.userid, data.$1);
+        LocalDataX.put(LocalKeyX.token, data.$2);
         LocalDataX.put(LocalKeyX.route, RouteNameX.root);
+
+        /// Set user on app controller
+        app.user = (await DatabaseX.getUser(userId: data.$1)).obs;
+        app.isLogin.value = true;
 
         /// Success
         buttonStateGoogle.value = ButtonStateEX.success;
@@ -141,14 +145,17 @@ class LoginController extends GetxController {
             password: password.text,
           );
 
-          /// Set User on App Controller
-          app.user = (await DatabaseX.getUser(userId: data.$1)).obs;
-          app.isLogin.value = true;
-
           /// Set Local Data
+          ///
+          /// The token must be stored **before** any authenticated request,
+          /// because it is the `wstoken` used by [DBEndPointX.mainAPI]
           LocalDataX.put(LocalKeyX.userid, data.$1);
           LocalDataX.put(LocalKeyX.token, data.$2);
           LocalDataX.put(LocalKeyX.route, RouteNameX.root);
+
+          /// Set User on App Controller
+          app.user = (await DatabaseX.getUser(userId: data.$1)).obs;
+          app.isLogin.value = true;
 
           /// Success
           buttonStateLogin.value = ButtonStateEX.success;

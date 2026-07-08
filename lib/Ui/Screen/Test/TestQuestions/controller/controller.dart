@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Data/data.dart';
@@ -47,7 +48,7 @@ class TestQuestionsController extends GetxController {
   /// Get data from database
   Future<void> getData() async {
     try {
-      /// Get quiz start attempt
+      /// Get quiz start attempt (starts a new attempt or resumes the running one)
       quizStartAttempt = await DatabaseX.getQuizStartAttempt(quizId: quizId);
 
       selectedAnswers.addAll(
@@ -55,12 +56,44 @@ class TestQuestionsController extends GetxController {
       );
 
       /// Set start time and end time
-      _startTime = DateTime.now();
+      ///
+      /// A resumed attempt keeps the deadline of the moment it was created on
+      /// the server, otherwise the app would grant a fresh [quiz.timelimit]
+      /// while the backend keeps counting from the original start
+      _startTime = await _attemptStartTime();
       _endTime = _startTime.add(Duration(seconds: quiz.timelimit));
-      startTimer();
+
+      /// Show the real remaining time on the first frame, the timer only
+      /// ticks after one second and would otherwise flash the full time limit
+      _updateRemaining(_endTime.difference(DateTime.now()));
+
+      /// A resumed attempt may already be expired, [_updateRemaining] then
+      /// submitted it and there is nothing left to count down
+      if (remainingTime > 0) startTimer();
     } catch (e) {
-      print("quizId: $quizId");
-      print("error getQuizStartAttempt: ${e.toString()}");
+      log(
+        "error getQuizStartAttempt for quiz $quizId: $e",
+        name: runtimeType.toString(),
+      );
+
+      /// Rethrow so FutureBuilderX shows the error state
+      /// instead of building the view with an uninitialized [quizStartAttempt]
+      rethrow;
+    }
+  }
+
+  /// Real start time of the running attempt.
+  ///
+  /// Falls back to "now" when the backend does not report it, which is the
+  /// correct value for a freshly created attempt anyway.
+  Future<DateTime> _attemptStartTime() async {
+    try {
+      return await DatabaseX.getQuizAttemptStartTime(quizId: quizId) ??
+          DateTime.now();
+    } catch (e) {
+      /// Never block the quiz because of this secondary lookup
+      log("error getQuizAttemptStartTime: $e", name: runtimeType.toString());
+      return DateTime.now();
     }
   }
 
@@ -78,23 +111,15 @@ class TestQuestionsController extends GetxController {
       /// Set button state to loading
       buttonState.value = ButtonStateEX.loading;
 
+      var question = quizStartAttempt.questions[currentQuestionIndex];
+
       /// Submit question answer
-      var result = await DatabaseX.submitQuizQuestionAnswer(
+      await DatabaseX.submitQuizQuestionAnswer(
         quizId: quizId,
         attemptId: quizStartAttempt.attemptId,
-        questionNumber: quizStartAttempt.questions[currentQuestionIndex].slot,
-        answerIndex: quizStartAttempt.questions[currentQuestionIndex].answers
-            .indexOf(selectedAnswer.value),
+        questionNumber: question.slot,
+        answerIndex: question.answers.indexOf(selectedAnswer.value),
       );
-      print("quizid: $quizId");
-      print("attemptid: ${quizStartAttempt.attemptId}");
-      print(
-        "questionnumber: ${quizStartAttempt.questions[currentQuestionIndex].slot}",
-      );
-      print(
-        "answerindex: ${quizStartAttempt.questions[currentQuestionIndex].answers.indexOf(selectedAnswer.value)}",
-      );
-      print("result: $result");
 
       /// Add selected answer to list
       selectedAnswers[currentQuestionIndex] = selectedAnswer.value;
@@ -111,7 +136,7 @@ class TestQuestionsController extends GetxController {
         submitQuiz();
       }
     } catch (e) {
-      print(e);
+      log("error submitQuizQuestionAnswer: $e", name: runtimeType.toString());
       buttonState.value = ButtonStateEX.failed;
       await Future.delayed(const Duration(seconds: 2));
     }
@@ -121,22 +146,26 @@ class TestQuestionsController extends GetxController {
     buttonState.value = ButtonStateEX.normal;
   }
 
+  /// Refresh the countdown, submitting the quiz once the deadline has passed
+  void _updateRemaining(Duration remaining) {
+    remainingTime = remaining.inSeconds;
+
+    /// Check if time is up
+    if (remaining.isNegative) {
+      /// Submit quiz if time is up
+      submitQuiz();
+    } else {
+      /// Update time remaining
+      timeRemaining.value = FunctionX.formatDuration(remaining);
+    }
+  }
+
   /// Start timer for quiz
   void startTimer() {
-    _timer = Timer.periodic(Duration(seconds: 1), (_) {
-      final now = DateTime.now();
-      final remaining = _endTime.difference(now);
-      remainingTime = remaining.inSeconds;
-
-      /// Check if time is up
-      if (remaining.isNegative) {
-        /// Submit quiz if time is up
-        submitQuiz();
-      } else {
-        /// Update time remaining
-        timeRemaining.value = FunctionX.formatDuration(remaining);
-      }
-    });
+    _timer = Timer.periodic(
+      Duration(seconds: 1),
+      (_) => _updateRemaining(_endTime.difference(DateTime.now())),
+    );
   }
 
   /// Submit quiz

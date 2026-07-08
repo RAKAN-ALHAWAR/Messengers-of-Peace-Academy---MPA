@@ -14,9 +14,9 @@ class CourseCard extends StatelessWidget {
     /// Build course card
     return GestureDetector(
       onTap: () async {
-        // if (course.isOpen) {
-        await onTap(course);
-        // }
+        if (course.isOpen) {
+          await onTap(course);
+        }
       },
       child: ContainerX(
         width: 290,
@@ -125,23 +125,24 @@ class CourseCard extends StatelessWidget {
             /// Spacer
             SizedBox(height: 4),
 
-            /// Course lessons
-            Row(
-              children: [
-                /// Lesson icon
-                Icon(IconX.videocam, size: 16),
+            /// Course lessons (hidden if no lessons)
+            if (course.numSections > 0)
+              Row(
+                children: [
+                  /// Lesson icon
+                  Icon(IconX.videocam, size: 16),
 
-                /// Spacer
-                SizedBox(width: 4),
+                  /// Spacer
+                  SizedBox(width: 4),
 
-                /// Lesson text
-                TextX(
-                  "${course.numSections} ${"lesson".tr}",
-                  style: TextStyleX.labelMedium,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ],
-            ),
+                  /// Lesson text
+                  TextX(
+                    "${course.numSections} ${"lesson".tr}",
+                    style: TextStyleX.labelMedium,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
 
             /// Spacer
             if (!course.isOpen) Spacer(),

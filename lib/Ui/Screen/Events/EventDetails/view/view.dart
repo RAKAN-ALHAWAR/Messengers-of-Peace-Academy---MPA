@@ -74,8 +74,7 @@ class EventDetailsView extends GetView<EventDetailsController> {
                     ).fadeAnimation200,
 
                     /// Repeated
-                    if (controller.eventDetails.value.isRepeated &&
-                        controller.eventDetails.value.repeatCount > 0)
+                    if (controller.eventDetails.value.isRepeated)
                       IconAndTitleCard(
                         icon: IconX.repeat,
                         value:

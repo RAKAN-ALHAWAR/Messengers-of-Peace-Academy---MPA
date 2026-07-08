@@ -157,7 +157,7 @@ class TestInfoView extends GetView<TestInfoController> {
                   ButtonX(
                     text: "Start the test",
                     onTap: controller.onStartTest,
-                    disabled: !controller.quiz.canStart,
+                    disabled: !controller.canEnterTest,
                   ).fadeAnimation200,
                 ],
               ),

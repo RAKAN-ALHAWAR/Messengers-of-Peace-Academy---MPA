@@ -13,6 +13,8 @@ class QuizResultX {
   final String feedback;
   final List<AnswerX> answers;
 
+  bool get isSuccess => passed.toLowerCase().contains('passed');
+
   QuizResultX({
     required this.status,
     required this.message,

@@ -2,6 +2,12 @@ import 'package:messengersofpeace/Core/Extension/convert/convert.dart';
 import 'package:messengersofpeace/Core/Helper/model/model.dart';
 import 'package:messengersofpeace/Data/data.dart';
 
+/// Values returned by the backend in `last_attempt_status`
+class QuizAttemptStatusX {
+  static const String notAttempted = 'notattempted';
+  static const String inProgress = 'inprogress';
+}
+
 class QuizX {
   final String name;
   final String description;

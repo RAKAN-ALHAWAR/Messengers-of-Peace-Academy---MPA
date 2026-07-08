@@ -35,14 +35,14 @@ class MeetingDetailsView extends GetView<MeetingDetailsController> {
                 controller.meeting.name,
                 style: TextStyleX.titleMedium,
               ).fadeAnimation150,
-              SizedBox(height: 8),
+              // SizedBox(height: 8),
 
-              /// Meeting lecturer
-              TextX(
-                "${"Lecturer".tr}: ${controller.meeting.lecturer}",
-                style: TextStyleX.bodyMedium,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ).fadeAnimation200,
+              // /// Meeting lecturer
+              // TextX(
+              //   "${"Lecturer".tr}: ${controller.meeting.lecturer}",
+              //   style: TextStyleX.bodyMedium,
+              //   color: Theme.of(context).colorScheme.onSurfaceVariant,
+              // ).fadeAnimation200,
               SizedBox(height: 10),
 
               /// Meeting date

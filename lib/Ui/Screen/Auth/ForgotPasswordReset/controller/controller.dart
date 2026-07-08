@@ -68,16 +68,19 @@ class ForgotPasswordResetController extends GetxController {
             password: password.text,
           );
 
+          /// Save data on local
+          ///
+          /// The token must be stored **before** any authenticated request,
+          /// because it is the `wstoken` used by [DBEndPointX.mainAPI]
+          LocalDataX.put(LocalKeyX.userid, data.$1);
+          LocalDataX.put(LocalKeyX.token, data.$2);
+          LocalDataX.put(LocalKeyX.route, RouteNameX.root);
+
           /// Set user on app controller
           app.user = (await DatabaseX.getUser(userId: data.$1)).obs;
 
           /// Set login state
           app.isLogin.value = true;
-
-          /// Save data on local
-          LocalDataX.put(LocalKeyX.userid, data.$1);
-          LocalDataX.put(LocalKeyX.token, data.$2);
-          LocalDataX.put(LocalKeyX.route, RouteNameX.root);
 
           /// The time delay here is aesthetically beneficial
           buttonState.value = ButtonStateEX.success;

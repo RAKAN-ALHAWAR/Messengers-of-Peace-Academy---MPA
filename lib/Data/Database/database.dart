@@ -60,13 +60,18 @@ class DatabaseX {
     }
   }
 
-  static Future<String> loginByGoogle({required String token}) async {
+  static Future<(String userid, String token)> loginByGoogle({
+    required String token,
+  }) async {
     var data = await RemoteDataSourceX.post(
       DBEndPointX.postLoginByGoogle,
       body: {NameX.idtoken: token},
     );
     if (data.$1[NameX.userId] != null) {
-      return data.$1[NameX.userId].toString();
+      return (
+        data.$1[NameX.userId].toString(),
+        (data.$1[NameX.token] ?? "").toString(),
+      );
     } else {
       throw ErrorX(details: data.$1);
     }
@@ -119,7 +124,9 @@ class DatabaseX {
     return data.$2;
   }
 
-  static Future<String?> verifyOtpSignUp({
+  /// Verifies the sign up otp and returns the user web service token
+  /// (empty string when the backend does not send one).
+  static Future<String> verifyOtpSignUp({
     required String userId,
     required String otpCode,
   }) async {
@@ -127,7 +134,7 @@ class DatabaseX {
       DBEndPointX.postVerifyOtpSignUp,
       body: {NameX.userId: userId, NameX.otp: otpCode},
     );
-    return data.$2;
+    return (data.$1 is Map ? (data.$1[NameX.token] ?? "") : "").toString();
   }
 
   static Future<String?> logout({required String token}) async {
@@ -607,6 +614,41 @@ class DatabaseX {
       },
     );
     return data.$2;
+  }
+
+  /// Start time of the attempt that is currently in progress, or `null` when
+  /// there is none (or the backend did not report it).
+  ///
+  /// The quiz deadline is counted from the moment the attempt was created on
+  /// the server, not from the moment the screen was opened, so a resumed
+  /// attempt must not restart the timer from scratch.
+  static Future<DateTime?> getQuizAttemptStartTime({
+    required String quizId,
+  }) async {
+    var data = await RemoteDataSourceX.post(
+      DBEndPointX.postGetQuizUserAttempts,
+      body: {
+        NameX.quizId: quizId,
+        NameX.userId: LocalDataX.userid,
+        NameX.status: 'all',
+      },
+      isSkeepStatus: true,
+    );
+    if (data.$1 is! Map) return null;
+
+    var attempts = data.$1[NameX.attempts];
+    if (attempts is! List) return null;
+
+    for (var attempt in attempts.reversed) {
+      if (attempt is Map &&
+          attempt[NameX.state] == QuizAttemptStatusX.inProgress) {
+        var timeStart = attempt[NameX.timeStart];
+        if (timeStart is int && timeStart > 0) {
+          return DateTime.fromMillisecondsSinceEpoch(timeStart * 1000);
+        }
+      }
+    }
+    return null;
   }
 
   static Future<QuizResultX> getQuizResult({required String quizId}) async {

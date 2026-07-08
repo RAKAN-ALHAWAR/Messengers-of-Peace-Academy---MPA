@@ -73,10 +73,14 @@ class OTPController extends GetxController with WidgetsBindingObserver {
 
         /// Check if OTP is for sign up
         if (otp.isSignUp) {
-          await DatabaseX.verifyOtpSignUp(
+          var token = await DatabaseX.verifyOtpSignUp(
             userId: otp.userid ?? '',
             otpCode: otpCode.text,
           );
+
+          /// Save the user token before any authenticated request,
+          /// because it is the `wstoken` used by [DBEndPointX.mainAPI]
+          if (token.isNotEmpty) LocalDataX.put(LocalKeyX.token, token);
 
           /// Get user
           user = await DatabaseX.getUser(userId: otp.userid!);

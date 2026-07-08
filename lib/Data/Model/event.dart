@@ -76,4 +76,8 @@ class EventX {
       requiredDataKeys: [NameX.id],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {NameX.id: id, NameX.name: name, NameX.startTime: timeStart};
+  }
 }

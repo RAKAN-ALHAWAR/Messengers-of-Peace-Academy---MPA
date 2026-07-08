@@ -70,13 +70,23 @@ class CompleteAccountInfoView extends GetView<CompleteAccountInfoController> {
                             //   margin: EdgeInsets.only(bottom: 12),
                             // ).fadeAnimation200,
 
-                            /// Date of Birth
+                            /// Date of Birth (minimum age: 18)
                             TextFieldDateX(
                               hint: "Date of Birth",
                               controller: controller.dateOfBirth,
                               icon: IconX.today,
                               margin: EdgeInsets.only(bottom: 12),
                               validate: ValidatorX.date,
+                              lastDate: DateTime(
+                                DateTime.now().year - 18,
+                                DateTime.now().month,
+                                DateTime.now().day,
+                              ),
+                              initialDate: DateTime(
+                                DateTime.now().year - 18,
+                                DateTime.now().month,
+                                DateTime.now().day,
+                              ),
                             ).fadeAnimation200,
 
                             /// Whatsapp number
