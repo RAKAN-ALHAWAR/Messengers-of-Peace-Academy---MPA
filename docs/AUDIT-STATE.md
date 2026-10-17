@@ -67,8 +67,10 @@ are authorized by this audit.
   A subsequent simulator screenshot shows the account-verification screen,
   confirming user interaction with the app. The user was asked to enter the
   verification code directly. Do not record that code or the displayed email.
-  Authentication completion and Computer Use access remain pending. Do not
-  claim completed account testing.
+  The user subsequently confirmed sign-in. A fresh screenshot confirms
+  authenticated Home. Do not store the displayed identity or screenshot in
+  the repository. Computer Use again denied Device Hub access; independent
+  navigation and account scenarios remain pending, not completed.
 - Three wrong-case local import/part paths were found; case-sensitive CI is
   not runtime-verified, but source spelling is confirmed mismatched.
 - Performance evidence independently repeated: 4 synthetic tests passed.
@@ -80,7 +82,8 @@ are authorized by this audit.
   no-network claim. These are applied to the report.
 - Inspect the complete request/model/controller/view paths.
 - Capture reproducible findings and separate source evidence from live behavior.
-- Await direct sign-in if the installed application has no existing session.
+- Await Device Hub access and backend source/contract information. The user
+  was asked for the Moodle-plugin source location or API documentation.
 
 ## Pending decisions and limits
 
@@ -89,3 +92,6 @@ are authorized by this audit.
   server contract; proposals are not adopted requirements.
 - A comprehensive fix plan will distinguish local changes, backend dependencies,
   platform verification gaps, and user decisions. No production-ready claim.
+- Documentation commit `62598dc` was fast-forwarded into the original main
+  branch. Original lockfile SHA-256 stayed identical. No remote push was made.
+  Generated build locks remain isolated and outside the documentation commit.

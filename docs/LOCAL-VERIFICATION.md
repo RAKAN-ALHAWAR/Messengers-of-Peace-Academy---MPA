@@ -108,6 +108,7 @@ reported completed verification above was run afresh.
 
 ## Outstanding runtime verification
 
-Account sign-in, course/quiz grading and progression, file save/open, complete
-profile/notification/calendar scenarios, Android/device behavior and backend
-contracts remain open. All corrections described in the report are proposals.
+The user completed sign-in directly; a fresh screenshot shows authenticated
+Home. Computer Use still denies Device Hub access. Course/quiz grading and
+progression, file save/open, profile/notification/calendar scenarios, Android
+runtime and backend contracts remain open. Corrections remain proposals.
