@@ -1,4 +1,9 @@
 const Map<String, String> phGeneral = {
+  "Close": "Isara",
+  "Password changed successfully. Please sign in with your new password.":
+      "Matagumpay na nabago ang password. Mag-sign in gamit ang bago mong password.",
+  "Profile information saved, but the photo could not be uploaded. Please try again.":
+      "Na-save ang iyong impormasyon, pero hindi na-upload ang larawan. Pakisubukang muli.",
   "Email": "Email",
   "Login": "Login",
   "Welcome back login to your account": "Welcome back login to your account",

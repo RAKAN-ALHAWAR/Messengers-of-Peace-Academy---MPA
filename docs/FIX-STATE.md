@@ -54,6 +54,21 @@ cannot be claimed without a remote run; configure checks for the actual host.
 
 ## Progress
 
-- Approved repair scope recorded; no application code edited yet.
-- Next: introduce tested Toast presenter, implement auth lane, add visible
-  completion validation, review combined diff and verify local application build.
+- Toast/Back: replacement implemented with one owned OverlayEntry/timer. Error,
+  success and info render under actual MyApp; real Back arrow pops while a
+  message remains visible, and close/timeout never pop the page. Top messages
+  sit below the toolbar so their pointer area does not cover Back. Repeated
+  messages replace the old one; missing/disposed overlay is safe.
+- Fresh regression run: test/ui/toast_navigation_test.dart, 3 passed. Baseline
+  run before replacement: 1 passed/2 failed, including the original Overlay
+  exception. A first replacement's notification covered Back physically;
+  moving below the toolbar fixed that additional failed gesture assertion.
+- Analyzer: 0 errors/warnings, 6 existing informational findings; default exits1.
+  No claim of clean analyzer or completed device scenario yet.
+- Auth/completion lanes are running in separate worktrees. Original lockfile
+  remains protected. No live requests, package upgrades or remote changes.
+- During a baseline auth-test failure, a Request assertion exposed the existing
+  bundled service credential again in local logs. The assertion was changed to
+  compare counts only. Value omitted; owner-coordinated removal/rotation remains
+  OPEN, not performed or claimed fixed by this batch.
+- Next: integrate auth/completion, review combined diff and verify local build.

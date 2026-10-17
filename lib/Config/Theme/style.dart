@@ -37,6 +37,7 @@ class StyleX {
     vertical: vPaddingApp,
   );
   static const double hPaddingApp = 16.0;
+  static const double toastContentGap = 10.0;
   static const double vPaddingApp = 20.0;
   static const double bottomSheetPadding = 20.0;
   static const double paddingHeaderWeb = 80.0;
@@ -51,4 +52,5 @@ class StyleX {
   static const int successButtonSecond = 1;
   static const int returnButtonToNormalStateSecond = 2;
   static const int toastSecond = 4;
+  static const formScrollDuration = Duration(milliseconds: 200);
 }

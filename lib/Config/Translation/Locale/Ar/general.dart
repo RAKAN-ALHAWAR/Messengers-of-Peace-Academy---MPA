@@ -1,4 +1,9 @@
 const Map<String, String> arGeneral = {
+  "Close": "إغلاق",
+  "Password changed successfully. Please sign in with your new password.":
+      "تم تغيير كلمة المرور بنجاح. سجّل الدخول باستخدام الكلمة الجديدة.",
+  "Profile information saved, but the photo could not be uploaded. Please try again.":
+      "تم حفظ بياناتك، لكن تعذّر رفع الصورة. حاول مجددًا.",
   "Email": "البريد الإلكتروني",
   "Login": "تسجيل الدخول",
   "Welcome back login to your account":

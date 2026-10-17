@@ -1,4 +1,9 @@
 const Map<String, String> esGeneral = {
+  "Close": "Cerrar",
+  "Password changed successfully. Please sign in with your new password.":
+      "Contraseña cambiada correctamente. Inicia sesión con tu nueva contraseña.",
+  "Profile information saved, but the photo could not be uploaded. Please try again.":
+      "Se guardaron tus datos, pero no se pudo subir la foto. Inténtalo de nuevo.",
   "Email": "Email",
   "Login": "Login",
   "Welcome back login to your account": "Welcome back login to your account",

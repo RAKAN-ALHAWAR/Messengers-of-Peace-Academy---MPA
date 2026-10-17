@@ -1,4 +1,9 @@
 const Map<String, String> enGeneral = {
+  "Close": "Close",
+  "Password changed successfully. Please sign in with your new password.":
+      "Password changed successfully. Please sign in with your new password.",
+  "Profile information saved, but the photo could not be uploaded. Please try again.":
+      "Profile information saved, but the photo could not be uploaded. Please try again.",
   "Email": "Email",
   "Login": "Login",
   "Welcome back login to your account": "Welcome back login to your account",
