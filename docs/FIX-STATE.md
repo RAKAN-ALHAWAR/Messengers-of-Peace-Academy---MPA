@@ -72,13 +72,59 @@ cannot be claimed without a remote run; configure checks for the actual host.
   lacked loaded Material icon fonts in the test host; fixed only in the harness.
 - Analyzer: 0 errors/warnings, 6 existing informational findings; default exits1.
   No claim of clean analyzer or completed device scenario yet.
-- Auth/completion lanes are running in separate worktrees. Original lockfile
-  remains protected. No live requests, package upgrades or remote changes.
+- Auth/completion lanes integrated after inspecting actual diffs. Original
+  lockfile remains protected. No live requests, upgrades or remote changes.
 - During a baseline auth-test failure, a Request assertion exposed the existing
   bundled service credential again in local logs. The assertion was changed to
   compare counts only. Value omitted; owner-coordinated removal/rotation remains
   OPEN, not performed or claimed fixed by this batch.
-- Next: integrate auth/completion, review combined diff and verify local build.
+- Auth acceptance: HTTP12 + controller10 tests passed independently after merge.
+  An accepted reset makes one request, preserves session data and returns to
+  sign-in. Rejection permits retry; duplicate and closed-screen work is ignored.
+  Final auth host no longer includes the old outer-Overlay isolation workaround;
+  its10 tests passed again using the repaired Toast transport directly.
+- Completion acceptance:15 completion +4 shared validation tests, all included
+  in main's completed45-test suite. Empty choices and DOB show inline errors;
+  first invalid field is revealed; entries/reference data survive rebuild and
+  request failure; conditional fields, retry and session ownership are covered.
+  Separate baseline failures: missing language error, and expected3 reference
+  calls versus9 after rebuild. No backend-required-field policy was invented.
+- Read-only fresh security/correctness review: no blockers in
+  cc92b52..bfe8fa2; reviewer independently ran45 tests and analyzer with6 existing
+  infos. Its one hygiene finding (CRLF dropdown added-line whitespace) was fixed
+  by LF normalization. Final test-host cleanup is test-only, no product change.
+- iOS simulator build completed exit0 with the previously verified command-line
+  IPHONEOS_DEPLOYMENT_TARGET=15.0 / CODE_SIGNING_ALLOWED=NO override. Product
+  deployment-target files were not changed. CocoaPods/plugin warnings remain;
+  not a clean-warning or device-flow claim. Log: /private/tmp/mopa-urgent-build.log.
+- Agents used separate worktrees and inherited parent model settings, without
+  overrides. House-named Sonnet/Opus variants were unavailable to the runtime.
+  Handoffs: /private/tmp/mopa-auth-handoff.md and
+  /private/tmp/mopa-completion-handoff.md. Their tests were independently rerun.
+- Final integrated run after removing auth outer-Overlay scaffolding:45 passed
+  (/private/tmp/mopa-urgent-final-tests.log). Diff whitespace check passes.
+- Updated simulator app installed without uninstalling or clearing account data;
+  launch succeeded, PID75639 on iPhone17Pro/iOS26.5 UUID
+  1C4C054D-0C46-4762-8328-0B3E72617A48. Launch announced because startup can
+  fetch account data. Process evidence only, not a form/account interaction pass.
+  Rollback build: /private/tmp/mopa-audit-derived/Build/Products/Debug-iphonesimulator/Runner.app.
+- Next: original-checkout integration, preserving its foreign lockfile.
+
+## Remaining audit work
+
+First urgent batch, not completion of the full-project audit. Quiz/result
+parsing, video/progress, broader session recovery, EditProfile ownership and
+reference-data defects and list cost remain open in the audit reports.
+Backend minutes/completion/unlocking/grading/token ACL need the real contract.
+Interactive device/account flows and remote CI remain unverified.
+
+## Retrospective
+
+Worked: baseline failures became committed regressions;45 pass after integration.
+Correction: removed old Overlay test workaround; normalized CRLF patches and
+replaced Request-object assertions that exposed credential-bearing URLs.
+Open: backend contracts, interactive platforms, CI and credential rotation;
+no remote writes/deployment performed.
 
 ### CI preparation
 

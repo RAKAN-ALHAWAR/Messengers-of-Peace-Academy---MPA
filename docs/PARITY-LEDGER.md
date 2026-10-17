@@ -9,7 +9,8 @@ Updated: 2026-10-18.
 | Android | Source inspection only | Download permissions and manifest inspected; no runtime result yet. |
 | Moodle backend | Not verified | No backend source/schema in the app repository. Account testing was authorized, server administration was not. |
 | Web counterpart | Not located | No web implementation is present in this repository. |
-| Toast/Back and auth form flows | Shared-code defects reproduced locally | Actual MyApp widget test proves invisible snackbar/blocked Back; synthetic controller tests prove silent completion validation and reset/login failure conflation. iOS/Android interactive retests remain open. No implementation made. |
+| Toast/Back and auth form flows | Shared Flutter repairs locally verified | Actual MyApp Back/Toast gestures, completion form and reset/controller/HTTP regressions:45 tests pass. iOS build exit0 with simulator-only target override. iOS/Android interactive and server retests remain open. |
+| EditProfile counterpart | Open follow-up | Shared DropdownX supports validation, but required-field policy is not inferred for EditProfile without backend description. Existing cross-session continuation/avatar race in EditProfile remains open; completion guard is not a project-wide session fix. |
 
 All remaining gaps must be presented before any deployment. No deployment is
 part of this audit.

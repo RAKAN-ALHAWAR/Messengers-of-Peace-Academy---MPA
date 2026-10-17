@@ -14,6 +14,7 @@ import 'package:messengersofpeace/Core/Helper/http/http.dart';
 import 'package:messengersofpeace/Data/data.dart';
 import 'package:messengersofpeace/Ui/Screen/Auth/ForgotPassword/controller/controller.dart';
 import 'package:messengersofpeace/Ui/Screen/Auth/ForgotPasswordReset/controller/controller.dart';
+import 'package:messengersofpeace/Ui/Widget/widget.dart';
 
 const successMessage =
     'Password changed successfully. Please sign in with your new password.';
@@ -29,12 +30,8 @@ http.Response rejected() => http.Response(
   200,
 );
 
-// The outer Overlay isolates auth from the separately repaired Get snackbar
-// compatibility defect. It is test scaffolding, not a product workaround.
+// Exercise the repaired notification transport without an extra outer Overlay.
 Widget host(List<GetPage<dynamic>> pages) => GetMaterialApp(
-  builder:
-      (context, child) =>
-          Overlay(initialEntries: [OverlayEntry(builder: (_) => child!)]),
   initialRoute: RouteNameX.root,
   getPages: [
     GetPage(
@@ -140,7 +137,7 @@ Future<void> cleanHost(WidgetTester tester) async {
   for (var i = 0; i < 20; i++) {
     await tester.pump(const Duration(seconds: 1));
   }
-  Get.closeAllSnackbars();
+  ToastX.dismiss();
   await tester.pump(const Duration(seconds: 1));
   await tester.pumpWidget(const SizedBox());
   Get.reset();

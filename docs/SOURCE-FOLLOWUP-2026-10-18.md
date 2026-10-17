@@ -1,6 +1,8 @@
 # Source-only follow-up, 2026-10-18
 
-Status: analysis and proposed corrections only. Application source unchanged.
+Status: historical baseline analysis and proposed corrections. Urgent U01-U03
+and H01 now have local repairs and regression coverage in FIX-STATE.md. Other
+findings remain open unless that ledger explicitly records verification.
 This extends `AUDIT-2026-10-17.md`; it does not replace the previous findings.
 
 ## Owner direction and boundaries

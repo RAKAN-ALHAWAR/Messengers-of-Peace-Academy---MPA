@@ -11,11 +11,19 @@ testing in this session. He will enter any credentials directly in the simulator
 No server edits, deployment, credential rotation, GitLab writes, or remote push
 are authorized by this audit.
 
-Latest user direction (2026-10-17): defer interactive simulator access and
+Earlier user direction (2026-10-17): defer interactive simulator access and
 continue analyzing the code itself. The backend source is not available to
 Saker; he may supply an API description later. Do not request simulator access
-again during this source-analysis pass. No product implementation is approved
-by this direction; produce verified findings and a backend-contract checklist.
+again during this source-analysis pass. This earlier direction authorized
+analysis only; the later approval below authorizes the urgent repair batch.
+
+Urgent repairs (2026-10-18): shared Toast/Back, visible completion validation,
+stable reference loading, reset-to-sign-in with abandoned-work guards, and
+rejection of empty failed HTTP responses implemented. Final integrated suite45
+passed; fresh independent review found no blockers. Analyzer:6 existing infos,
+0 errors/warnings. iOS build exit0 with simulator-only target override. Updated
+app installed/launched (process evidence only). CI configured, not remotely run.
+Exact evidence and remaining audit work: FIX-STATE.md.
 
 Latest report (2026-10-18, user-observed):
 password-reset password submission fails; Back appears ineffective; no toasts

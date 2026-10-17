@@ -143,4 +143,33 @@ not add one. The current live reset error/stage remains unknown.
 The user completed sign-in directly; a fresh screenshot shows authenticated
 Home. Computer Use still denies Device Hub access. Course/quiz grading and
 progression, file save/open, profile/notification/calendar scenarios, Android
-runtime and backend contracts remain open. Corrections remain proposals.
+runtime and backend contracts remain open. Earlier observations were baseline;
+the urgent repairs below supersede their corresponding proposal-only status.
+
+## Urgent repair verification, 2026-10-18
+
+Final integrated suite in /private/tmp/mopa-urgent-fixes-20261018:
+
+```sh
+flutter test --no-pub --reporter expanded
+flutter analyze --no-pub --no-fatal-infos
+```
+
+Main's completed summary: `00:02 +45: All tests passed!`. Independent reviewer
+also completed45 tests in isolation. Analyzer exit0 with6 pre-existing infos,
+0 errors/warnings; default analyzer still exits1 for infos. No lint suppression.
+Final auth tests have no outer Overlay workaround. Actual MyApp tests verify
+Toast/Back gestures; completion tests mount actual view/controller. All test
+requests intercepted, with synthetic identities/session/files only.
+
+Simulator build completed exit0, with existing CocoaPods/plugin warnings:
+
+```sh
+xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -configuration Debug -sdk iphonesimulator -destination id=1C4C054D-0C46-4762-8328-0B3E72617A48 -derivedDataPath /private/tmp/mopa-urgent-derived IPHONEOS_DEPLOYMENT_TARGET=15.0 CODE_SIGNING_ALLOWED=NO -quiet build
+```
+
+Installed without uninstall/data clearing; launch returned PID75639. Product
+deployment targets unchanged. /private/tmp/mopa-toast-ar.png is an inspected
+widget render using synthetic screen content and real Arabic/Material icon
+fonts, not a device screenshot. Device/account scenarios and remote CI remain
+unverified. Scope, review and remaining defects: FIX-STATE.md.
