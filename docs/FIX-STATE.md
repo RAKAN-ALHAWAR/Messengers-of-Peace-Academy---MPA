@@ -123,6 +123,10 @@ cannot be claimed without a remote run; configure checks for the actual host.
 
 ## Remaining audit work
 
+Full proposed sequence and finding-to-acceptance mapping now lives in
+REMEDIATION-PLAN-2026-10-18.md. It was requested for review, not adopted as new
+implementation authority. This file remains the evidence ledger for repairs.
+
 First urgent batch, not completion of the full-project audit. Quiz/result
 parsing, video/progress, broader session recovery, EditProfile ownership and
 reference-data defects and list cost remain open in the audit reports.

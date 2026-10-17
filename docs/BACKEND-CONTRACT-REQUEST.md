@@ -1,7 +1,8 @@
 # Backend contract request
 
 Status: proposed information request, not an adopted server specification.
-Inspected frontend baseline: f338fa9. Backend source is unavailable to Saker;
+Audit baseline: f338fa9; current frontend context updated through dce8750.
+Backend source is unavailable to Saker;
 an API description may be supplied later. No backend changes are requested by
 this document and no message has been sent to a service owner.
 
@@ -28,10 +29,10 @@ Frontend reset sends username=email, otp and newpassword. Confirm actual field
 names, password policy, OTP lifetime/consumption, reset acknowledgement and
 behavior after a repeated request. Does reset invalidate existing tokens?
 
-After reset, the frontend calls login then get_user_full_profile. Provide
-separate response examples for each stage. An accepted reset must be
-distinguishable from a subsequent login/profile failure; a retry should not
-blindly repeat an already accepted reset.
+The baseline chained reset, login and get_user_full_profile, conflating their
+failures. The repaired frontend returns to sign-in after an accepted reset.
+Provide separate response examples for reset acknowledgement, login and profile;
+an ambiguous reset response must not trigger blind replay of a consumed OTP.
 
 Current frontend expectations, requiring confirmation:
 
@@ -52,8 +53,9 @@ Successful authentication must not silently create a tokenless local session.
 
 For update_user_profile, provide required custom fields, enum values and clear/
 omit semantics. The frontend sends an age bucket rather than DOB, and its
-completion default gender is 'Male' while radio values are 'male'/'female'.
-Confirm accepted values rather than adopting either spelling from frontend.
+baseline completion default gender was 'Male' while radios use 'male'/'female'.
+The current completion default is 'male', matching its existing radio values.
+Confirm authoritative accepted values rather than adopting frontend spelling.
 Are country, native language, referral source and university truly required,
 under which conditions? Confirm phone prefix/Unicode-digit normalization.
 Document profile-picture upload response, maximum size and retry behavior.

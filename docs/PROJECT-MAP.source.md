@@ -66,3 +66,4 @@ this number is not a claim that every line has a runtime test.
 - Platform gaps: `docs/PARITY-LEDGER.md`.
 - Additional reproductions and urgent auth symptoms: `docs/SOURCE-FOLLOWUP-2026-10-18.md`.
 - Missing backend information (proposed request): `docs/BACKEND-CONTRACT-REQUEST.md`.
+- Full remediation proposal and finding/acceptance mapping: `docs/REMEDIATION-PLAN-2026-10-18.md`.

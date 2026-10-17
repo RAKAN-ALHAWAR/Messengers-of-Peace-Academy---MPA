@@ -2,6 +2,20 @@
 
 Updated: 2026-10-18 (Asia/Damascus).
 
+Latest request: Saker asked for a plan to address all errors. Main owns docs-only
+comprehensive planning and coverage/review; no new application implementation.
+Proposed plan: REMEDIATION-PLAN-2026-10-18.md, covering every finding, excluded
+suspicions, all GitLab16-22 acceptance scenarios, backend/owner dependencies and
+platform/CI gates. Its future choices remain proposed pending Saker's review.
+Fresh read-only plan reviewer owns gap/dependency/acceptance review only.
+Review completed: no missing actionable findings or blockers; one dependency
+clarification applied so M5 depends on M1A rather than the full migration gate.
+Plan remains proposed; no new product code or session/storage changes made.
+Coverage check mapped all43 original audit IDs (including fixed/excluded IDs,
+not43 open defects) and every GitLab16-22 row. Final reviewer rechecked the
+dependency clarification and early logging redaction: no blockers. Docs-only
+checks passed; no runtime test rerun was needed for this planning step.
+
 ## Authorized scope
 
 Run the existing Flutter application on an iPhone simulator, explore its code,
