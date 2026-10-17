@@ -16,6 +16,7 @@ class ForgotPasswordController extends GetxController {
 
   // Button states
   final buttonState = ButtonStateEX.normal.obs;
+  Timer? _resetButtonTimer;
 
   // Form key
   late GlobalKey<FormState> formKey;
@@ -29,61 +30,49 @@ class ForgotPasswordController extends GetxController {
   //============================================================================
   // Functions
 
-  /// Handle reset password
-  void onResetPassword() async {
-    /// Check if loading is false
-    if (isLoading.isFalse) {
-      /// Check if form is valid
-      if (formKey.currentState!.validate()) {
-        /// Set Loading to true
-        isLoading.value = true;
+  /// Request a code for the submitted email; ignore abandoned screen work.
+  Future<void> onResetPassword() async {
+    if (isClosed || isLoading.value) return;
+    if (!(formKey.currentState?.validate() ?? false)) {
+      autoValidate = AutovalidateMode.always;
+      return;
+    }
 
-        /// Set Button State to loading
-        buttonState.value = ButtonStateEX.loading;
+    final submittedEmail = email.text.trim();
+    _resetButtonTimer?.cancel();
+    isLoading.value = true;
+    buttonState.value = ButtonStateEX.loading;
 
-        /// Try to reset password
-        try {
-          var message = await DatabaseX.forgetPassword(
-            email: email.text.trim(),
-          );
+    try {
+      final message = await DatabaseX.forgetPassword(email: submittedEmail);
+      if (isClosed) return;
 
-          /// Show success message
-          ToastX.success(message: message);
+      ToastX.success(message: message);
+      buttonState.value = ButtonStateEX.success;
+      await Future<void>.delayed(
+        const Duration(seconds: StyleX.successButtonSecond),
+      );
+      if (isClosed) return;
 
-          /// The time delay here is aesthetically beneficial
-          buttonState.value = ButtonStateEX.success;
-          await Future.delayed(
-            const Duration(seconds: StyleX.successButtonSecond),
-          );
-
-          /// Create OTP object
-          OtpX otp = OtpX(
-            email: email.text.trim(),
-            isSignUp: false,
-            isPhone: false,
-          );
-
-          /// Navigate to OTP Screen
-          Get.toNamed(RouteNameX.otp, arguments: otp);
-        } catch (e) {
-          /// Set Button State to failed
-          buttonState.value = ButtonStateEX.failed;
-
-          /// Show error message
-          ToastX.error(message: e);
-        }
-
-        /// Set Loading to false
+      Get.toNamed(
+        RouteNameX.otp,
+        arguments: OtpX(email: submittedEmail, isSignUp: false, isPhone: false),
+      );
+    } catch (error) {
+      if (isClosed) return;
+      buttonState.value = ButtonStateEX.failed;
+      ToastX.error(message: error);
+    } finally {
+      if (!isClosed) {
         isLoading.value = false;
-
-        /// Reset the button state
-        Timer(
+        _resetButtonTimer = Timer(
           const Duration(seconds: StyleX.returnButtonToNormalStateSecond),
-          () => buttonState.value = ButtonStateEX.normal,
+          () {
+            if (!isClosed && !isLoading.value) {
+              buttonState.value = ButtonStateEX.normal;
+            }
+          },
         );
-      } else {
-        /// Set Autovalidate to always
-        autoValidate = AutovalidateMode.always;
       }
     }
   }
@@ -101,6 +90,8 @@ class ForgotPasswordController extends GetxController {
 
   @override
   void onClose() {
+    _resetButtonTimer?.cancel();
+
     /// Dispose controllers
     email.dispose();
     super.onClose();

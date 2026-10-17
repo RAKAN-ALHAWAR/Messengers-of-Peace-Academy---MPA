@@ -3,16 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../../Config/config.dart';
-import '../../../../../Core/core.dart';
 import '../../../../../Data/data.dart';
 import '../../../../Widget/widget.dart';
 
 class ForgotPasswordResetController extends GetxController {
-  //============================================================================
-  // Injection of required controls
-
-  AppControllerX app = Get.find();
-
   //============================================================================
   // Variables
 
@@ -21,6 +15,11 @@ class ForgotPasswordResetController extends GetxController {
 
   // Button states
   final buttonState = ButtonStateEX.normal.obs;
+
+  // An acknowledged reset may have consumed the OTP. Never submit it again,
+  // including while the sign-in route is replacing this screen.
+  bool _resetAccepted = false;
+  Timer? _resetButtonTimer;
 
   // Email
   String email = Get.arguments[NameX.email] ?? '';
@@ -41,74 +40,52 @@ class ForgotPasswordResetController extends GetxController {
   //============================================================================
   // Functions
 
-  /// Handle reset password
-  void onResetPassword() async {
-    /// Check if loading is false
-    if (isLoading.isFalse) {
-      /// Check if form is valid
-      if (formKey.currentState!.validate()) {
-        /// Set Loading to true
-        isLoading.value = true;
+  /// Reset the password independently of starting a new authenticated session.
+  Future<void> onResetPassword() async {
+    if (isClosed || isLoading.value || _resetAccepted) return;
+    if (!(formKey.currentState?.validate() ?? false)) {
+      autoValidate = AutovalidateMode.always;
+      return;
+    }
 
-        /// Set Button State to loading
-        buttonState.value = ButtonStateEX.loading;
+    _resetButtonTimer?.cancel();
+    isLoading.value = true;
+    buttonState.value = ButtonStateEX.loading;
 
-        /// Try to reset password
-        try {
-          /// Reset forget password
-          await DatabaseX.resetForgetPassword(
-            email: email,
-            password: password.text,
-            otpCode: otp,
-          );
+    try {
+      await DatabaseX.resetForgetPassword(
+        email: email,
+        password: password.text,
+        otpCode: otp,
+      );
+      if (isClosed) return;
 
-          /// Login to get user id and token
-          var data = await DatabaseX.login(
-            email: email,
-            password: password.text,
-          );
-
-          /// Save data on local
-          ///
-          /// The token must be stored **before** any authenticated request,
-          /// because it is the `wstoken` used by [DBEndPointX.mainAPI]
-          LocalDataX.put(LocalKeyX.userid, data.$1);
-          LocalDataX.put(LocalKeyX.token, data.$2);
-          LocalDataX.put(LocalKeyX.route, RouteNameX.root);
-
-          /// Set user on app controller
-          app.user = (await DatabaseX.getUser(userId: data.$1)).obs;
-
-          /// Set login state
-          app.isLogin.value = true;
-
-          /// The time delay here is aesthetically beneficial
-          buttonState.value = ButtonStateEX.success;
-          await Future.delayed(
-            const Duration(seconds: StyleX.successButtonSecond),
-          );
-
-          /// Navigate to root screen
-          Get.offAllNamed(RouteNameX.root);
-        } catch (e) {
-          /// Set Button State to failed
-          buttonState.value = ButtonStateEX.failed;
-
-          /// Show error message
-          ToastX.error(message: e);
-        }
-
-        /// Set Loading to false
+      // Reset acceptance is final even if presenting the next screen fails.
+      // Sign-in remains an explicit, separate action by the account owner.
+      _resetAccepted = true;
+      buttonState.value = ButtonStateEX.success;
+      Get.offAllNamed(RouteNameX.login);
+      ToastX.success(
+        message:
+            'Password changed successfully. Please sign in with your new password.',
+      );
+    } catch (error) {
+      if (isClosed || _resetAccepted) return;
+      buttonState.value = ButtonStateEX.failed;
+      ToastX.error(message: error);
+    } finally {
+      // Keep an accepted reset locked until its route is disposed. Failures
+      // retain the entered password and permit an intentional retry.
+      if (!isClosed && !_resetAccepted) {
         isLoading.value = false;
-
-        /// Reset the button state
-        Timer(
+        _resetButtonTimer = Timer(
           const Duration(seconds: StyleX.returnButtonToNormalStateSecond),
-          () => buttonState.value = ButtonStateEX.normal,
+          () {
+            if (!isClosed && !isLoading.value) {
+              buttonState.value = ButtonStateEX.normal;
+            }
+          },
         );
-      } else {
-        /// Set Autovalidate to always
-        autoValidate = AutovalidateMode.always;
       }
     }
   }
@@ -126,6 +103,8 @@ class ForgotPasswordResetController extends GetxController {
 
   @override
   void onClose() {
+    _resetButtonTimer?.cancel();
+
     /// Dispose controllers
     password.dispose();
     rePassword.dispose();
