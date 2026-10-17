@@ -63,6 +63,13 @@ cannot be claimed without a remote run; configure checks for the actual host.
   run before replacement: 1 passed/2 failed, including the original Overlay
   exception. A first replacement's notification covered Back physically;
   moving below the toolbar fixed that additional failed gesture assertion.
+- Expanded notification run:4 passed, additionally proving a superseded timer
+  cannot dismiss the new message and swipe dismissal never pops the page.
+  Fresh read-only reviewer independently repeated the initial3 tests with no
+  blockers. Arabic visual snapshot rendered with bundled text/Material icon
+  fonts at /private/tmp/mopa-toast-ar.png and inspected; its screen content is
+  synthetic, not device/account evidence. One visual probe passed. First render
+  lacked loaded Material icon fonts in the test host; fixed only in the harness.
 - Analyzer: 0 errors/warnings, 6 existing informational findings; default exits1.
   No claim of clean analyzer or completed device scenario yet.
 - Auth/completion lanes are running in separate worktrees. Original lockfile
@@ -72,3 +79,19 @@ cannot be claimed without a remote run; configure checks for the actual host.
   compare counts only. Value omitted; owner-coordinated removal/rotation remains
   OPEN, not performed or claimed fixed by this batch.
 - Next: integrate auth/completion, review combined diff and verify local build.
+
+### CI preparation
+
+The project remote is GitLab, so `.gitlab-ci.yml` runs the analyzer (existing
+infos remain visible/nonfatal) and all tests. It bootstraps official Flutter
+tag3.41.6 and verifies the exact installed SDK commit. No deploy credentials or
+deployment job. Three source URI case mismatches were corrected for Linux;
+two touched CRLF files were normalized to LF for whitespace-clean patches.
+CI has not run remotely; no push is authorized, and local Docker daemon is not
+running. Do not claim green CI or verified runner configuration.
+
+Source verification used the deep-research skill for the narrow CI-source
+check. Primary references: https://docs.gitlab.com/ci/yaml/ (pipeline syntax)
+and https://github.com/cirruslabs/docker-images-flutter (rejected image source:
+maintainer says updates stop May1,2026). No comparative tool research/adoption
+claim. Official SDK source: https://github.com/flutter/flutter/tree/3.41.6.

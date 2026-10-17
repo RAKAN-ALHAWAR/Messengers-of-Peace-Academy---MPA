@@ -9,7 +9,7 @@ import '../../../../../Core/core.dart';
 import '../../../../Widget/Basic/Other/label.dart';
 import '../../../../Widget/Basic/Utils/future_builder.dart';
 import '../controller/controller.dart';
-import 'Sections/loading.dart';
+import 'sections/loading.dart';
 import 'sections/profile_image_section.dart';
 
 class EditProfileView extends GetView<EditProfileController> {

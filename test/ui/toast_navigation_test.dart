@@ -99,6 +99,29 @@ void main() {
     expect(Get.currentRoute, '/probe');
   });
 
+  testWidgets(
+    'a replaced timer cannot dismiss the newer message; swipe closes only feedback',
+    (tester) async {
+      await tester.pumpWidget(const MyApp());
+      await tester.pumpAndSettle();
+      Get.toNamed('/probe');
+      await tester.pumpAndSettle();
+      ToastX.info(message: 'old timer');
+      await tester.pump();
+      await tester.pump(const Duration(seconds: StyleX.toastSecond - 1));
+      ToastX.info(message: 'new timer');
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('new timer'), findsOneWidget);
+      await tester.drag(find.byType(Dismissible), const Offset(800, 0));
+      await tester.pumpAndSettle();
+      expect(find.text('new timer'), findsNothing);
+      expect(Get.currentRoute, '/probe');
+      await tester.pump(const Duration(seconds: StyleX.toastSecond));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('presenter tolerates absent and unmounted hosts', (tester) async {
     final presenter = ToastPresenterX();
     presenter.show(

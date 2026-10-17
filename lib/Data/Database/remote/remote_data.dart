@@ -5,7 +5,7 @@ import '../../../Core/Helper/http/http.dart';
 import '../../../Core/Util/http_url.dart';
 import '../../../Core/Util/url.dart';
 import '../../Enum/transmission_method_status.dart';
-import '../../Model/Basic/data_source_param.dart';
+import '../../Model/basic/data_source_param.dart';
 import '../../data.dart';
 import 'config/remote_config.dart';
 import 'config/remote_key.dart';
