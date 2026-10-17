@@ -1,6 +1,6 @@
 # Mopa audit state
 
-Updated: 2026-10-17 (Asia/Damascus).
+Updated: 2026-10-18 (Asia/Damascus).
 
 ## Authorized scope
 
@@ -10,6 +10,47 @@ defects before preparing corrections. Saker authorized using his own account for
 testing in this session. He will enter any credentials directly in the simulator.
 No server edits, deployment, credential rotation, GitLab writes, or remote push
 are authorized by this audit.
+
+Latest user direction (2026-10-17): defer interactive simulator access and
+continue analyzing the code itself. The backend source is not available to
+Saker; he may supply an API description later. Do not request simulator access
+again during this source-analysis pass. No product implementation is approved
+by this direction; produce verified findings and a backend-contract checklist.
+
+Latest report (2026-10-18, user-observed):
+password-reset password submission fails; Back appears ineffective; no toasts
+appear; CompleteAccountInfo Save appears ineffective and the user skipped it.
+Prioritize tracing these paths. Main owns Toast/Back/root-overlay reproduction;
+app reviewer owns password-reset and CompleteAccountInfo validation/request
+chains. Local reproductions are complete as described below; the exact failed
+stage in Saker's live reset remains unknown. No simulator-specific cause claimed.
+
+Urgent findings independently reproduced by main (2026-10-18):
+- Actual MyApp + ToastX + BackButtonX: Back works before Toast; Toast raises
+  `No Overlay widget found`, shows nothing, and leaves Get's snackbar queue open.
+  Next Back raises `LateInitializationError` and leaves the page unchanged.
+  Test changes only the in-memory routes to synthetic pages; it retains MyApp's
+  real builder/theme/bindings. No application source was edited.
+- Actual reset controller: accepted reset followed by rejected automatic login
+  leaves the form failed. Two intercepted requests, no profile fetch. This
+  proves a misleading combined failure is possible, not that Saker's password
+  definitely changed. Loading resets to false; no loading-lock claim.
+- Actual completion controller: valid text fields and missing country produce
+  zero requests, no loading and only a Toast warning. Controller probes use an
+  extra outer Overlay to isolate this flow from the product snackbar failure.
+- The three urgent probes completed together: 3 passed. These observations
+  prove current defects, not completed fixes. See SOURCE-FOLLOWUP-2026-10-18.md.
+- Independently repeated cross-session profile probe: after actual appbar Back
+  disposes A's controller, its delayed continuation uploads A's selected photo
+  using synthetic B's token and user ID. Outbound attribution proved; actual
+  backend persistence/authorization bypass not established. One test passed.
+- Additional completed suites: HTTP/session/upload 8, data boundaries 8,
+  playback/abandoned navigation 2. All synthetic/intercepted, no account calls.
+
+Next: review proposed frontend fixes, then implement with regression tests in
+an isolated lane. Backend-dependent semantics remain open; concrete requested
+contracts are in BACKEND-CONTRACT-REQUEST.md. No product fix, upgrade or remote
+push has occurred in this analysis pass.
 
 ## Workspace and ownership
 
@@ -82,8 +123,9 @@ are authorized by this audit.
   no-network claim. These are applied to the report.
 - Inspect the complete request/model/controller/view paths.
 - Capture reproducible findings and separate source evidence from live behavior.
-- Await Device Hub access and backend source/contract information. The user
-  was asked for the Moodle-plugin source location or API documentation.
+- Continue source-only analysis and synthetic local reproductions. Interactive
+  simulator verification is deliberately deferred by Saker, not a blocker to
+  this pass. Backend source is unavailable; descriptions may arrive later.
 
 ## Pending decisions and limits
 

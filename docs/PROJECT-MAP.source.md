@@ -64,3 +64,5 @@ this number is not a claim that every line has a runtime test.
 - Findings, requirement mapping, proposals: `docs/AUDIT-2026-10-17.md`.
 - Completed local commands/evidence: `docs/LOCAL-VERIFICATION.md`.
 - Platform gaps: `docs/PARITY-LEDGER.md`.
+- Additional reproductions and urgent auth symptoms: `docs/SOURCE-FOLLOWUP-2026-10-18.md`.
+- Missing backend information (proposed request): `docs/BACKEND-CONTRACT-REQUEST.md`.

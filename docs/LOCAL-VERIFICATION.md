@@ -106,7 +106,39 @@ definitions into scratch. No real credential was exercised. An initial rerun
 failed because its parent scratch folder was absent; it was created and the
 reported completed verification above was run afresh.
 
-## Outstanding runtime verification
+## Source follow-up completed 2026-10-18
+
+All commands below ran in the isolated audit checkout using synthetic Hive data
+and intercepted HTTP. Passing observation tests assert existing defects, not
+successful repairs. Application source and original lockfile were unchanged.
+
+```sh
+flutter test --no-pub --reporter expanded /private/tmp/mopa-security-http-probes/http_session_test.dart
+flutter test --no-pub --reporter expanded /private/tmp/mopa-audit-probes/source_followup_test.dart
+flutter test --no-pub --reporter expanded /private/tmp/mopa-audit-probes/lifecycle_app_test.dart
+flutter test --no-pub --reporter expanded /private/tmp/mopa-audit-probes/toast_back_actual_app_test.dart /private/tmp/mopa-audit-probes/symptoms_controller_test.dart
+flutter test --no-pub --reporter expanded --timeout 20s /private/tmp/mopa-security-http-probes/cross_session_profile_test.dart
+```
+
+Main independently completed all five commands:8,8,2,3,1 passing tests,
+respectively. Details and exclusions: `SOURCE-FOLLOWUP-2026-10-18.md`.
+Actual-MyApp urgent reproduction:
+
+```text
+CAPTURED FlutterError: No Overlay widget found.
+TOAST route=/probe snackbarOpen=true visible=0
+CAPTURED LateError: LateInitializationError: Field '_controller' has not been initialized.
+AFTER_BACK route=/probe snackbarOpen=true errors=2
+RESET_STAGES=[reset-success, login-failure] route=/reset state=failed loading=false
+COMPLETE calls=0 loading=false state=normal countryToast=1
+00:00 +3: All tests passed!
+```
+
+The randomized private field suffix is omitted. Controller-only probes add an
+outer Overlay to isolate the controller path; actual-MyApp reproduction does
+not add one. The current live reset error/stage remains unknown.
+
+## Outstanding interactive verification
 
 The user completed sign-in directly; a fresh screenshot shows authenticated
 Home. Computer Use still denies Device Hub access. Course/quiz grading and
