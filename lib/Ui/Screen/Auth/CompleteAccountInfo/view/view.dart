@@ -57,7 +57,7 @@ class CompleteAccountInfoView extends GetView<CompleteAccountInfoController> {
                       /// Personal information form
                       Form(
                         key: controller.formKey,
-                        autovalidateMode: controller.autoValidate,
+                        autovalidateMode: controller.autoValidate.value,
                         child: Column(
                           children: [
                             /// Username
@@ -80,7 +80,10 @@ class CompleteAccountInfoView extends GetView<CompleteAccountInfoController> {
                               controller: controller.dateOfBirth,
                               icon: IconX.today,
                               margin: EdgeInsets.only(bottom: 12),
-                              validate: ValidatorX.date,
+                              validate:
+                                  (_) => ValidatorX.birthDate(
+                                    controller.birthDate,
+                                  ),
                               onChange: controller.onChangeBirthDate,
                               prefillInitialDate: false,
                               lastDate:
@@ -119,7 +122,8 @@ class CompleteAccountInfoView extends GetView<CompleteAccountInfoController> {
                                     child: Center(
                                       child: SearchableCountryCodeDropdown(
                                         value: controller.countryCode.value,
-                                        phoneCodesList: controller.phoneCodesList,
+                                        phoneCodesList:
+                                            controller.phoneCodesList,
                                         onChanged: controller.changeCountryCode,
                                         onlyEnglish: true,
                                       ),
@@ -172,6 +176,11 @@ class CompleteAccountInfoView extends GetView<CompleteAccountInfoController> {
                             /// Country dropdown
                             DropdownX(
                               hint: "Country",
+                              validator:
+                                  (value) =>
+                                      value == null || value.isEmpty
+                                          ? 'Please select a country'.tr
+                                          : null,
                               value: controller.country.value,
                               onChanged: controller.changeCountry,
                               list:
@@ -193,6 +202,11 @@ class CompleteAccountInfoView extends GetView<CompleteAccountInfoController> {
                             /// Native language dropdown
                             DropdownX(
                               hint: "Your Native Language",
+                              validator:
+                                  (value) =>
+                                      value == null || value.isEmpty
+                                          ? 'Please select a language'.tr
+                                          : null,
                               value: controller.language.value,
                               onChanged: controller.changeLanguage,
                               list:
@@ -204,6 +218,11 @@ class CompleteAccountInfoView extends GetView<CompleteAccountInfoController> {
                             /// How did you hear about us dropdown
                             DropdownX(
                               hint: "How did you hear about us",
+                              validator:
+                                  (value) =>
+                                      value == null || value.isEmpty
+                                          ? 'Please select a how to find us'.tr
+                                          : null,
                               value: controller.howToFindUs.value,
                               list: controller.howToFindUsList,
                               onChanged: controller.changeHowToFindUs,
@@ -282,6 +301,11 @@ class CompleteAccountInfoView extends GetView<CompleteAccountInfoController> {
                             if (controller.isSaudiUniversity.value)
                               DropdownX(
                                 hint: "What university do you study at",
+                                validator:
+                                    (value) =>
+                                        value == null || value.isEmpty
+                                            ? 'Please select a university'.tr
+                                            : null,
                                 value: controller.university.value,
                                 list: controller.universities,
                                 onChanged: controller.changeUniversity,

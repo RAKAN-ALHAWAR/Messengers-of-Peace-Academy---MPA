@@ -13,6 +13,7 @@ import 'package:messengersofpeace/Data/Model/info/phone_code.dart';
 import '../../../../../Config/config.dart';
 import '../../../../../Data/Form/update_user_form.dart';
 import '../../../../Widget/widget.dart';
+import '../../../../Widget/Basic/Utils/form_validation.dart';
 
 class CompleteAccountInfoController extends GetxController {
   //============================================================================
@@ -37,7 +38,7 @@ class CompleteAccountInfoController extends GetxController {
 
   // Values
   final countryCode = "+966".obs;
-  final gender = "Male".obs;
+  final gender = "male".obs;
   final country = "".obs;
   final language = "".obs;
   final howToFindUs = "".obs;
@@ -57,7 +58,9 @@ class CompleteAccountInfoController extends GetxController {
   late GlobalKey<FormState> formKey;
 
   // Autovalidate mode
-  AutovalidateMode autoValidate = AutovalidateMode.disabled;
+  final autoValidate = AutovalidateMode.disabled.obs;
+  Future<void>? _referenceData;
+  Timer? _buttonResetTimer;
 
   // Text editing controllers
   TextEditingController dateOfBirth = TextEditingController();
@@ -88,25 +91,39 @@ class CompleteAccountInfoController extends GetxController {
   // Functions
 
   /// Get data
-  Future<void> getData() async {
+  Future<void> getData() => _referenceData ??= _loadData();
+
+  Future<void> _loadData() async {
     /// Load data in parallel
-    await Future.wait<void>([
-      loadCountries(),
-      loadPhoneCodes(),
-      loadLanguages(),
-    ]);
+    try {
+      await Future.wait<void>([
+        loadCountries(),
+        loadPhoneCodes(),
+        loadLanguages(),
+      ]);
+    } catch (_) {
+      // A failed load must be retryable; a successful load survives rebuilds.
+      _referenceData = null;
+      rethrow;
+    }
   }
 
   /// Load countries
   Future<void> loadCountries() async {
-    countriesList.value = await DatabaseX.getCountriesList();
+    final ownsSession = _sessionGuard();
+    final result = await DatabaseX.getCountriesList();
+    if (ownsSession()) countriesList.value = result;
   }
 
   /// Load languages
   Future<void> loadLanguages() async {
+    final ownsSession = _sessionGuard();
     try {
-      languagesList.value = await DatabaseX.getNativeLanguages();
+      final result = await DatabaseX.getNativeLanguages();
+      if (!ownsSession()) return;
+      languagesList.value = result;
     } catch (_) {}
+    if (!ownsSession()) return;
 
     /// If languages is empty, add english and arabic
     if (languagesList.isEmpty) {
@@ -117,9 +134,12 @@ class CompleteAccountInfoController extends GetxController {
 
   /// Load phone codes
   Future<void> loadPhoneCodes() async {
+    final ownsSession = _sessionGuard();
     try {
       /// Get phone codes
-      phoneCodesList.value = await DatabaseX.getPhoneCodeCountriesList();
+      final result = await DatabaseX.getPhoneCodeCountriesList();
+      if (!ownsSession()) return;
+      phoneCodesList.value = result;
 
       /// Set default country code if available
       if (phoneCodesList.isNotEmpty) {
@@ -131,6 +151,7 @@ class CompleteAccountInfoController extends GetxController {
         countryCode.value = saudiCode.dialCode;
       }
     } catch (_) {}
+    if (!ownsSession()) return;
 
     /// If phone codes is empty, add saudi code
     if (phoneCodesList.isEmpty) {
@@ -143,6 +164,8 @@ class CompleteAccountInfoController extends GetxController {
 
   /// Change image
   Future<void> changeImage({bool isGallery = true}) async {
+    final ownsSession = _sessionGuard();
+
     /// Close the bottom sheet
     Get.back();
 
@@ -152,7 +175,7 @@ class CompleteAccountInfoController extends GetxController {
     );
 
     /// If an image is selected, the data is updated
-    if (x != null) {
+    if (x != null && ownsSession()) {
       image = x;
       update();
     }
@@ -181,110 +204,81 @@ class CompleteAccountInfoController extends GetxController {
 
   /// Save and update user data
   Future<void> onEdit() async {
-    /// Check if the loading is false
-    if (isLoading.isFalse) {
-      /// Check if the form is valid
-      if (formKey.currentState!.validate()) {
-        /// Check the age, the picker already limits it but the value is only
-        /// trustworthy once it has actually been picked
-        final birthDateError = ValidatorX.birthDate(birthDate);
-        if (birthDateError != null) {
-          ToastX.error(message: birthDateError);
-          return;
-        }
-
-        /// Check if the whatsapp number is valid
-        if (country.isEmpty) {
-          /// Show error toast
-          ToastX.error(message: "Please select a country");
-          return;
-        }
-
-        /// Check if the language is valid
-        if (language.isEmpty) {
-          /// Show error toast
-          ToastX.error(message: "Please select a language");
-          return;
-        }
-
-        /// Check if the how to find us is valid
-        if (howToFindUs.isEmpty) {
-          /// Show error toast
-          ToastX.error(message: "Please select a how to find us");
-          return;
-        }
-
-        /// Check if the university is valid
-        if (isSaudiUniversity.value && university.isEmpty) {
-          /// Show error toast
-          ToastX.error(message: "Please select a university");
-          return;
-        }
-
-        /// Check if the city is valid
-        if (gender.value.isEmpty) {
-          /// Show error toast
-          ToastX.error(message: "Please select a gender");
-          return;
-        }
-
-        /// Set loading to true
-        isLoading.value = true;
-
-        /// Set button state to loading
-        buttonState.value = ButtonStateEX.loading;
-
+    if (isLoading.value || isClosed) return;
+    final ownsSession = _sessionGuard();
+    if (!ownsSession()) return;
+    final form = formKey.currentState;
+    if (form == null) return;
+    autoValidate.value = AutovalidateMode.onUserInteraction;
+    if (!validateAndRevealFirstError(form)) return;
+    // Preserve the existing gender policy; the normal default is visibly male.
+    if (gender.value.isEmpty) {
+      ToastX.error(message: 'Please select a gender');
+      return;
+    }
+    _buttonResetTimer?.cancel();
+    isLoading.value = true;
+    buttonState.value = ButtonStateEX.loading;
+    final selectedImage = image;
+    try {
+      final message = await DatabaseX.updateUser(
+        form: formData,
+        username: app.user.value.username.trim(),
+      );
+      if (!ownsSession()) return;
+      if (selectedImage != null) {
         try {
-          /// Update user data
-          var message = await DatabaseX.updateUser(
-            form: formData,
-            username: app.user.value.username.trim(),
-          );
-
-          /// Update user image
-          if (image != null) {
-            try {
-              await DatabaseX.updateUserImage(image: File(image!.path));
-            } catch (_) {}
-          }
-
-          /// Show success toast
-          ToastX.success(message: message);
-
-          /// Set button state to success
-          buttonState.value = ButtonStateEX.success;
-          await Future.delayed(
-            const Duration(seconds: StyleX.successButtonSecond),
-          );
-
-          /// Navigate to root
-          Get.offAllNamed(RouteNameX.root);
-        } catch (e) {
-          /// Set button state to failed
+          await DatabaseX.updateUserImage(image: File(selectedImage.path));
+        } catch (_) {
+          if (!ownsSession()) return;
           buttonState.value = ButtonStateEX.failed;
-
-          /// Show error toast
-          ToastX.error(message: e);
+          ToastX.error(
+            message:
+                'Profile information saved, but the photo could not be uploaded. Please try again.',
+          );
+          return;
         }
-
-        /// Set loading to false
+        if (!ownsSession()) return;
+      }
+      ToastX.success(message: message);
+      buttonState.value = ButtonStateEX.success;
+      await Future<void>.delayed(
+        const Duration(seconds: StyleX.successButtonSecond),
+      );
+      if (ownsSession()) Get.offAllNamed(RouteNameX.root);
+    } catch (error) {
+      if (!ownsSession()) return;
+      buttonState.value = ButtonStateEX.failed;
+      ToastX.error(message: error);
+    } finally {
+      if (ownsSession()) {
         isLoading.value = false;
-
-        /// Reset the button state
-        Timer(
+        _buttonResetTimer = Timer(
           const Duration(seconds: StyleX.returnButtonToNormalStateSecond),
-          () => buttonState.value = ButtonStateEX.normal,
-        );
-      } else {
-        /// Set autovalidate mode to always
-        autoValidate = AutovalidateMode.always;
-
-        /// Show error toast
-        ToastX.error(
-          message: "Please fill in all fields and verify their accuracy",
+          () {
+            if (ownsSession()) buttonState.value = ButtonStateEX.normal;
+          },
         );
       }
     }
+  }
+
+  /// Async results belong only to this controller and the initiating session.
+  bool Function() _sessionGuard() {
+    final user = app.user.value;
+    final userId = user.id;
+    final localUserId = LocalDataX.userid;
+    final token = LocalDataX.token;
+    return () =>
+        !isClosed &&
+        Get.isRegistered<CompleteAccountInfoController>() &&
+        identical(Get.find<CompleteAccountInfoController>(), this) &&
+        Get.isRegistered<AppControllerX>() &&
+        identical(Get.find<AppControllerX>(), app) &&
+        identical(app.user.value, user) &&
+        app.user.value.id == userId &&
+        LocalDataX.userid == localUserId &&
+        LocalDataX.token == token;
   }
 
   /// Complete later
@@ -331,6 +325,8 @@ class CompleteAccountInfoController extends GetxController {
 
   @override
   void onClose() {
+    _buttonResetTimer?.cancel();
+
     /// Dispose controllers
     dateOfBirth.dispose();
     whatsapp.dispose();
