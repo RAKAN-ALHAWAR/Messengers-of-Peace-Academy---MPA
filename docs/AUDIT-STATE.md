@@ -47,10 +47,12 @@ Urgent findings independently reproduced by main (2026-10-18):
 - Additional completed suites: HTTP/session/upload 8, data boundaries 8,
   playback/abandoned navigation 2. All synthetic/intercepted, no account calls.
 
-Next: review proposed frontend fixes, then implement with regression tests in
-an isolated lane. Backend-dependent semantics remain open; concrete requested
-contracts are in BACKEND-CONTRACT-REQUEST.md. No product fix, upgrade or remote
-push has occurred in this analysis pass.
+Latest direction (2026-10-18): Saker approved starting repairs ('طيب ابداء
+بالاصلاح') following the urgent findings. Start with shared Toast/Back,
+completion field validation, and unambiguous password-reset success. Work in
+isolated branches, preserve original pubspec.lock, add regression tests and
+review before integration. Backend policy changes and remote push remain out
+of scope. The implementation ledger is FIX-STATE.md.
 
 ## Workspace and ownership
 
