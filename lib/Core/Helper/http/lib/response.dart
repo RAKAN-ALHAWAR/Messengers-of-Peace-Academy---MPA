@@ -116,10 +116,16 @@ class HttpResponseX {
       return fallbackResponse;
     }
 
-    // If the response body is empty, return an null.
-    // إذا كان جسم الاستجابة فارغًا، يتم إرجاع قيمة فارغة.
+    // A missing error body must not acknowledge a failed mutation. Preserve
+    // empty successful responses and the caller's explicit 401 fallback.
     if (response.body.isEmpty) {
-      return null;
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return null;
+      }
+      if (response.statusCode == 401 && ignoreUnauthorized) {
+        return fallbackResponse;
+      }
+      throw ErrorX.createErrorByCode(response.statusCode);
     }
 
     dynamic responseBody;
@@ -130,7 +136,7 @@ class HttpResponseX {
     } catch (_) {
       responseBody = response.body;
     }
-    
+
     T results;
     try {
       results = responseBody as T;
@@ -163,7 +169,8 @@ class HttpResponseX {
       } else {
         return throw ErrorX.createErrorByCode(
           response.statusCode,
-          details: results is Map<String, dynamic> ? results : {'result': results},
+          details:
+              results is Map<String, dynamic> ? results : {'result': results},
         );
       }
     }
