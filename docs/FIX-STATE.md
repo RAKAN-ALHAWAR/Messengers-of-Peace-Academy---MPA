@@ -108,7 +108,18 @@ cannot be claimed without a remote run; configure checks for the actual host.
   1C4C054D-0C46-4762-8328-0B3E72617A48. Launch announced because startup can
   fetch account data. Process evidence only, not a form/account interaction pass.
   Rollback build: /private/tmp/mopa-audit-derived/Build/Products/Debug-iphonesimulator/Runner.app.
-- Next: original-checkout integration, preserving its foreign lockfile.
+- Integrated by fast-forward into original main at31a6cfe after final review.
+  Original pubspec.lock SHA256 remains
+  9ad24bce6ed2b390ee55772a69c51798d36c313c016841a36c44fa24941ad9c7;
+  it is the only pre-existing original-checkout modification. No push.
+- Reviewer rechecked the sole hygiene finding and test-host cleanup: resolved,
+  no introduced findings, final stamp cc92b52..31a6cfe. Simulator process75639
+  remained present in launchctl with exit-status0 after launch.
+- Package resolution/build/testing occurred in the isolated worktree. Original
+  ignored package configuration is stale and its foreign lock lacks open_file;
+  it was deliberately not rewritten. Run the recorded checks in the resolved
+  worktree, or perform a normal dependency resolution when the owner is ready to
+  update that lock. This is not a source/compiler failure introduced by repairs.
 
 ## Remaining audit work
 

@@ -23,6 +23,9 @@ rejection of empty failed HTTP responses implemented. Final integrated suite45
 passed; fresh independent review found no blockers. Analyzer:6 existing infos,
 0 errors/warnings. iOS build exit0 with simulator-only target override. Updated
 app installed/launched (process evidence only). CI configured, not remotely run.
+Verified commits fast-forwarded into original main at31a6cfe; original foreign
+lockfile remains byte-identical. No push/deploy. Package resolution/testing is
+in the isolated worktree; original ignored package configuration stays stale.
 Exact evidence and remaining audit work: FIX-STATE.md.
 
 Latest report (2026-10-18, user-observed):
