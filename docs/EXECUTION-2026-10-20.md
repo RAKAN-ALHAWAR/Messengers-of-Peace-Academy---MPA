@@ -48,3 +48,7 @@ on independent slices. Existing45 tests are the starting regression gate.
 - Auth lifecycle ownership transferred to codex/mopa-auth-lifecycle-20261020:
   AppController/Core import; Login/SignUp/OTP/Loading controllers and auth tests.
   Main retains transport, shared leases, diagnostics, integration and translations.
+- Diagnostics now emit error category/code/type and sanitized stack frames rather
+  than arbitrary response bodies, nested details, error messages or framework
+  context/library contents. Removed raw quiz-result print. Two synthetic privacy
+  tests passed; no credential rotation or deployed-state claim is made.

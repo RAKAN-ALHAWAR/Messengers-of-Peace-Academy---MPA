@@ -49,7 +49,13 @@ class ErrorX implements Exception {
   /// Restructure the error message - Static version
   static void console(error) {
     FlutterError.reportError(
-      FlutterErrorDetails(exception: error, library: 'Saker Dakak'),
+      FlutterErrorDetails(
+        exception: ErrorX(
+          message: diagnosticSummary(error),
+          errorCode: error is ErrorX ? error.errorCode : ErrorCodesX.unexpected,
+        ),
+        library: 'Saker Dakak',
+      ),
     );
   }
 
@@ -57,25 +63,18 @@ class ErrorX implements Exception {
     return ErrorX().runtimeType.toString() == val.runtimeType.toString();
   }
 
+  /// Unknown response/exception payloads are not safe diagnostic metadata.
+  static String diagnosticSummary(Object? error) =>
+      error is ErrorX
+          ? 'ErrorX(code: ${error.errorCode}, type: ${error.errorType.name}, severity: ${error.severity.name})'
+          : 'Failure type: ${error.runtimeType}';
+
+  static String diagnosticStack(String stack) =>
+      stack.replaceAll(RegExp(r'https?://[^\s]+'), '[redacted-url]');
+
   /// Restructure the error message - Instance version
   void log() {
-    FlutterError.reportError(
-      FlutterErrorDetails(
-        exception: this,
-        library: 'Saker Dakak',
-        informationCollector:
-            () => [
-              DiagnosticsNode.message('Title: $title'),
-              DiagnosticsNode.message('Message: $message'),
-              DiagnosticsNode.message('Error Code: $errorCode'),
-              DiagnosticsNode.message('Original Error: $originalError'),
-              DiagnosticsNode.message('Severity: $severity'),
-              DiagnosticsNode.message('Error Type: $errorType'),
-              DiagnosticsNode.message('Details: $details'),
-              DiagnosticsNode.message('Stack Trace: $stackTrace'),
-            ],
-      ),
-    );
+    console(this);
   }
 
   // الدالة لإنشاء الأخطاء بناءً على رمز الخطأ وتفاصيل إضافية

@@ -12,29 +12,23 @@ class LoggingConsoleX {
   static void _customErrorLogger(FlutterErrorDetails details) {
     String border = "║       ";
     String errorMessage =
-        '\n╔══════════════════════════════════════════════╡ ${details.library ?? "SEZARD"} ╞══════════════════════════════════════════════╗\n';
+        '\n╔══════════════════════════════════════════════╡ SEZARD ╞══════════════════════════════════════════════╗\n';
     errorMessage += "${border}Error Details:";
     errorMessage += "\n$border\n";
     errorMessage +=
-        '${details.exceptionAsString().trim().split('\n').expand((line) => StringUtilX.wrap(line, 125).split('\n')).map((line) => '$border$line').toList().join('\n')}\n';
+        '${ErrorX.diagnosticSummary(details.exception).split('\n').map((line) => '$border$line').join('\n')}\n';
     errorMessage +=
         "╠----------------------------------------------------------------------------------------------------------------\n";
-    if (details.context!=null && details.context.toString().isNotEmpty) {
-      errorMessage += "${border}Context:";
+    if (details.context != null) {
+      errorMessage += "${border}Context type:";
       errorMessage += "\n$border\n";
-      errorMessage += "${details.context
-          .toString()
-          .split('\n')
-          .expand((line) => StringUtilX.wrap(line, 125).split('\n'))
-          .map((line) => '$border$line')
-          .toList()
-          .join('\n')}\n";
+      errorMessage +=
+          "${details.context.runtimeType.toString().split('\n').expand((line) => StringUtilX.wrap(line, 125).split('\n')).map((line) => '$border$line').toList().join('\n')}\n";
       errorMessage +=
           "╠----------------------------------------------------------------------------------------------------------------\n";
     }
     if (details.stack.toString().isNotEmpty) {
-      String linksInProject = details.stack
-          .toString()
+      String linksInProject = ErrorX.diagnosticStack(details.stack.toString())
           .split('\n')
           .expand((line) => StringUtilX.wrap(line, 125).split('\n'))
           .where((line) {
@@ -50,8 +44,7 @@ class LoggingConsoleX {
         errorMessage +=
             "╠----------------------------------------------------------------------------------------------------------------\n";
       }
-      String linksInEnv = details.stack
-          .toString()
+      String linksInEnv = ErrorX.diagnosticStack(details.stack.toString())
           .split('\n')
           .expand((line) => StringUtilX.wrap(line, 125).split('\n'))
           .where((line) {
