@@ -41,3 +41,10 @@ on independent slices. Existing45 tests are the starting regression gate.
 - Shared SessionLeaseX captures account/token plus monotonic generation. Low-level
   Hive write/delete/clear and automatic expiry invalidate it synchronously.
   Initial7 lease tests and2 privacy regressions passed locally with pinned SDK.
+- Shared identity stream now coalesces credential writes into a microtask. The
+  revision still invalidates immediately; open widgets can retire completed data
+  without a parent rebuild. Observed8/8 lease tests, including notification after
+  Hive identity update and no notification for unrelated preferences.
+- Auth lifecycle ownership transferred to codex/mopa-auth-lifecycle-20261020:
+  AppController/Core import; Login/SignUp/OTP/Loading controllers and auth tests.
+  Main retains transport, shared leases, diagnostics, integration and translations.

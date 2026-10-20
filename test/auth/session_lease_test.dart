@@ -22,6 +22,24 @@ void main() {
     await directory.delete(recursive: true);
   });
 
+  test('session stream exposes updated identity and ignores preferences', () async {
+    await Future<void>.delayed(Duration.zero);
+    final revisions = <int>[];
+    final identities = <String>[];
+    final subscription = LocalDataX.sessionChanges.listen((revision) {
+      revisions.add(revision);
+      identities.add(LocalDataX.userid);
+    });
+    await LocalDataX.put(LocalKeyX.language, 'ar');
+    await Future<void>.delayed(Duration.zero);
+    expect(revisions, isEmpty);
+    await LocalDataX.put(LocalKeyX.userid, 'synthetic-B');
+    await Future<void>.delayed(Duration.zero);
+    expect(revisions, [LocalDataX.sessionRevision]);
+    expect(identities, ['synthetic-B']);
+    await subscription.cancel();
+  });
+
   test('unrelated preferences keep a lease valid', () {
     final lease = SessionLeaseX.capture();
     LocalDataX.put(LocalKeyX.language, 'ar');

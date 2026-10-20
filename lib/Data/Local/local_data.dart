@@ -9,9 +9,21 @@ class LocalDataX<T> {
   // older work; it cannot be recognized by comparing the token alone.
   static int _sessionRevision = 0;
   static int get sessionRevision => _sessionRevision;
+  static final _sessionChanges = StreamController<int>.broadcast();
+  static Stream<int> get sessionChanges => _sessionChanges.stream;
+  static bool _notificationPending = false;
   static void identityChanged([String? key]) {
     if (key == null || key == LocalKeyX.userid || key == LocalKeyX.token) {
       _sessionRevision++;
+      // Coalesce synchronous credential writes. Listeners observe Hive's updated
+      // in-memory identity, never the credentials preceding this revision.
+      if (!_notificationPending) {
+        _notificationPending = true;
+        scheduleMicrotask(() {
+          _notificationPending = false;
+          _sessionChanges.add(_sessionRevision);
+        });
+      }
     }
   }
   //============================================================================
