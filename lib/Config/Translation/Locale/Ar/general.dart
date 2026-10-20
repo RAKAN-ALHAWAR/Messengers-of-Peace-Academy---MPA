@@ -1,4 +1,11 @@
 const Map<String, String> arGeneral = {
+  "Unable to start a secure session. Please sign in again.":
+      "تعذّر بدء جلسة آمنة. سجّل الدخول مجددًا.",
+  "Your account still needs verification. Please contact support to recover verification access.":
+      "حسابك ما زال يحتاج إلى التحقق. تواصل مع الدعم لاستعادة إمكانية التحقق.",
+  "Account verified. Please sign in to continue.":
+      "تم التحقق من الحساب. سجّل الدخول للمتابعة.",
+  "Session changed. Please try again.": "تغيّرت جلسة الحساب. حاول مجددًا.",
   "Close": "إغلاق",
   "Password changed successfully. Please sign in with your new password.":
       "تم تغيير كلمة المرور بنجاح. سجّل الدخول باستخدام الكلمة الجديدة.",

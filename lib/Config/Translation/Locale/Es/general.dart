@@ -1,4 +1,12 @@
 const Map<String, String> esGeneral = {
+  "Unable to start a secure session. Please sign in again.":
+      "No se pudo iniciar una sesión segura. Vuelve a iniciar sesión.",
+  "Your account still needs verification. Please contact support to recover verification access.":
+      "Tu cuenta aún necesita verificación. Contacta con soporte para recuperar el acceso a la verificación.",
+  "Account verified. Please sign in to continue.":
+      "Cuenta verificada. Inicia sesión para continuar.",
+  "Session changed. Please try again.":
+      "La sesión ha cambiado. Inténtalo de nuevo.",
   "Close": "Cerrar",
   "Password changed successfully. Please sign in with your new password.":
       "Contraseña cambiada correctamente. Inicia sesión con tu nueva contraseña.",

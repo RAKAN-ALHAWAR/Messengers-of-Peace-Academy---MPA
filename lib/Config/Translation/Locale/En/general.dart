@@ -1,4 +1,11 @@
 const Map<String, String> enGeneral = {
+  "Unable to start a secure session. Please sign in again.":
+      "Unable to start a secure session. Please sign in again.",
+  "Your account still needs verification. Please contact support to recover verification access.":
+      "Your account still needs verification. Please contact support to recover verification access.",
+  "Account verified. Please sign in to continue.":
+      "Account verified. Please sign in to continue.",
+  "Session changed. Please try again.": "Session changed. Please try again.",
   "Close": "Close",
   "Password changed successfully. Please sign in with your new password.":
       "Password changed successfully. Please sign in with your new password.",

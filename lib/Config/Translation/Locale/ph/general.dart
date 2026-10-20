@@ -1,4 +1,12 @@
 const Map<String, String> phGeneral = {
+  "Unable to start a secure session. Please sign in again.":
+      "Hindi makapagsimula ng ligtas na session. Mag-sign in muli.",
+  "Your account still needs verification. Please contact support to recover verification access.":
+      "Kailangan pang i-verify ang iyong account. Makipag-ugnayan sa suporta para maibalik ang access sa pag-verify.",
+  "Account verified. Please sign in to continue.":
+      "Na-verify na ang account. Mag-sign in para magpatuloy.",
+  "Session changed. Please try again.":
+      "Nagbago ang session. Pakisubukang muli.",
   "Close": "Isara",
   "Password changed successfully. Please sign in with your new password.":
       "Matagumpay na nabago ang password. Mag-sign in gamit ang bago mong password.",

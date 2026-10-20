@@ -64,3 +64,11 @@ on independent slices. Existing45 tests are the starting regression gate.
   This conservative protocol cap is an implementation choice pending final review.
 - Replacement HTTP status path observed green34/34 transport/privacy/upload and
   response cases. Removed superseded post-cast error branch in a separate step.
+- Integrated profile commits cb20394/4a078d3/efb3d08: preserve explicit legacy
+  phone bytes/options on reference failure, calculate age buckets by birthday,
+  snapshot profile/photo submissions, skip acknowledged text on photo-only retry,
+  and guard mounted/closed/superseded forms. Main independently observed53/53
+  focused profile/model/completion tests. Missing phone-prefix default remains
+  the pre-existing policy pending contract approval; no silent policy rewrite.
+- Added secure-session/recovery/session-changed messages to all four existing
+  locale maps. Language copy is local source coverage, not device localization QA.
