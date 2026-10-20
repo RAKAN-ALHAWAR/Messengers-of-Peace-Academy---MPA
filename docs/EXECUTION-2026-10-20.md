@@ -32,3 +32,12 @@ on independent slices. Existing45 tests are the starting regression gate.
   only original foreign pubspec.lock is modified. No new source edits yet.
 - Next: isolate work, add shared lease and red/green tests; profile and model
   fixes in parallel, then integrate, review and proceed to remaining local work.
+- Toolchain drift observed: global Flutter is now3.47 candidate abaf9c52378;
+  using its new source with old resolved packages caused SDK language-feature
+  compilation failures before tests. No global SDK rollback was made. Created
+  isolated /private/tmp/mopa-flutter-3.41.6 at verified tag/db50e20168; official
+  SDK bootstrap downloaded artifacts. All project verification uses that binary.
+  Offline project resolution matches the previously resolved audit lock exactly.
+- Shared SessionLeaseX captures account/token plus monotonic generation. Low-level
+  Hive write/delete/clear and automatic expiry invalidate it synchronously.
+  Initial7 lease tests and2 privacy regressions passed locally with pinned SDK.

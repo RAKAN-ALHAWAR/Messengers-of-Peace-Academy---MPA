@@ -29,7 +29,7 @@ class HiveX {
     try {
       var data = box.get(key);
       if (data != null) {
-        if (data is Map && data['value']!=null) {
+        if (data is Map && data['value'] != null) {
           var expiry = data['expiry'];
           if (expiry != null &&
               DateTime.now().isAfter(DateTime.parse(expiry))) {
@@ -47,28 +47,34 @@ class HiveX {
     }
   }
 
-  static void put<T>(
-      {required T data, required String key, Duration? maxAge}) async {
+  static Future<void> put<T>({
+    required T data,
+    required String key,
+    Duration? maxAge,
+  }) async {
+    LocalDataX.identityChanged(key);
     try {
       var expiry =
           maxAge != null ? DateTime.now().add(maxAge).toIso8601String() : null;
-      await Hive.box(_boxName).put(key, {'value': data, 'expiry': expiry});
+      await box.put(key, {'value': data, 'expiry': expiry});
     } catch (e) {
       rethrow;
     }
   }
 
-  static void remove(String key) async {
+  static Future<void> remove(String key) async {
+    LocalDataX.identityChanged(key);
     try {
-      await Hive.box(_boxName).delete(key);
+      await box.delete(key);
     } catch (e) {
       rethrow;
     }
   }
 
-  static void removeAll() async {
+  static Future<void> removeAll() async {
+    LocalDataX.identityChanged();
     try {
-      await Hive.box(_boxName).clear();
+      await box.clear();
     } catch (e) {
       rethrow;
     }

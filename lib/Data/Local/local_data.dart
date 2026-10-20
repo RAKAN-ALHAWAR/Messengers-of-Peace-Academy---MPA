@@ -5,6 +5,15 @@ part of '../data.dart';
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class LocalDataX<T> {
+  // In-memory login generation. Even a same-value credential write invalidates
+  // older work; it cannot be recognized by comparing the token alone.
+  static int _sessionRevision = 0;
+  static int get sessionRevision => _sessionRevision;
+  static void identityChanged([String? key]) {
+    if (key == null || key == LocalKeyX.userid || key == LocalKeyX.token) {
+      _sessionRevision++;
+    }
+  }
   //============================================================================
   // Variables
 
@@ -31,11 +40,8 @@ class LocalDataX<T> {
     return HiveX.get<T>(kay, defaultData)!;
   }
 
-  static void put<T>(String kay, T data, {Duration? maxAge}) {
-    HiveX.put(data: data, key: kay, maxAge: maxAge);
-  }
+  static Future<void> put<T>(String kay, T data, {Duration? maxAge}) =>
+      HiveX.put(data: data, key: kay, maxAge: maxAge);
 
-  static void remove(String kay) {
-    HiveX.remove(kay);
-  }
+  static Future<void> remove(String kay) => HiveX.remove(kay);
 }
