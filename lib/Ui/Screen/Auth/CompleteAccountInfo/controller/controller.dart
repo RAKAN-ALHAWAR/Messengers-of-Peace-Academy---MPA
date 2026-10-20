@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:messengersofpeace/Core/core.dart';
+import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:messengersofpeace/Data/data.dart';
 import 'package:messengersofpeace/Data/Model/info/country.dart';
 import 'package:messengersofpeace/Data/Model/info/language.dart';
@@ -61,6 +62,7 @@ class CompleteAccountInfoController extends GetxController {
   final autoValidate = AutovalidateMode.disabled.obs;
   Future<void>? _referenceData;
   Timer? _buttonResetTimer;
+  late final SessionLeaseX _ownerLease;
 
   // Text editing controllers
   TextEditingController dateOfBirth = TextEditingController();
@@ -94,12 +96,15 @@ class CompleteAccountInfoController extends GetxController {
   Future<void> getData() => _referenceData ??= _loadData();
 
   Future<void> _loadData() async {
+    final ownsSession = _sessionGuard();
+    if (!ownsSession()) return;
+
     /// Load data in parallel
     try {
       await Future.wait<void>([
-        loadCountries(),
-        loadPhoneCodes(),
-        loadLanguages(),
+        loadCountries(ownsSession),
+        loadPhoneCodes(ownsSession),
+        loadLanguages(ownsSession),
       ]);
     } catch (_) {
       // A failed load must be retryable; a successful load survives rebuilds.
@@ -109,15 +114,17 @@ class CompleteAccountInfoController extends GetxController {
   }
 
   /// Load countries
-  Future<void> loadCountries() async {
-    final ownsSession = _sessionGuard();
+  Future<void> loadCountries([bool Function()? operation]) async {
+    final ownsSession = operation ?? _sessionGuard();
+    if (!ownsSession()) return;
     final result = await DatabaseX.getCountriesList();
     if (ownsSession()) countriesList.value = result;
   }
 
   /// Load languages
-  Future<void> loadLanguages() async {
-    final ownsSession = _sessionGuard();
+  Future<void> loadLanguages([bool Function()? operation]) async {
+    final ownsSession = operation ?? _sessionGuard();
+    if (!ownsSession()) return;
     try {
       final result = await DatabaseX.getNativeLanguages();
       if (!ownsSession()) return;
@@ -133,8 +140,9 @@ class CompleteAccountInfoController extends GetxController {
   }
 
   /// Load phone codes
-  Future<void> loadPhoneCodes() async {
-    final ownsSession = _sessionGuard();
+  Future<void> loadPhoneCodes([bool Function()? operation]) async {
+    final ownsSession = operation ?? _sessionGuard();
+    if (!ownsSession()) return;
     try {
       /// Get phone codes
       final result = await DatabaseX.getPhoneCodeCountriesList();
@@ -165,6 +173,7 @@ class CompleteAccountInfoController extends GetxController {
   /// Change image
   Future<void> changeImage({bool isGallery = true}) async {
     final ownsSession = _sessionGuard();
+    if (!ownsSession()) return;
 
     /// Close the bottom sheet
     Get.back();
@@ -265,20 +274,8 @@ class CompleteAccountInfoController extends GetxController {
 
   /// Async results belong only to this controller and the initiating session.
   bool Function() _sessionGuard() {
-    final user = app.user.value;
-    final userId = user.id;
-    final localUserId = LocalDataX.userid;
-    final token = LocalDataX.token;
-    return () =>
-        !isClosed &&
-        Get.isRegistered<CompleteAccountInfoController>() &&
-        identical(Get.find<CompleteAccountInfoController>(), this) &&
-        Get.isRegistered<AppControllerX>() &&
-        identical(Get.find<AppControllerX>(), app) &&
-        identical(app.user.value, user) &&
-        app.user.value.id == userId &&
-        LocalDataX.userid == localUserId &&
-        LocalDataX.token == token;
+    final lease = SessionLeaseX.capture(isActive: () => _ownerLease.isCurrent);
+    return () => lease.isCurrent;
   }
 
   /// Complete later
@@ -315,6 +312,17 @@ class CompleteAccountInfoController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    final accountId = app.user.value.id;
+    _ownerLease = SessionLeaseX.capture(
+      isActive:
+          () =>
+              !isClosed &&
+              Get.isRegistered<CompleteAccountInfoController>() &&
+              identical(Get.find<CompleteAccountInfoController>(), this) &&
+              Get.isRegistered<AppControllerX>() &&
+              identical(Get.find<AppControllerX>(), app) &&
+              app.user.value.id == accountId,
+    );
 
     /// Initialize form key
     formKey = GlobalKey<FormState>();

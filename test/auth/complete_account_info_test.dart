@@ -279,7 +279,14 @@ void main() {
     );
   });
 
-  for (final abandon in ['closed', 'token', 'user', 'owner']) {
+  for (final abandon in [
+    'closed',
+    'token',
+    'user',
+    'owner',
+    'same-value',
+    'aba',
+  ]) {
     testWidgets(
       'pending completion ignores abandoned $abandon and sends no photo',
       (tester) async {
@@ -307,6 +314,15 @@ void main() {
               );
             } else if (abandon == 'user') {
               controller.app.user.value.id = 'replacement-user';
+            } else if (abandon == 'same-value') {
+              await tester.runAsync(
+                () => LocalDataX.put(LocalKeyX.token, 'synthetic-token'),
+              );
+            } else if (abandon == 'aba') {
+              await tester.runAsync(() async {
+                await LocalDataX.put(LocalKeyX.token, 'replacement-token');
+                await LocalDataX.put(LocalKeyX.token, 'synthetic-token');
+              });
             } else {
               Get.delete<CompleteAccountInfoController>(force: true);
               Get.put(CompleteAccountInfoController());
@@ -436,6 +452,24 @@ void main() {
         await pending;
         expect(find.text('Root destination'), findsNothing);
         expect(controller.buttonState.value, ButtonStateEX.success);
+      }, () => MockClient(referenceResponse));
+    },
+  );
+
+  testWidgets(
+    'stale completion form cannot start a mutation under a new generation',
+    (tester) async {
+      await http.runWithClient(() async {
+        await mount(tester);
+        validValues();
+        await tester.pumpAndSettle();
+        final loaded = requests.length;
+        await tester.runAsync(
+          () => LocalDataX.put(LocalKeyX.token, 'synthetic-token'),
+        );
+        await controller.onEdit();
+        expect(requests.length, loaded);
+        expect(controller.isLoading.value, isFalse);
       }, () => MockClient(referenceResponse));
     },
   );
