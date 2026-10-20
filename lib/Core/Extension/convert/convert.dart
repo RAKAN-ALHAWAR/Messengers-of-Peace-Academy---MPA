@@ -61,28 +61,24 @@ extension ConvertExtensionX on dynamic {
   /// Returns the converted int value if successful, otherwise the default value.
   int toIntDefaultX(defaultValue) {
     if (this is int) {
-      return this;
+      return this as int;
     }
-    if (this is double || this is num) {
-      return this.toInt();
+    if (this is num) {
+      final value = this as num;
+      return value.isFinite ? value.toInt() : defaultValue;
     }
     if (this is bool) {
-      return this?1:0;
-    }
-    if (this == null || this is Object) {
-      return defaultValue;
+      return (this as bool) ? 1 : 0;
     }
     if (this is String) {
-      String value = this.trim();
-      if (value.isEmpty) {
-        return defaultValue;
+      final value = (this as String).trim();
+      final integer = int.tryParse(value);
+      if (integer != null) {
+        return integer;
       }
-      try {
-        return int.tryParse(this) ??
-            double.tryParse(this)?.toInt() ??
-            defaultValue;
-      } catch (e) {
-        return defaultValue;
+      final decimal = double.tryParse(value);
+      if (decimal != null && decimal.isFinite) {
+        return decimal.toInt();
       }
     }
     return defaultValue;
@@ -228,32 +224,13 @@ extension ConvertExtensionX on dynamic {
   }
 
   double toDoubleDefaultX(double defaultValue) {
-    try {
-      if (this is double) {
-        return this;
-      }
-      if (this is int || this is num) {
-        return this+.0;
-      }
-      if (this == null || this is Object) {
-        return defaultValue;
-      }
-      if (this is String) {
-        String value = this.trim();
-        try {
-          if (double.tryParse(value) != null) {
-            return double.parse(value);
-          } else {
-            throw defaultValue;
-          }
-        } catch (e) {
-          throw defaultValue;
-        }
-      }
-      throw defaultValue;
-    } catch (e) {
-      rethrow;
+    double? value;
+    if (this is num) {
+      value = (this as num).toDouble();
+    } else if (this is String) {
+      value = double.tryParse((this as String).trim());
     }
+    return value != null && value.isFinite ? value : defaultValue;
   }
 
   /// Converts a given value to a bool if possible.

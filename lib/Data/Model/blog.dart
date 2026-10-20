@@ -32,15 +32,14 @@ class BlogX {
             ? attachments.first[NameX.fileurl]?.toString() ?? ''
             : null;
 
-    final tags = List<Map<String, dynamic>>.from(json[NameX.tags] ?? []);
+    // Tags are optional metadata. A short or malformed tag must not discard
+    // an otherwise valid article, and Unicode prefixes must not split a rune.
+    final tags = json[NameX.tags];
+    final firstTag = tags is List && tags.isNotEmpty ? tags.first : null;
+    final tagName = firstTag is Map ? firstTag[NameX.name]?.toString() : null;
+    final prefix = (tagName ?? '').runes.take(2).toList();
     final lang =
-        tags.isNotEmpty
-            ? tags.first[NameX.name]
-                    ?.toString()
-                    .substring(0, 2)
-                    .toLowerCase() ??
-                'en'
-            : null;
+        prefix.length == 2 ? String.fromCharCodes(prefix).toLowerCase() : 'en';
 
     return ModelUtilX.checkFromJson(json, (json) {
       return BlogX(
@@ -50,7 +49,7 @@ class BlogX {
         summary: json[NameX.summary].toStrX,
         imageUrl: fileUrl ?? '',
         imageUrlWithoutWebservice: fileUrl?.replaceFirst('webservice/', ''),
-        lang: lang ?? 'en',
+        lang: lang,
         createdAt:
             json[NameX.created] != null
                 ? DateTime.fromMillisecondsSinceEpoch(
