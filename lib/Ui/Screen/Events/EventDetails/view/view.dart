@@ -34,85 +34,92 @@ class EventDetailsView extends GetView<EventDetailsController> {
           child: FutureBuilderX(
             /// Get data from database
             future: controller.getData,
+            requestKey: (
+              controller,
+              controller.event.id,
+              TranslationX.getLanguageCode,
+            ),
 
             /// Loading
             loading: const EventDetailsLoading(),
 
             /// Build body
             child: (_) {
-              return SingleChildScrollView(
-                padding: StyleX.paddingApp,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    /// Event name
-                    TextX(
-                      controller.eventDetails.value.name,
-                      style: TextStyleX.titleLarge,
-                    ).fadeAnimation150,
+              return Obx(
+                () => SingleChildScrollView(
+                  padding: StyleX.paddingApp,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      /// Event name
+                      TextX(
+                        controller.eventDetails.value.name,
+                        style: TextStyleX.titleLarge,
+                      ).fadeAnimation150,
 
-                    /// Spacer
-                    SizedBox(height: 16),
+                      /// Spacer
+                      SizedBox(height: 16),
 
-                    /// Date
-                    IconAndTitleCard(
-                      icon: IconX.today,
-                      value: DateFormat(
-                        'EEEE ,d MMMM y',
-                        TranslationX.getLanguageCode,
-                      ).format(controller.eventDetails.value.dateTimeStart),
-                    ).fadeAnimation200,
-
-                    /// Spacer
-                    SizedBox(height: 10),
-
-                    /// Time
-                    IconAndTitleCard(
-                      icon: IconX.schedule,
-                      value:
-                          "${"From".tr} ${controller.getTimeShow(controller.eventDetails.value.dateTimeStart)} ${"to".tr} ${controller.getTimeShow(controller.eventDetails.value.dateTimeEnd)}",
-                    ).fadeAnimation200,
-
-                    /// Repeated
-                    if (controller.eventDetails.value.isRepeated)
+                      /// Date
                       IconAndTitleCard(
-                        icon: IconX.repeat,
+                        icon: IconX.today,
+                        value: DateFormat(
+                          'EEEE ,d MMMM y',
+                          TranslationX.getLanguageCode,
+                        ).format(controller.eventDetails.value.dateTimeStart),
+                      ).fadeAnimation200,
+
+                      /// Spacer
+                      SizedBox(height: 10),
+
+                      /// Time
+                      IconAndTitleCard(
+                        icon: IconX.schedule,
                         value:
-                            "${"Repeated weekly for".tr} ${controller.eventDetails.value.repeatCount} ${"weeks".tr}",
-                        isPrimary: true,
-                      ).marginOnly(top: 10).fadeAnimation200,
+                            "${"From".tr} ${controller.getTimeShow(controller.eventDetails.value.dateTimeStart)} ${"to".tr} ${controller.getTimeShow(controller.eventDetails.value.dateTimeEnd)}",
+                      ).fadeAnimation200,
 
-                    /// Spacer
-                    SizedBox(height: 24),
+                      /// Repeated
+                      if (controller.eventDetails.value.isRepeated)
+                        IconAndTitleCard(
+                          icon: IconX.repeat,
+                          value:
+                              "${"Repeated weekly for".tr} ${controller.eventDetails.value.repeatCount} ${"weeks".tr}",
+                          isPrimary: true,
+                        ).marginOnly(top: 10).fadeAnimation200,
 
-                    /// Event details title
-                    TextX(
-                      "Event Details",
-                      style: TextStyleX.titleMedium,
-                    ).fadeAnimation250,
+                      /// Spacer
+                      SizedBox(height: 24),
 
-                    /// Spacer
-                    SizedBox(height: 4),
+                      /// Event details title
+                      TextX(
+                        "Event Details",
+                        style: TextStyleX.titleMedium,
+                      ).fadeAnimation250,
 
-                    /// Description
-                    TextX(
-                      controller.eventDetails.value.description,
-                      style: TextStyleX.bodyMedium,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ).fadeAnimation250,
+                      /// Spacer
+                      SizedBox(height: 4),
 
-                    /// Spacer
-                    SizedBox(height: 24),
+                      /// Description
+                      TextX(
+                        controller.eventDetails.value.description,
+                        style: TextStyleX.bodyMedium,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ).fadeAnimation250,
 
-                    /// Join meeting button
-                    if (controller.eventDetails.value.isNow &&
-                        controller.eventDetails.value.meetingUrl.isNotEmpty)
-                      ButtonX(
-                        onTap: controller.onOpenMeeting,
-                        text: "Join the meeting".tr,
-                        iconData: IconX.videocam,
-                      ).fadeAnimation250.marginOnly(top: 24),
-                  ],
+                      /// Spacer
+                      SizedBox(height: 24),
+
+                      /// Join meeting button
+                      if (controller.eventDetails.value.isNow &&
+                          controller.eventDetails.value.meetingUrl.isNotEmpty)
+                        ButtonX(
+                          onTap: controller.onOpenMeeting,
+                          text: "Join the meeting".tr,
+                          iconData: IconX.videocam,
+                        ).fadeAnimation250.marginOnly(top: 24),
+                    ],
+                  ),
                 ),
               );
             },

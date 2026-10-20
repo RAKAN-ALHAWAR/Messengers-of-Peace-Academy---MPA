@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
@@ -20,6 +21,7 @@ class BadgesView extends GetView<BadgesController> {
         /// Get data from the controller
         child: FutureBuilderX<List<BadgeX>>(
           future: controller.getData,
+          requestKey: (controller, TranslationX.getLanguageCode),
 
           /// Loading state
           loading: const BadgesLoading(),

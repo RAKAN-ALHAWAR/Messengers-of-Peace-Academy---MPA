@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
@@ -21,6 +22,11 @@ class CourseDetailsView extends GetView<CourseDetailsController> {
         /// Get data from the controller
         child: FutureBuilderX(
           future: controller.getData,
+          requestKey: (
+            controller,
+            controller.courseId,
+            TranslationX.getLanguageCode,
+          ),
 
           /// Loading state
           loading: const CourseDetailsLoading(),

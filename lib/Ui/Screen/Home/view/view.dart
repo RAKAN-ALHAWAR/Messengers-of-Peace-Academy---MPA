@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
@@ -25,6 +26,7 @@ class HomeView extends GetView<HomeController> {
       ),
       body: FutureBuilderX(
         future: controller.getData,
+        requestKey: (controller, TranslationX.getLanguageCode),
 
         /// Loading
         loading: const HomeLoading(),

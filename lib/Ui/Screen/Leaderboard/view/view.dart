@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
@@ -19,6 +20,7 @@ class LeaderboardView extends GetView<LeaderboardController> {
         /// Get data from the controller
         child: FutureBuilderX<List<LeaderboardX>>(
           future: controller.getData,
+          requestKey: (controller, TranslationX.getLanguageCode),
 
           /// Loading state
           loading: const LeaderboardLoading(),

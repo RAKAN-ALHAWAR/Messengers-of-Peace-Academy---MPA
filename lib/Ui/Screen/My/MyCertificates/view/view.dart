@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
@@ -39,6 +40,7 @@ class MyCertificatesView extends GetView<MyCertificatesController> {
                 Expanded(
                   child: FutureBuilderX(
                     future: controller.getData,
+                    requestKey: (controller, TranslationX.getLanguageCode),
                     loading: MyCertificatesLoading(),
                     child: (_) => SizedBox(),
                   ),

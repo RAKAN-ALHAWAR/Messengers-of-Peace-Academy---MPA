@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
@@ -18,6 +19,7 @@ class ProfileDetailsView extends GetView<ProfileDetailsController> {
     return Scaffold(
       body: FutureBuilderX(
         future: controller.getData,
+        requestKey: (controller, TranslationX.getLanguageCode),
 
         /// Loading state
         loading: const ProfileDetailsLoading(),

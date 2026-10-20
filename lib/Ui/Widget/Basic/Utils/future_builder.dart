@@ -1,11 +1,17 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+
+import '../../../../Core/Service/session_lease.dart';
+import '../../../../Data/data.dart';
 import '../../../Section/GeneralState/error.dart';
 
 class FutureBuilderX<T> extends StatefulWidget {
   const FutureBuilderX({
     super.key,
     required this.future,
+    this.requestKey,
     this.loading,
     required this.child,
     this.onLoading,
@@ -17,13 +23,17 @@ class FutureBuilderX<T> extends StatefulWidget {
   });
 
   final Future<T> Function() future;
+
+  /// Immutable equality key for business inputs such as a course ID or locale.
+  /// A new callback object alone does not identify a new request. Session
+  /// revisions are included automatically, even when these inputs are unchanged.
+  final Object? requestKey;
   final Widget? loading;
   final Widget Function(T data) child;
 
   final bool isHideIfError;
   final bool isHideIfEmpty;
 
-  // Callbacks
   final VoidCallback? onLoading;
   final VoidCallback? onError;
   final VoidCallback? onSuccess;
@@ -34,62 +44,122 @@ class FutureBuilderX<T> extends StatefulWidget {
 }
 
 class FutureBuilderXState<T> extends State<FutureBuilderX<T>> {
-  late dynamic Function() _future;
+  late Future<T> _future;
+  late SessionLeaseX _lease;
+  late int _sessionRevision;
+  int _generation = 0;
+  late final StreamSubscription<int> _sessionSubscription;
 
   @override
   void initState() {
     super.initState();
-    _future = widget.future;
-  }
-
-  Future<void> _reloadFuture() async {
-    setState(() {
-      _future = widget.future;
-      widget.onRetry?.call();
+    _startLoad();
+    _sessionSubscription = LocalDataX.sessionChanges.listen((_) {
+      if (WidgetsBinding.instance.schedulerPhase ==
+          SchedulerPhase.persistentCallbacks) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _reloadSession());
+      } else {
+        _reloadSession();
+      }
     });
   }
 
-  void onRefresh() {
-    setState(() {
-      _reloadFuture();
+  void _reloadSession() {
+    if (mounted && _sessionRevision != LocalDataX.sessionRevision) {
+      setState(_startLoad);
+    }
+  }
+
+  @override
+  void dispose() {
+    _sessionSubscription.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant FutureBuilderX<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.requestKey != widget.requestKey ||
+        _sessionRevision != LocalDataX.sessionRevision) {
+      _startLoad();
+    }
+  }
+
+  void _startLoad() {
+    final generation = ++_generation;
+    _sessionRevision = LocalDataX.sessionRevision;
+    final lease = SessionLeaseX.capture(
+      isActive: () => mounted && generation == _generation,
+    );
+    _lease = lease;
+    _notify(lease, () => widget.onLoading);
+
+    // Deferral catches synchronous throws and keeps callers' initial state
+    // changes out of the ancestor build that created this widget.
+    final request = widget.future;
+    _future = Future<T>.microtask(() {
+      if (!lease.isCurrent) {
+        throw StateError(
+          'The request no longer belongs to the current screen.',
+        );
+      }
+      return request();
     });
+    _future.then<void>(
+      (_) => _notify(lease, () => widget.onSuccess),
+      onError: (Object error, StackTrace stackTrace) {
+        _notify(lease, () => widget.onError);
+      },
+    );
+  }
+
+  void _notify(SessionLeaseX lease, VoidCallback? Function() callback) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (lease.isCurrent) callback()?.call();
+    });
+  }
+
+  /// Fetch the current inputs once, without reporting a user error retry.
+  Future<void> refresh() => _reloadFuture(notifyRetry: false);
+
+  /// Existing retry entry point retained for callers and the error action.
+  Future<void> onRefresh() => _reloadFuture(notifyRetry: true);
+
+  Future<void> _reloadFuture({required bool notifyRetry}) async {
+    if (!mounted) return;
+    setState(_startLoad);
+    if (notifyRetry) _notify(_lease, () => widget.onRetry);
+    try {
+      await _future;
+    } catch (_) {
+      // The retained FutureBuilder renders the failure. An ignored retry
+      // callback must not create a second, unhandled asynchronous error.
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _future(),
+    return FutureBuilder<T>(
+      future: _future,
       builder: (context, snapshot) {
-        /// Loading State
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            widget.onLoading?.call();
-          });
+        // A stale operation may finish before navigation removes this widget.
+        // Neither its data nor its success/error callbacks belong to the new
+        // account. The session signal starts the new session's load, including
+        // when no parent rebuild occurs.
+        if (!_lease.isCurrent) return const SizedBox();
+        if (snapshot.connectionState != ConnectionState.done) {
           return widget.loading ??
               const Center(child: CircularProgressIndicator());
         }
-
-        /// Error State
         if (snapshot.hasError) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            widget.onError?.call();
-          });
-          if (widget.isHideIfError) {
-            return const SizedBox();
-          } else {
-            return ErrorView(error: snapshot.error, onTapButton: onRefresh);
-          }
+          return widget.isHideIfError
+              ? const SizedBox()
+              : ErrorView(error: snapshot.error, onTapButton: onRefresh);
         }
-
-        /// Success State
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          widget.onSuccess?.call();
-        });
         if (widget.isHideIfEmpty && snapshot.data == null) {
           return const SizedBox();
-        } else {
-          return widget.child(snapshot.data as T);
         }
+        return widget.child(snapshot.data as T);
       },
     );
   }

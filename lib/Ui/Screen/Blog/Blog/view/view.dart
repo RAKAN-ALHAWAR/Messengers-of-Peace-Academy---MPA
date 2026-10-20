@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -20,6 +21,7 @@ class BlogView extends GetView<BlogController> {
         /// Get data from the controller
         child: FutureBuilderX<List<BlogX>>(
           future: controller.getData,
+          requestKey: (controller, TranslationX.getLanguageCode),
 
           /// Loading state
           loading: const BlogLoading(),

@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Ui/Animation/fade/fade_animation.dart';
@@ -22,6 +23,7 @@ class NotificationsView extends GetView<NotificationsController> {
       body: SafeArea(
         child: FutureBuilderX(
           future: controller.getData,
+          requestKey: (controller, TranslationX.getLanguageCode),
           loading: NotificationsLoading(),
           child: (_) {
             /// If there are no notifications, show empty message
