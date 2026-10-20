@@ -62,3 +62,5 @@ on independent slices. Existing45 tests are the starting regression gate.
   bounds memory (not uploaded file size). Seven synthetic POST/PUT tests passed,
   including stalled body/headers, normal response, single request and size cap.
   This conservative protocol cap is an implementation choice pending final review.
+- Replacement HTTP status path observed green34/34 transport/privacy/upload and
+  response cases. Removed superseded post-cast error branch in a separate step.

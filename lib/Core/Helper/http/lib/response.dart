@@ -165,28 +165,6 @@ class HttpResponseX {
       );
     }
 
-    // Success response
-    // If the status code is in the category 2xx (200-299), return the parsed results.
-    // استجابة ناجحة
-    // إذا كان رمز الحالة في الفئة 2xx (200-299)، يتم إرجاع النتائج المحللة.
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return results;
-    } else {
-      // Handle errors
-      // If status code is 401 and ignoreUnauthorized is true,
-      // return the fallback response. Otherwise, throw an error.
-      // معالجة الأخطاء
-      // إذا كان رمز الحالة هو 401 وكان ignoreUnauthorized صحيحًا،
-      // يتم إرجاع الاستجابة البديلة. خلاف ذلك، يتم طرح خطأ.
-      if (response.statusCode == 401 && ignoreUnauthorized) {
-        return fallbackResponse;
-      } else {
-        return throw ErrorX.createErrorByCode(
-          response.statusCode,
-          details:
-              results is Map<String, dynamic> ? results : {'result': results},
-        );
-      }
-    }
+    return results;
   }
 }
