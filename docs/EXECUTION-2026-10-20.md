@@ -52,3 +52,13 @@ on independent slices. Existing45 tests are the starting regression gate.
   than arbitrary response bodies, nested details, error messages or framework
   context/library contents. Removed raw quiz-result print. Two synthetic privacy
   tests passed; no credential rotation or deployed-state claim is made.
+- Authenticated transport preserves401 before typed body casting/fallback, emits
+  local expiry only for the matching current user token, and recognizes Moodle's
+  exact invalidtoken response.403/500/timeouts and old-account401 do not expire a
+  replacement account. Unowned legacy cache is excluded for authenticated calls.
+  Observed13 synthetic transport cases plus12 HTTP response regressions passing.
+- Multipart deadlines cover response headers and streamed body; owned client
+  closes immediately on completion/error/timeout. A16MiB acknowledgement cap
+  bounds memory (not uploaded file size). Seven synthetic POST/PUT tests passed,
+  including stalled body/headers, normal response, single request and size cap.
+  This conservative protocol cap is an implementation choice pending final review.

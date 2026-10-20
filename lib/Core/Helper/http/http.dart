@@ -3,9 +3,11 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 import '../../Error/error.dart';
+import '../../Service/session_lease.dart';
 
 part 'lib/request.dart';
 part 'lib/response.dart';
@@ -15,6 +17,65 @@ class HttpX {
   static late final String _internetCheckUrl;
   static late final Duration _timeout;
   static late final Duration _internetRetryDelay;
+  // Protocol response budget for multipart acknowledgements, not file contents.
+  static const _multipartResponseLimit = 16 * 1024 * 1024;
+
+  static Future<http.Response> _sendMultipart(
+    http.MultipartRequest request,
+    Duration? timeout,
+  ) async {
+    final client = http.Client();
+    StreamSubscription<List<int>>? subscription;
+    final completion = Completer<http.Response>();
+    var cancelled = false;
+    Future<http.Response> send() async {
+      final streamed = await client.send(request);
+      if (cancelled) throw const HttpException('Upload response cancelled');
+      final bytes = BytesBuilder(copy: false);
+      subscription = streamed.stream.listen(
+        (chunk) {
+          if (completion.isCompleted) return;
+          if (bytes.length + chunk.length > _multipartResponseLimit) {
+            completion.completeError(
+              ErrorX.createErrorByCode(ErrorCodesX.payloadTooLarge),
+            );
+          } else {
+            bytes.add(chunk);
+          }
+        },
+        onError: (Object error, StackTrace stack) {
+          if (!completion.isCompleted) completion.completeError(error, stack);
+        },
+        onDone: () {
+          if (!completion.isCompleted) {
+            completion.complete(
+              http.Response.bytes(
+                bytes.takeBytes(),
+                streamed.statusCode,
+                headers: streamed.headers,
+                reasonPhrase: streamed.reasonPhrase,
+                request: streamed.request,
+                isRedirect: streamed.isRedirect,
+                persistentConnection: streamed.persistentConnection,
+              ),
+            );
+          }
+        },
+        cancelOnError: true,
+      );
+      return completion.future;
+    }
+
+    try {
+      return await send().timeout(timeout ?? _timeout);
+    } finally {
+      cancelled = true;
+      client.close();
+      // Stream cancellation may itself wait on a stalled transport. The owned
+      // client is closed immediately; cleanup cannot extend the request deadline.
+      if (subscription != null) unawaited(subscription!.cancel());
+    }
+  }
 
   static init({
     String internetCheckUrl = "one.one.one.one",
@@ -33,6 +94,8 @@ class HttpX {
     int? maxRetries,
     bool ignoreUnauthorized = false,
   }) async {
+    final lease = SessionLeaseX.capture();
+    final authenticated = lease.authenticates(url);
     try {
       // Validate Url
       HttpUtilX.validateUrl(url);
@@ -40,13 +103,22 @@ class HttpX {
       // Handle Request
       http.Response response = await HttpRequestX.call(method, maxRetries);
 
+      if (response.statusCode == 401 && authenticated && !ignoreUnauthorized) {
+        SessionExpiryX.report(lease);
+        // Never let fallbackResponse turn an expired identity into success.
+        throw ErrorX.createErrorByCode(ErrorCodesX.unauthorized);
+      }
+
       // Handle response status codes
       return await HttpResponseX.call(
         response,
         fallbackResponse,
         ignoreUnauthorized,
       );
-    } on ErrorX {
+    } on ErrorX catch (error) {
+      if (error.errorCode == ErrorCodesX.unauthorized && !ignoreUnauthorized) {
+        rethrow;
+      }
       if (fallbackResponse != null) {
         return fallbackResponse;
       } else {
@@ -163,11 +235,7 @@ class HttpX {
     }
     return await _call(
       url: url,
-      method: () async {
-        return await http.Response.fromStream(
-          await request.send().timeout(timeout ?? _timeout),
-        );
-      },
+      method: () => _sendMultipart(request, timeout),
       fallbackResponse: fallbackResponse,
       maxRetries: maxRetries,
       ignoreUnauthorized: ignoreUnauthorized,
@@ -249,11 +317,7 @@ class HttpX {
     }
     return await _call(
       url: url,
-      method: () async {
-        return await http.Response.fromStream(
-          await request.send().timeout(timeout ?? _timeout),
-        );
-      },
+      method: () => _sendMultipart(request, timeout),
       fallbackResponse: fallbackResponse,
       maxRetries: maxRetries,
       ignoreUnauthorized: ignoreUnauthorized,

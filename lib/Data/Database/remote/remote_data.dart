@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import '../../../Core/Error/error.dart';
+import '../../../Core/Service/session_lease.dart';
 import '../../../Core/Helper/http/http.dart';
 import '../../../Core/Util/http_url.dart';
 import '../../../Core/Util/url.dart';
@@ -22,6 +23,8 @@ class RemoteDataSourceX {
     bool isSkeepStatus = false,
   ]) async {
     param ??= DataSourceParamX(); // Use default parameters if none provided
+    final lease = SessionLeaseX.capture();
+    final authenticated = lease.authenticates(url);
     T? result;
     ErrorX? error;
     try {
@@ -30,7 +33,22 @@ class RemoteDataSourceX {
       error = ErrorX.fromException(e);
     }
 
-    if ((error?.errorCode ?? -1) != ErrorCodesX.unauthorized &&
+    if (authenticated && !lease.isCurrent) {
+      throw ErrorX(message: 'Session changed. Please try again.');
+    }
+    if (authenticated &&
+        (result is Map && result['errorcode'] == 'invalidtoken')) {
+      SessionExpiryX.report(lease);
+      throw ErrorX.createErrorByCode(ErrorCodesX.unauthorized);
+    }
+
+    if (error?.errorCode == ErrorCodesX.unauthorized) throw error!;
+
+    // Legacy cache entries have no account ownership. Do not read or populate
+    // them for authenticated requests; explicit owned caches can be added later.
+
+    if (!authenticated &&
+        (error?.errorCode ?? -1) != ErrorCodesX.unauthorized &&
         (param.page == null || param.page == 1)) {
       result = _useLocal<T>(param.localCacheKey, result);
     }

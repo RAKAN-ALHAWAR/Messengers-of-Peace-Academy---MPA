@@ -137,6 +137,20 @@ class HttpResponseX {
       responseBody = response.body;
     }
 
+    // Error status is authoritative even when the error body does not match T.
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      if (response.statusCode == 401 && ignoreUnauthorized) {
+        return fallbackResponse;
+      }
+      throw ErrorX.createErrorByCode(
+        response.statusCode,
+        details:
+            responseBody is Map<String, dynamic>
+                ? responseBody
+                : {'result': responseBody},
+      );
+    }
+
     T results;
     try {
       results = responseBody as T;
