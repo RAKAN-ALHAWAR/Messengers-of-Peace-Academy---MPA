@@ -39,12 +39,21 @@ class UpdateUserForm {
     required this.email,
   });
 
-  String? get getAge {
+  String? get getAge => ageBucketAt(DateTime.now());
+
+  /// Same backend bucket codes, using completed birthdays rather than years.
+  String? ageBucketAt(DateTime today) {
     if (age != null && age!.isNotEmpty) {
       return age;
     }
-    int? year =
-        (birthOfDate != null ? DateTime.now().year - birthOfDate!.year : null);
+    final birth = birthOfDate;
+    int? year = birth == null ? null : today.year - birth.year;
+    if (birth != null &&
+        year != null &&
+        (today.month < birth.month ||
+            (today.month == birth.month && today.day < birth.day))) {
+      year--;
+    }
     List<String> listAge = ["18-25 Yrs", "26-40 Yrs", "41-65 Yrs", "+65 Yrs"];
     if (year != null) {
       if (year <= 25) {

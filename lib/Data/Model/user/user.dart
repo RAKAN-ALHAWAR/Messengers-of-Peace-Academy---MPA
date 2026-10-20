@@ -40,10 +40,13 @@ class UserX {
 
   String get phone {
     final whatsappField = whatsapp;
-    if (whatsappField.isNotEmpty) {
-      return whatsappField.substring(phoneCodeCountry.length);
+    final prefix = phoneCodeCountry;
+    if (prefix.isNotEmpty && whatsappField.startsWith(prefix)) {
+      return whatsappField.substring(prefix.length);
     }
-    return "";
+    // Legacy records can contain a short number or a different prefix. Keep
+    // their bytes intact so an unrelated profile edit cannot fabricate a phone.
+    return whatsappField;
   }
 
   String get phoneCodeCountry {
@@ -59,7 +62,6 @@ class UserX {
       (field) => field.name == NameX.gender,
       orElse: () => CustomField(name: NameX.gender, value: ''),
     );
-    print(genderField.value);
     return genderField.value.toLowerCase().contains("female")
         ? "female"
         : genderField.value.toLowerCase().contains("male")
