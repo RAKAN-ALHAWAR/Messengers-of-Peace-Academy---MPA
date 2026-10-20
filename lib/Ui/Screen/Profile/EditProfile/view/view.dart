@@ -43,7 +43,7 @@ class EditProfileView extends GetView<EditProfileController> {
                       /// Form fields
                       Form(
                         key: controller.formKey,
-                        autovalidateMode: controller.autoValidate,
+                        autovalidateMode: controller.autoValidate.value,
                         child: Column(
                           children: [
                             /// First Name and Last Name inputs
@@ -83,36 +83,31 @@ class EditProfileView extends GetView<EditProfileController> {
                             /// Note that you cannot change the name later unless you contact us
                             Align(
                               alignment: AlignmentDirectional.centerStart,
-                              child:
-                                  Text.rich(
+                              child: Text.rich(
+                                TextSpan(
+                                  children: [
                                     TextSpan(
-                                      children: [
-                                        TextSpan(
-                                          text:
-                                              "${"To change the name, please".tr} ",
-                                          style: TextStyleX.bodySmall.copyWith(
-                                            color:
-                                                Theme.of(
-                                                  context,
-                                                ).colorScheme.onSurface,
-                                          ),
-                                        ),
-                                        TextSpan(
-                                          recognizer:
-                                              TapGestureRecognizer()
-                                                ..onTap =
-                                                    controller.onContactUs,
-                                          text: "contact us.".tr,
-                                          style: TextStyleX.bodySmall.copyWith(
-                                            color:
-                                                Theme.of(
-                                                  context,
-                                                ).colorScheme.primary,
-                                          ),
-                                        ),
-                                      ],
+                                      text:
+                                          "${"To change the name, please".tr} ",
+                                      style: TextStyleX.bodySmall.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurface,
+                                      ),
                                     ),
-                                  ).marginOnly(bottom: 18).fadeAnimation200,
+                                    TextSpan(
+                                      recognizer: TapGestureRecognizer()
+                                        ..onTap = controller.onContactUs,
+                                      text: "contact us.".tr,
+                                      style: TextStyleX.bodySmall.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ).marginOnly(bottom: 18).fadeAnimation200,
                             ),
 
                             /// Username input
@@ -231,10 +226,9 @@ class EditProfileView extends GetView<EditProfileController> {
                               hint: "Country",
                               value: controller.country.value,
                               onChanged: controller.changeCountry,
-                              list:
-                                  controller.countriesList
-                                      .map((e) => e.name)
-                                      .toList(),
+                              list: controller.countriesList
+                                  .map((e) => e.name)
+                                  .toList(),
                             ).fadeAnimation300.marginOnly(bottom: 16),
 
                             /// Current city of residence dropdown
@@ -251,10 +245,9 @@ class EditProfileView extends GetView<EditProfileController> {
                             DropdownX(
                               hint: "Your Native Language",
                               value: controller.language.value,
-                              list:
-                                  controller.languagesList
-                                      .map((e) => e.name)
-                                      .toList(),
+                              list: controller.languagesList
+                                  .map((e) => e.name)
+                                  .toList(),
                               onChanged: controller.changeLanguage,
                             ).fadeAnimation300.marginOnly(bottom: 16),
 
@@ -334,8 +327,9 @@ class EditProfileView extends GetView<EditProfileController> {
                                 ),
                               ],
                             ).fadeAnimation400.marginOnly(
-                              bottom:
-                                  controller.isSaudiUniversity.value ? 16 : 24,
+                              bottom: controller.isSaudiUniversity.value
+                                  ? 16
+                                  : 24,
                             ),
 
                             /// Saudi university dropdown
