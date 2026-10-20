@@ -1,6 +1,13 @@
 # Mopa audit state
 
-Updated: 2026-10-18 (Asia/Damascus).
+Updated: 2026-10-20 (Asia/Damascus).
+
+Latest direction (2026-10-20): Saker said 'اكمل' after the full remediation plan.
+Proceed with its locally actionable slices. Backend/owner decisions explicitly
+left open in the plan stay open; no production/remote authorization is inferred.
+Main owns session/request ownership, transport/logging, integration and records;
+profile and shared-data workers use separate branches/worktrees. Current board:
+EXECUTION-2026-10-20.md. Preserve original foreign pubspec.lock unchanged.
 
 Latest request: Saker asked for a plan to address all errors. Main owns docs-only
 comprehensive planning and coverage/review; no new application implementation.
