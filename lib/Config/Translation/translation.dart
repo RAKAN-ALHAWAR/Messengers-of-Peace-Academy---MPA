@@ -25,7 +25,7 @@ class TranslationX extends Translations {
     {'code': 'ar', 'name': 'العربية'},
     {'code': 'en', 'name': 'English'},
     {'code': 'es', 'name': 'Español'},
-    {'code': 'ph', 'name': 'Filipino'},
+    {'code': 'fil', 'name': 'Filipino'},
   ];
 
   /// List Locale of all supported languages
@@ -33,13 +33,13 @@ class TranslationX extends Translations {
     Locale('en'),
     Locale('ar'),
     Locale('es'),
-    Locale('ph'),
+    Locale('fil'),
   ];
 
   /// Link the language code with its translation file
   @override
   Map<String, Map<String, String>> get keys {
-    return {'en': en, 'ar': ar, 'es': es, 'ph': ph};
+    return {'en': en, 'ar': ar, 'es': es, 'fil': ph};
   }
 
   //============================================================================
@@ -47,21 +47,31 @@ class TranslationX extends Translations {
 
   /// Fetch the name of the current language
   static String getCurrentNameLanguage() {
-    String x = Get.locale!.languageCode;
-    return languages.firstWhere((lang) => x == lang['code'])['name'] ??
-        "not found";
+    final code = getLanguageCode;
+    return languages.firstWhere(
+      (language) => code == language['code'],
+      orElse:
+          () => languages.firstWhere((language) => language['code'] == 'en'),
+    )['name']!;
   }
 
-  /// Fetch the locale of the current language
-  static Locale get getLocale =>
-      Locale(Get.locale?.languageCode ?? LocalDataX.language);
+  // Legacy preferences used the country-like "ph" code. The UI uses intl's
+  // Filipino locale, while the existing backend contract continues to use ph.
+  static String _uiCode(String code) => code == 'ph' ? 'fil' : code;
 
-  /// Fetch the code of the current language
+  /// Fetch the locale of the current language, including legacy preferences.
+  static Locale get getLocale => Locale(getLanguageCode);
+
+  /// Locale for UI translations, dates, and request ownership.
   static String get getLanguageCode =>
-      Get.locale?.languageCode ?? LocalDataX.language;
+      _uiCode(Get.locale?.languageCode ?? LocalDataX.language);
+
+  /// Language code for existing backend headers and explicit language fields.
+  static String get backendLanguageCode =>
+      getLanguageCode == 'fil' ? 'ph' : getLanguageCode;
 
   /// Change the application language
   static changeLocale(String lang) async {
-    await Get.updateLocale(Locale(lang));
+    await Get.updateLocale(Locale(_uiCode(lang)));
   }
 }

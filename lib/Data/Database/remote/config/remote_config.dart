@@ -7,7 +7,7 @@ class RemoteConfigX {
   static String contentType = 'application/x-www-form-urlencoded';
   static String accept = 'application/json';
   static String authType = 'Bearer';
-  static String get languageCode => TranslationX.getLanguageCode;
+  static String get languageCode => TranslationX.backendLanguageCode;
 
   // Connection
   static int maxRetries = 1;
