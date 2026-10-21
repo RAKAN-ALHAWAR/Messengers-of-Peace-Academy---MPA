@@ -135,10 +135,12 @@ void main() {
       () => MockClient((request) async {
         requests++;
         final method = request.url.queryParameters['wsfunction'];
-        if (method == function(DBEndPointX.postGetUser))
+        if (method == function(DBEndPointX.postGetUser)) {
           return response(user(LocalDataX.userid));
-        if (method == function(DBEndPointX.postGetUserStatistics))
+        }
+        if (method == function(DBEndPointX.postGetUserStatistics)) {
           return response(statistics());
+        }
         return response([]);
       }),
     );
@@ -210,8 +212,9 @@ void main() {
           () => MockClient((request) async {
             requests++;
             final method = request.url.queryParameters['wsfunction'];
-            if (method == function(DBEndPointX.postGetUser))
+            if (method == function(DBEndPointX.postGetUser)) {
               return response(user('not-yet-published'));
+            }
             final isStatistics =
                 method == function(DBEndPointX.postGetUserStatistics);
             if ((pendingStage == 'statistics' && isStatistics) ||
@@ -264,10 +267,12 @@ void main() {
       },
       () => MockClient((request) async {
         final method = request.url.queryParameters['wsfunction'];
-        if (method == function(DBEndPointX.postGetUser))
+        if (method == function(DBEndPointX.postGetUser)) {
           return response(user(LocalDataX.userid));
-        if (method == function(DBEndPointX.postGetUserStatistics))
+        }
+        if (method == function(DBEndPointX.postGetUserStatistics)) {
           return response(statistics());
+        }
         return response(
           LocalDataX.userid == 'synthetic-A'
               ? [
@@ -303,17 +308,20 @@ void main() {
             await expectLater(load(), throwsA(anything));
           },
           () => MockClient((request) async {
-            if (fail)
+            if (fail) {
               return response({
                 'status': 'failed',
                 'message': 'Synthetic failure',
               });
+            }
             if (screen == 'calendar') return response([event('old-owner')]);
             final method = request.url.queryParameters['wsfunction'];
-            if (method == function(DBEndPointX.postGetUser))
+            if (method == function(DBEndPointX.postGetUser)) {
               return response(user('old-owner'));
-            if (method == function(DBEndPointX.postGetUserStatistics))
+            }
+            if (method == function(DBEndPointX.postGetUserStatistics)) {
               return response(statistics());
+            }
             return response([]);
           }),
         );
