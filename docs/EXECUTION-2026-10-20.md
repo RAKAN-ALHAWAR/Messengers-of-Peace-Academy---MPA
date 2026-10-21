@@ -116,3 +116,7 @@ on independent slices. Existing45 tests are the starting regression gate.
   Explicit ignoreUnauthorized remains available and tested. Request-parameter
   diagnostics now omit arbitrary body/query/auth/header values.18 focused
   transport/privacy cases pass, including both Remote fallback policies.
+- Main owns FadeAnimation delay disposal after M2/M6 fixtures exposed a bounded
+  but uncancelled delayed callback. Timer is now cancelled on disposal; original
+  delay/animation still works. Two actual widget cases pass, with no waiting
+  added to mask pending callbacks.

@@ -1,5 +1,7 @@
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 part 'lib/fade_animation_extension.dart';
@@ -42,6 +44,7 @@ class FadeAnimationX extends StatefulWidget {
 // الفئة الحالة لـ FadeAnimationX.
 class _FadeAnimationXState extends State<FadeAnimationX>
     with SingleTickerProviderStateMixin {
+  Timer? _delayTimer;
   late AnimationController
   _controller; // Animation controller for managing the animation.
   // وحدة التحكم في الرسوم المتحركة لإدارة الرسوم المتحركة.
@@ -141,7 +144,7 @@ class _FadeAnimationXState extends State<FadeAnimationX>
       ).animate(curve);
     }
 
-    Future.delayed(Duration(milliseconds: widget.delay), () {
+    _delayTimer = Timer(Duration(milliseconds: widget.delay), () {
       if (mounted) {
         _controller.forward(); // Start the animation after the delay.
         // بدء الرسوم المتحركة بعد التأخير.
@@ -151,6 +154,7 @@ class _FadeAnimationXState extends State<FadeAnimationX>
 
   @override
   void dispose() {
+    _delayTimer?.cancel();
     _controller.dispose(); // Dispose of the animation controller.
     // التخلص من وحدة التحكم في الرسوم المتحركة.
     super.dispose();
