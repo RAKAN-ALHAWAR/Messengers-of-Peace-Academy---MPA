@@ -12,6 +12,7 @@ import 'package:messengersofpeace/Data/Model/info/language.dart';
 import 'package:messengersofpeace/Data/Model/info/phone_code.dart';
 
 import '../../../../../Config/config.dart';
+import '../../../../../Config/Translation/translation.dart';
 import '../../../../../Data/Form/update_user_form.dart';
 import '../../../../Widget/widget.dart';
 import '../../../../Widget/Basic/Utils/form_validation.dart';
@@ -61,6 +62,7 @@ class CompleteAccountInfoController extends GetxController {
   // Autovalidate mode
   final autoValidate = AutovalidateMode.disabled.obs;
   Future<void>? _referenceData;
+  (String, int)? _referenceKey;
   Timer? _buttonResetTimer;
   late final SessionLeaseX _ownerLease;
 
@@ -93,29 +95,37 @@ class CompleteAccountInfoController extends GetxController {
   // Functions
 
   /// Get data
-  Future<void> getData() => _referenceData ??= _loadData();
+  Future<void> getData() {
+    final key = (TranslationX.getLanguageCode, LocalDataX.sessionRevision);
+    if (_referenceKey != key) {
+      _referenceKey = key;
+      _referenceData = null;
+    }
+    return _referenceData ??= _loadData(key);
+  }
 
-  Future<void> _loadData() async {
-    final ownsSession = _sessionGuard();
-    if (!ownsSession()) return;
+  Future<void> _loadData((String, int) key) async {
+    final ownsLocale = _referenceGuard();
+    bool ownsRequest() => ownsLocale() && _referenceKey == key;
+    if (!ownsRequest()) return;
 
     /// Load data in parallel
     try {
       await Future.wait<void>([
-        loadCountries(ownsSession),
-        loadPhoneCodes(ownsSession),
-        loadLanguages(ownsSession),
+        loadCountries(ownsRequest),
+        loadPhoneCodes(ownsRequest),
+        loadLanguages(ownsRequest),
       ]);
     } catch (_) {
       // A failed load must be retryable; a successful load survives rebuilds.
-      _referenceData = null;
+      if (_referenceKey == key) _referenceData = null;
       rethrow;
     }
   }
 
   /// Load countries
   Future<void> loadCountries([bool Function()? operation]) async {
-    final ownsSession = operation ?? _sessionGuard();
+    final ownsSession = operation ?? _referenceGuard();
     if (!ownsSession()) return;
     final result = await DatabaseX.getCountriesList();
     if (ownsSession()) countriesList.value = result;
@@ -123,7 +133,7 @@ class CompleteAccountInfoController extends GetxController {
 
   /// Load languages
   Future<void> loadLanguages([bool Function()? operation]) async {
-    final ownsSession = operation ?? _sessionGuard();
+    final ownsSession = operation ?? _referenceGuard();
     if (!ownsSession()) return;
     try {
       final result = await DatabaseX.getNativeLanguages();
@@ -141,7 +151,7 @@ class CompleteAccountInfoController extends GetxController {
 
   /// Load phone codes
   Future<void> loadPhoneCodes([bool Function()? operation]) async {
-    final ownsSession = operation ?? _sessionGuard();
+    final ownsSession = operation ?? _referenceGuard();
     if (!ownsSession()) return;
     try {
       /// Get phone codes
@@ -276,6 +286,14 @@ class CompleteAccountInfoController extends GetxController {
   bool Function() _sessionGuard() {
     final lease = SessionLeaseX.capture(isActive: () => _ownerLease.isCurrent);
     return () => lease.isCurrent;
+  }
+
+  bool get ownsCurrentSession => _ownerLease.isCurrent;
+
+  bool Function() _referenceGuard() {
+    final ownsSession = _sessionGuard();
+    final locale = TranslationX.getLanguageCode;
+    return () => ownsSession() && TranslationX.getLanguageCode == locale;
   }
 
   /// Complete later

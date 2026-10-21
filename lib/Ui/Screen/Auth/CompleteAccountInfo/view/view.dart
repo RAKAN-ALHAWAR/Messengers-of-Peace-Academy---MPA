@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
+import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:messengersofpeace/Core/core.dart';
 import 'package:messengersofpeace/Ui/Animation/fade/fade_animation.dart';
 import 'package:messengersofpeace/Ui/Widget/Basic/Utils/future_builder.dart';
@@ -31,12 +32,17 @@ class CompleteAccountInfoView extends GetView<CompleteAccountInfoController> {
         child: FutureBuilderX(
           /// Future to load data
           future: controller.getData,
+          requestKey: (controller, TranslationX.getLanguageCode),
 
           /// Loading widget
           loading: const LoadingCompleteAccountInfo(),
 
           /// Data widget
           child: (_) {
+            if (!Get.isRegistered<CompleteAccountInfoController>() ||
+                !controller.ownsCurrentSession) {
+              return const SizedBox.shrink();
+            }
             return SingleChildScrollView(
               padding: StyleX.paddingApp,
               child: Obx(

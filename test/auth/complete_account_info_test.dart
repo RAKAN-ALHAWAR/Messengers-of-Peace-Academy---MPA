@@ -335,6 +335,10 @@ void main() {
             expect(requests.length, loaded);
             expect(find.text('Saved'), findsNothing);
             expect(find.text('Root destination'), findsNothing);
+            if (abandon == 'same-value' || abandon == 'aba') {
+              await tester.pump(const Duration(seconds: 1));
+              await tester.pumpAndSettle();
+            }
           },
           () => MockClient((request) async {
             if (request.bodyFields.containsKey('profile[city]')) {
@@ -470,6 +474,81 @@ void main() {
         await controller.onEdit();
         expect(requests.length, loaded);
         expect(controller.isLoading.value, isFalse);
+      }, () => MockClient(referenceResponse));
+    },
+  );
+
+  testWidgets('completion reference cache reloads when locale changes', (
+    tester,
+  ) async {
+    Get.locale = const Locale('en');
+    await http.runWithClient(() async {
+      await controller.getData();
+      final loaded = requests.length;
+      expect(loaded, 3);
+      Get.locale = const Locale('ar');
+      await controller.getData();
+      expect(requests.length, loaded + 3);
+      expect(requests.last.headers['Accept-Language'], 'ar');
+    }, () => MockClient(referenceResponse));
+  });
+
+  testWidgets(
+    'late completion references cannot overwrite the current locale',
+    (tester) async {
+      Get.locale = const Locale('en');
+      final old = Completer<http.Response>();
+      await http.runWithClient(
+        () async {
+          final first = controller.getData();
+          await tester.pump();
+          Get.locale = const Locale('ar');
+          await controller.getData();
+          old.complete(
+            http.Response(
+              '[{"code":"ZZ","name":"Stale locale","dial_code":"+000"}]',
+              200,
+            ),
+          );
+          await first;
+          expect(
+            controller.countriesList.map((value) => value.name),
+            isNot(contains('Stale locale')),
+          );
+          expect(
+            controller.languagesList.map((value) => value.name),
+            isNot(contains('Stale locale')),
+          );
+          expect(controller.countryCode.value, '+966');
+        },
+        () => MockClient((request) {
+          if (request.headers['Accept-Language'] == 'en') return old.future;
+          return referenceResponse(request);
+        }),
+      );
+    },
+  );
+
+  testWidgets(
+    'completion view reloads locale references and retires old-session form',
+    (tester) async {
+      await http.runWithClient(() async {
+        await mount(tester);
+        controller.city.text = 'Synthetic entered city';
+        final loaded = requests.length;
+        Get.updateLocale(const Locale('ar'));
+        await tester.pumpAndSettle();
+        expect(requests.length, loaded + 3);
+        expect(controller.city.text, 'Synthetic entered city');
+        expect(find.byType(Form), findsOneWidget);
+        await tester.runAsync(
+          () => LocalDataX.put(LocalKeyX.token, 'synthetic-token'),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(Form), findsNothing);
+        expect(requests.length, loaded + 3);
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pumpAndSettle();
       }, () => MockClient(referenceResponse));
     },
   );

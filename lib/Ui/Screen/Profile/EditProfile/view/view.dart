@@ -5,6 +5,7 @@ import 'package:messengersofpeace/Ui/Animation/fade/fade_animation.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
 
 import '../../../../../Config/config.dart';
+import '../../../../../Config/Translation/translation.dart';
 import '../../../../../Core/core.dart';
 import '../../../../Widget/Basic/Other/label.dart';
 import '../../../../Widget/Basic/Utils/future_builder.dart';
@@ -21,8 +22,13 @@ class EditProfileView extends GetView<EditProfileController> {
       body: SafeArea(
         child: FutureBuilderX(
           future: controller.getData,
+          requestKey: (controller, TranslationX.getLanguageCode),
           loading: EditProfileLoading(),
           child: (_) {
+            if (!Get.isRegistered<EditProfileController>() ||
+                !controller.ownsCurrentSession) {
+              return const SizedBox.shrink();
+            }
             return SingleChildScrollView(
               padding: StyleX.paddingApp,
               child: Obx(
@@ -83,31 +89,36 @@ class EditProfileView extends GetView<EditProfileController> {
                             /// Note that you cannot change the name later unless you contact us
                             Align(
                               alignment: AlignmentDirectional.centerStart,
-                              child: Text.rich(
-                                TextSpan(
-                                  children: [
+                              child:
+                                  Text.rich(
                                     TextSpan(
-                                      text:
-                                          "${"To change the name, please".tr} ",
-                                      style: TextStyleX.bodySmall.copyWith(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurface,
-                                      ),
+                                      children: [
+                                        TextSpan(
+                                          text:
+                                              "${"To change the name, please".tr} ",
+                                          style: TextStyleX.bodySmall.copyWith(
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.onSurface,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          recognizer:
+                                              TapGestureRecognizer()
+                                                ..onTap =
+                                                    controller.onContactUs,
+                                          text: "contact us.".tr,
+                                          style: TextStyleX.bodySmall.copyWith(
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.primary,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    TextSpan(
-                                      recognizer: TapGestureRecognizer()
-                                        ..onTap = controller.onContactUs,
-                                      text: "contact us.".tr,
-                                      style: TextStyleX.bodySmall.copyWith(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ).marginOnly(bottom: 18).fadeAnimation200,
+                                  ).marginOnly(bottom: 18).fadeAnimation200,
                             ),
 
                             /// Username input
@@ -226,9 +237,10 @@ class EditProfileView extends GetView<EditProfileController> {
                               hint: "Country",
                               value: controller.country.value,
                               onChanged: controller.changeCountry,
-                              list: controller.countriesList
-                                  .map((e) => e.name)
-                                  .toList(),
+                              list:
+                                  controller.countriesList
+                                      .map((e) => e.name)
+                                      .toList(),
                             ).fadeAnimation300.marginOnly(bottom: 16),
 
                             /// Current city of residence dropdown
@@ -245,9 +257,10 @@ class EditProfileView extends GetView<EditProfileController> {
                             DropdownX(
                               hint: "Your Native Language",
                               value: controller.language.value,
-                              list: controller.languagesList
-                                  .map((e) => e.name)
-                                  .toList(),
+                              list:
+                                  controller.languagesList
+                                      .map((e) => e.name)
+                                      .toList(),
                               onChanged: controller.changeLanguage,
                             ).fadeAnimation300.marginOnly(bottom: 16),
 
@@ -327,9 +340,8 @@ class EditProfileView extends GetView<EditProfileController> {
                                 ),
                               ],
                             ).fadeAnimation400.marginOnly(
-                              bottom: controller.isSaudiUniversity.value
-                                  ? 16
-                                  : 24,
+                              bottom:
+                                  controller.isSaudiUniversity.value ? 16 : 24,
                             ),
 
                             /// Saudi university dropdown

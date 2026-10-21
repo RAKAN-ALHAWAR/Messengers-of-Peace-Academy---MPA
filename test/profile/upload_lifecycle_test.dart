@@ -53,6 +53,13 @@ void main() {
         }
       });
     }
+    // Retiring the form also retires its delayed entrance animations. Drain
+    // those bounded, mounted-guarded callbacks before test teardown.
+    if (mode != 'closed' && mode != 'owner') {
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+    }
   }
 
   testWidgets(

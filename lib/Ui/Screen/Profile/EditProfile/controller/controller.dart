@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../../../../Core/core.dart';
 import '../../../../../../Data/data.dart';
 import '../../../../../Config/config.dart';
+import '../../../../../Config/Translation/translation.dart';
 import '../../../../../Data/Form/update_user_form.dart';
 import '../../../../../Data/Model/info/country.dart';
 import '../../../../../Data/Model/info/language.dart';
@@ -87,7 +88,7 @@ class EditProfileController extends GetxController {
 
   /// Get data from database
   Future<void> getData() async {
-    final lease = _captureLease();
+    final lease = _captureReferenceLease();
     if (!lease.isCurrent) return;
     // Load data in parallel
     await Future.wait<void>([
@@ -108,7 +109,7 @@ class EditProfileController extends GetxController {
 
   /// Load countries from database
   Future<void> loadCountries([SessionLeaseX? operation]) async {
-    final lease = operation ?? _captureLease();
+    final lease = operation ?? _captureReferenceLease();
     if (!lease.isCurrent) return;
     try {
       final result = await DatabaseX.getCountriesList();
@@ -124,7 +125,7 @@ class EditProfileController extends GetxController {
 
   /// Load phone codes from database
   Future<void> loadPhoneCodes([SessionLeaseX? operation]) async {
-    final lease = operation ?? _captureLease();
+    final lease = operation ?? _captureReferenceLease();
     if (!lease.isCurrent) return;
     try {
       final result = await DatabaseX.getPhoneCodeCountriesList();
@@ -149,7 +150,7 @@ class EditProfileController extends GetxController {
 
   /// Load languages from database
   Future<void> loadLanguages([SessionLeaseX? operation]) async {
-    final lease = operation ?? _captureLease();
+    final lease = operation ?? _captureReferenceLease();
     if (!lease.isCurrent) return;
     try {
       final result = await DatabaseX.getNativeLanguages();
@@ -317,6 +318,16 @@ class EditProfileController extends GetxController {
 
   SessionLeaseX _captureLease() =>
       SessionLeaseX.capture(isActive: () => _ownerLease.isCurrent);
+
+  bool get ownsCurrentSession => _ownerLease.isCurrent;
+
+  SessionLeaseX _captureReferenceLease() {
+    final locale = TranslationX.getLanguageCode;
+    return SessionLeaseX.capture(
+      isActive:
+          () => _ownerLease.isCurrent && TranslationX.getLanguageCode == locale,
+    );
+  }
 
   Future<void> _waitForSuccessFeedback() {
     final delay = Completer<void>();

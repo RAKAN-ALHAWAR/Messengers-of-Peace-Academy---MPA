@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
+import 'package:messengersofpeace/Data/data.dart';
 
 import 'profile_harness.dart';
 
@@ -95,6 +99,61 @@ void main() {
         expect(Get.currentRoute, '/profile-test');
         ToastX.dismiss();
         await tester.pump(const Duration(seconds: 5));
+      }, harness.client);
+    },
+  );
+
+  testWidgets('late profile references cannot overwrite the current locale', (
+    tester,
+  ) async {
+    Get.locale = const Locale('en');
+    final old = Completer<http.Response>();
+    harness.onReference = () => old.future;
+    await http.runWithClient(() async {
+      final first = harness.controller.getData();
+      await tester.pump();
+      Get.locale = const Locale('ar');
+      harness.onReference = null;
+      await harness.controller.getData();
+      old.complete(
+        http.Response(
+          '[{"code":"ZZ","name":"Stale locale","dial_code":"+000"}]',
+          200,
+        ),
+      );
+      await first;
+      expect(
+        harness.controller.countriesList.map((value) => value.name),
+        isNot(contains('Stale locale')),
+      );
+      expect(
+        harness.controller.languagesList.map((value) => value.name),
+        isNot(contains('Stale locale')),
+      );
+      expect(harness.controller.countryCode.value, '+963');
+    }, harness.client);
+  });
+
+  testWidgets(
+    'profile view reloads locale references and retires old-session form',
+    (tester) async {
+      await http.runWithClient(() async {
+        await harness.mount(tester);
+        harness.controller.city.text = 'Synthetic entered city';
+        final loaded = harness.referenceCalls;
+        Get.updateLocale(const Locale('ar'));
+        await tester.pumpAndSettle();
+        expect(harness.referenceCalls, loaded + 3);
+        expect(harness.controller.city.text, 'Synthetic entered city');
+        expect(find.byType(Form), findsOneWidget);
+        await tester.runAsync(
+          () => LocalDataX.put(LocalKeyX.token, 'synthetic-token'),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(Form), findsNothing);
+        expect(harness.referenceCalls, loaded + 3);
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pumpAndSettle();
       }, harness.client);
     },
   );
