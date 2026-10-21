@@ -72,3 +72,24 @@ on independent slices. Existing45 tests are the starting regression gate.
   the pre-existing policy pending contract approval; no silent policy rewrite.
 - Added secure-session/recovery/session-changed messages to all four existing
   locale maps. Language copy is local source coverage, not device localization QA.
+- M3 integrated be5ef36/db0eddd. Main independently observed20/20 focused parsing
+  and widget cases, including request retention, retry, event edits and account
+  data retirement without parent rebuild. Controller-local cache ownership is a
+  separate followup; widget leases alone do not prove controller mutation safety.
+- Main next local scope: VideoPlayer controller + regular/YouTube control
+  sections and player widget tests (V01 only); LoadingView request identity.
+  Playback completion policy/learning minutes remain contract-blocked.
+- OTP source sweep found raw debug prints of manual/autofilled codes in the
+  vendored active widget. Main owns removing those payload diagnostics and a
+  callback-preservation widget test. No external disclosure has been observed.
+
+## Resumed2026-10-22
+
+- Owner repeated continuation instruction. Verified original checkout still only
+  has foreign pubspec.lock with the recorded SHA256; execution branches retained.
+  Auth final race hardening and profile locale guards were interrupted uncommitted;
+  lane owners resumed verification. M6 has tests only, no implementation yet.
+- Main re-observed regular video position/play/pause/seek/mute controls reacting to
+  controller notifications, including out-of-range position clamping. OTP manual
+  entry/autofill callbacks still receive codes without payload debug output.
+  Both synthetic widget tests passed. Native playback/WebView behavior stays open.

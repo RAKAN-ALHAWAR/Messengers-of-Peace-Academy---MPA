@@ -31,7 +31,6 @@ class OtpPinFieldState extends State<OtpPinField>
         });
       }
       _OtpPinFieldAutoFill().getAppSignature.then((value) {
-        debugPrint('your hash value is $value');
         _OtpPinFieldAutoFill()
             .listenForCode(smsCodeRegexPattern: widget.smsRegex ?? '\\d{0,4}');
       });
@@ -112,9 +111,6 @@ class OtpPinFieldState extends State<OtpPinField>
                               : null,
                       focusNode: _focusNode,
                       keyboardType: widget.keyboardType,
-                      onSubmitted: (text) {
-                        debugPrint(text);
-                      },
                       onTapOutside: (event) {
                         FocusManager.instance.primaryFocus?.unfocus();
                       },
@@ -217,9 +213,6 @@ class OtpPinFieldState extends State<OtpPinField>
                 focusNode: _focusNode,
                 textInputAction: widget.textInputAction,
                 keyboardType: widget.keyboardType,
-                onSubmitted: (text) {
-                  debugPrint(text);
-                },
                 onTapOutside: (event) {
                   FocusManager.instance.primaryFocus?.unfocus();
                 },
@@ -473,7 +466,6 @@ class OtpPinFieldState extends State<OtpPinField>
     });
   }
   void codeUpdate(String code) {
-    debugPrint('auto fill sms code is $code');
     if (controller.text != code) {
       controller.value = TextEditingValue(text: code);
       if (widget.onCodeChanged != null) {
@@ -496,7 +488,6 @@ class OtpPinFieldState extends State<OtpPinField>
   }
   @override
   void codeUpdated() {
-    debugPrint('auto fill sms code is $code');
     if (controller.text != code && code != null) {
       controller.value = TextEditingValue(text: code ?? '');
       if (widget.onCodeChanged != null) {
