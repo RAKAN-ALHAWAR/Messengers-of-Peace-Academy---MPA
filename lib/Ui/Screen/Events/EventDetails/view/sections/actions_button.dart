@@ -41,73 +41,93 @@ class EventDetailsActionsButtonSection extends GetView<EventDetailsController> {
 
               /// On pressed delete event
               onPressed: () async {
+                final navigator = Navigator.of(context);
+                final detailRoute = ModalRoute.of(context);
+
                 /// Show bottom sheet delete event
                 await bottomSheetX(
-                  child: Obx(
-                    /// Lock screen when loading
-                    () => AbsorbPointer(
-                      absorbing: controller.isLoading.value,
-                      child: Column(
-                        children: [
-                          /// Warning image
-                          Image.asset(
-                            ImageX.warning,
-                            width: 80,
-                            height: 80,
-                          ).fadeAnimation150.marginOnly(bottom: 16, top: 14),
+                  child: Builder(
+                    builder: (sheetContext) {
+                      final sheetRoute = ModalRoute.of(sheetContext);
+                      Future<void> delete(EventOptionEX option) async {
+                        if (!await controller.onDeleteEvent(option) ||
+                            !navigator.mounted) {
+                          return;
+                        }
+                        // Close only the routes that initiated this deletion. A
+                        // dismissed sheet or a later route must not cause an
+                        // unrelated page to be popped after acknowledgement.
+                        for (final route in [sheetRoute, detailRoute]) {
+                          if (route == null || !route.isActive) continue;
+                          if (route.isCurrent) {
+                            navigator.pop(true);
+                          } else {
+                            navigator.removeRoute(route, true);
+                          }
+                        }
+                      }
 
-                          /// Warning text
-                          TextX(
-                                "Are you sure you want to delete the event ?",
-                                textAlign: TextAlign.center,
-                                style: TextStyleX.titleSLarge,
-                              ).fadeAnimation150
-                              .marginSymmetric(horizontal: 50)
-                              .marginOnly(bottom: 16),
+                      return Obx(
+                        /// Lock screen when loading
+                        () => AbsorbPointer(
+                          absorbing: controller.isLoading.value,
+                          child: Column(
+                            children: [
+                              /// Warning image
+                              Image.asset(ImageX.warning, width: 80, height: 80)
+                                  .fadeAnimation150
+                                  .marginOnly(bottom: 16, top: 14),
 
-                          /// Delete single button
-                          ButtonStateX(
-                            state: controller.buttonStateDeleteSingle.value,
-                            text: "Delete this event only",
-                            marginVertical: 0,
-                            onTap: () async {
-                              await controller.onDeleteEvent(
-                                EventOptionEX.single,
-                              );
-                            },
-                          ).fadeAnimation200.marginOnly(bottom: 8),
+                              /// Warning text
+                              TextX(
+                                    "Are you sure you want to delete the event ?",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyleX.titleSLarge,
+                                  ).fadeAnimation150
+                                  .marginSymmetric(horizontal: 50)
+                                  .marginOnly(bottom: 16),
 
-                          /// Delete future button
-                          ButtonStateX.second(
-                            state: controller.buttonStateDeleteFuture.value,
-                            text: "Delete all future events",
-                            marginVertical: 0,
-                            onTap: () async {
-                              await controller.onDeleteEvent(
-                                EventOptionEX.future,
-                              );
-                            },
-                          ).fadeAnimation200.marginOnly(bottom: 8),
+                              /// Delete single button
+                              ButtonStateX(
+                                state: controller.buttonStateDeleteSingle.value,
+                                text: "Delete this event only",
+                                marginVertical: 0,
+                                onTap: () async {
+                                  await delete(EventOptionEX.single);
+                                },
+                              ).fadeAnimation200.marginOnly(bottom: 8),
 
-                          /// Delete all button
-                          ButtonStateX.second(
-                            state: controller.buttonStateDeleteAll.value,
-                            text: "Delete all events",
-                            marginVertical: 0,
-                            onTap: () async {
-                              await controller.onDeleteEvent(EventOptionEX.all);
-                            },
-                          ).fadeAnimation200.marginOnly(bottom: 16),
+                              /// Delete future button
+                              ButtonStateX.second(
+                                state: controller.buttonStateDeleteFuture.value,
+                                text: "Delete all future events",
+                                marginVertical: 0,
+                                onTap: () async {
+                                  await delete(EventOptionEX.future);
+                                },
+                              ).fadeAnimation200.marginOnly(bottom: 8),
 
-                          /// Cancel button
-                          ButtonX.second(
-                            text: "Cancel",
-                            marginVertical: 0,
-                            onTap: Get.back,
-                          ).fadeAnimation250,
-                        ],
-                      ),
-                    ),
+                              /// Delete all button
+                              ButtonStateX.second(
+                                state: controller.buttonStateDeleteAll.value,
+                                text: "Delete all events",
+                                marginVertical: 0,
+                                onTap: () async {
+                                  await delete(EventOptionEX.all);
+                                },
+                              ).fadeAnimation200.marginOnly(bottom: 16),
+
+                              /// Cancel button
+                              ButtonX.second(
+                                text: "Cancel",
+                                marginVertical: 0,
+                                onTap: Get.back,
+                              ).fadeAnimation250,
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 );
               },

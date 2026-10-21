@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:messengersofpeace/Core/Extension/date_time.dart';
 import 'dart:async';
 
@@ -31,6 +32,9 @@ class EventDetailsController extends GetxController {
 
   /// Is changed
   RxBool isChanged = false.obs;
+  int _loadGeneration = 0;
+  bool _deleteAccepted = false;
+  Timer? _buttonResetTimer;
 
   /// Button state delete single
   Rx<ButtonStateEX> buttonStateDeleteSingle = ButtonStateEX.normal.obs;
@@ -46,15 +50,26 @@ class EventDetailsController extends GetxController {
 
   /// Get data from database
   Future<void> getData() async {
+    if (isClosed) return;
+    final generation = ++_loadGeneration;
+    final locale = TranslationX.getLanguageCode;
+    final lease = SessionLeaseX.capture(
+      isActive:
+          () =>
+              !isClosed &&
+              generation == _loadGeneration &&
+              TranslationX.getLanguageCode == locale,
+    );
     try {
-      /// Get event details from database
-      eventDetails.value = await DatabaseX.getEventDetails(eventId: event.id);
-    } catch (_) {}
-
-    /// Show actions button
+      final loaded = await DatabaseX.getEventDetails(eventId: event.id);
+      if (!lease.isCurrent) return;
+      eventDetails.value = loaded;
+    } catch (_) {
+      if (!lease.isCurrent) return;
+    }
     isShowActions.value =
         eventDetails.value.userId == LocalDataX.userid &&
-        eventDetails.value.isSystem == false;
+        !eventDetails.value.isSystem;
   }
 
   /// Handle open meeting
@@ -67,77 +82,63 @@ class EventDetailsController extends GetxController {
   }
 
   /// Handle delete event
-  Future<void> onDeleteEvent(EventOptionEX delete) async {
+  Future<bool> onDeleteEvent(EventOptionEX delete) async {
+    // Check outside try/finally: ignored taps must not unlock the active request.
+    if (isClosed || isLoading.value || _deleteAccepted) return false;
+    final lease = SessionLeaseX.capture(isActive: () => !isClosed);
+    _buttonResetTimer?.cancel();
+    isLoading.value = true;
+    _setDeleteState(delete, ButtonStateEX.loading);
     try {
-      if (isLoading.value) return;
-      isLoading.value = true;
-
-      /// Set button state
-      switch (delete) {
-        case EventOptionEX.single:
-          buttonStateDeleteSingle.value = ButtonStateEX.loading;
-          break;
-        case EventOptionEX.future:
-          buttonStateDeleteFuture.value = ButtonStateEX.loading;
-          break;
-        case EventOptionEX.all:
-          buttonStateDeleteAll.value = ButtonStateEX.loading;
-          break;
-      }
-
-      /// Delete event from database
       await DatabaseX.deleteEvent(
         eventId: eventDetails.value.id,
         deleteOption: delete,
       );
-
-      /// Set is changed to true
+      if (!lease.isCurrent) return false;
+      _deleteAccepted = true;
       isChanged.value = true;
-
-      /// Go back to previous screen with result
-      Get.back(result: isChanged.value);
-    } catch (e) {
-      /// Show error message
-      ToastX.error(message: e);
-
-      /// Set button state
-      switch (delete) {
-        case EventOptionEX.single:
-          buttonStateDeleteSingle.value = ButtonStateEX.failed;
-          break;
-        case EventOptionEX.future:
-          buttonStateDeleteFuture.value = ButtonStateEX.failed;
-          break;
-        case EventOptionEX.all:
-          buttonStateDeleteAll.value = ButtonStateEX.failed;
-          break;
-      }
+      return true;
+    } catch (error) {
+      if (!lease.isCurrent) return false;
+      ToastX.error(message: error);
+      _setDeleteState(delete, ButtonStateEX.failed);
+      return false;
     } finally {
-      /// Set loading to false
-      isLoading.value = false;
+      if (!isClosed && lease.isCurrent) {
+        isLoading.value = false;
+        if (!_deleteAccepted) {
+          _buttonResetTimer = Timer(
+            const Duration(seconds: StyleX.returnButtonToNormalStateSecond),
+            () {
+              if (lease.isCurrent) {
+                _setDeleteState(delete, ButtonStateEX.normal);
+              }
+            },
+          );
+        }
+      }
+    }
+  }
 
-      /// Reset button state
-      Timer(
-        const Duration(seconds: StyleX.returnButtonToNormalStateSecond),
-        () {
-          switch (delete) {
-            case EventOptionEX.single:
-              buttonStateDeleteSingle.value = ButtonStateEX.normal;
-              break;
-            case EventOptionEX.future:
-              buttonStateDeleteFuture.value = ButtonStateEX.normal;
-              break;
-            case EventOptionEX.all:
-              buttonStateDeleteAll.value = ButtonStateEX.normal;
-              break;
-          }
-        },
-      );
+  void _setDeleteState(EventOptionEX option, ButtonStateEX state) {
+    switch (option) {
+      case EventOptionEX.single:
+        buttonStateDeleteSingle.value = state;
+        break;
+      case EventOptionEX.future:
+        buttonStateDeleteFuture.value = state;
+        break;
+      case EventOptionEX.all:
+        buttonStateDeleteAll.value = state;
+        break;
     }
   }
 
   /// Handle edit event
   void onEdit() async {
+    if (isClosed) return;
+    final lease = SessionLeaseX.capture(isActive: () => !isClosed);
+
     /// Go to edit event screen
     var result = await Get.toNamed(
       RouteNameX.editEvent,
@@ -145,7 +146,7 @@ class EventDetailsController extends GetxController {
     );
 
     /// Check if the result is true
-    if (result == true) {
+    if (lease.isCurrent && result == true) {
       isChanged.value = true;
 
       /// Get data from database
@@ -170,8 +171,7 @@ class EventDetailsController extends GetxController {
   /// On close
   @override
   void onClose() {
-    /// Go back to previous screen with result
-    Get.back(result: isChanged.value);
+    _buttonResetTimer?.cancel();
     super.onClose();
   }
 }
