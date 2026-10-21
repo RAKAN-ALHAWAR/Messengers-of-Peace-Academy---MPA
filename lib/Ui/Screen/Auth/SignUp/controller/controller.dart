@@ -8,6 +8,7 @@ import '../../../../../Config/Translation/translation.dart';
 import '../../../../../Config/config.dart';
 import '../../../../../Core/Error/error.dart';
 import '../../../../../Core/core.dart';
+import '../../../../../Core/Service/session_lease.dart';
 import '../../../../../Data/Model/auth/otp.dart';
 import '../../../../../Data/data.dart';
 import '../../../../Widget/widget.dart';
@@ -56,84 +57,88 @@ class SignUpController extends GetxController {
   //============================================================================
   // Functions
 
-  /// Handle sign up
+  Timer? _resetTimer;
+
+  /// Inputs and route lifetime belong to one submission, including its delay.
   Future<void> onSignUp() async {
-    /// Check if loading is false
-    if (isLoading.isFalse) {
-      /// Check if form is valid
-      if (formKey.currentState!.validate()) {
-        /// Set Loading to true
-        isLoading.value = true;
-
-        /// Set Button State to loading
-        buttonState.value = ButtonStateEX.loading;
-
-        try {
-          /// Check Verification Method
-          if (verificationMethod.isEmpty) {
-            /// Set Error
-            throw ErrorX(
-              message: 'Please select your account verification method.',
-            );
-          }
-
-          /// Sign up
-          var userid = await DatabaseX.signUp(
-            firstName: firstName.text,
-            lastName: lastName.text,
-            email: email.text,
-            password: password.text,
-            username: email.text,
-            lang: TranslationX.getLanguageCode,
-          );
-
-          /// Set Button State to success
-          buttonState.value = ButtonStateEX.success;
-          await Future.delayed(
-            const Duration(seconds: StyleX.successButtonSecond),
-          );
-
-          /// Navigate to OTP Screen
-          Get.toNamed(
-            RouteNameX.otp,
-            arguments: OtpX(
-              isSignUp: true,
-              isPhone: false,
-              email: email.text,
-              userid: userid,
-
-              /// TODO: Add whatsapp verification
-              // isPhone: verificationMethod == "Whatsapp" ? true : false,
-            ),
-          );
-        } catch (e) {
-          var error = e.toErrorX;
-
-          /// Check Error Code
-          if (error.details[NameX.errorcode] == 'useralreadyexists') {
-            error = ErrorX(
-              message: 'Email is already in use, please use another email',
-            );
-          }
-
-          /// Set Button State to failed
-          buttonState.value = ButtonStateEX.failed;
-          ToastX.error(message: error.message);
-        }
-
-        /// Set Loading to false
+    if (isLoading.value || isClosed) return;
+    if (formKey.currentState?.validate() != true) {
+      autovalidate = AutovalidateMode.always;
+      return;
+    }
+    final route = Get.currentRoute;
+    final lease = SessionLeaseX.capture(
+      isActive:
+          () =>
+              !isClosed &&
+              Get.currentRoute == route &&
+              Get.isRegistered<AppControllerX>() &&
+              identical(Get.find<AppControllerX>(), app),
+    );
+    final submittedFirst = firstName.text;
+    final submittedLast = lastName.text;
+    final submittedEmail = email.text;
+    final submittedPassword = password.text;
+    final language = TranslationX.getLanguageCode;
+    final method = verificationMethod;
+    isLoading.value = true;
+    buttonState.value = ButtonStateEX.loading;
+    try {
+      if (method.isEmpty) {
+        throw ErrorX(
+          message: 'Please select your account verification method.',
+        );
+      }
+      final userid = await DatabaseX.signUp(
+        firstName: submittedFirst,
+        lastName: submittedLast,
+        email: submittedEmail,
+        password: submittedPassword,
+        username: submittedEmail,
+        lang: language,
+      );
+      if (!lease.isCurrent) return;
+      if (userid.trim().isEmpty) {
+        throw ErrorX(
+          message: 'Unable to start a secure session. Please sign in again.',
+        );
+      }
+      buttonState.value = ButtonStateEX.success;
+      await Future<void>.delayed(
+        const Duration(seconds: StyleX.successButtonSecond),
+      );
+      if (!lease.isCurrent) return;
+      isLoading.value = false;
+      buttonState.value = ButtonStateEX.normal;
+      Get.toNamed(
+        RouteNameX.otp,
+        arguments: OtpX(
+          isSignUp: true,
+          isPhone: false,
+          email: submittedEmail,
+          userid: userid,
+        ),
+      );
+    } catch (e) {
+      if (!lease.isCurrent) return;
+      var error = e.toErrorX;
+      if (error.details[NameX.errorcode] == 'useralreadyexists') {
+        error = ErrorX(
+          message: 'Email is already in use, please use another email',
+        );
+      }
+      buttonState.value = ButtonStateEX.failed;
+      ToastX.error(message: error.message);
+    } finally {
+      if (lease.isCurrent) {
         isLoading.value = false;
-
-        /// Reset button state
-        Timer(
+        _resetTimer?.cancel();
+        _resetTimer = Timer(
           const Duration(seconds: StyleX.returnButtonToNormalStateSecond),
           () {
-            buttonState.value = ButtonStateEX.normal;
+            if (lease.isCurrent) buttonState.value = ButtonStateEX.normal;
           },
         );
-      } else {
-        /// Set Autovalidate to always
-        autovalidate = AutovalidateMode.always;
       }
     }
   }
@@ -149,24 +154,27 @@ class SignUpController extends GetxController {
 
   /// Navigate to contact us screen
   void onContactUs() async {
+    final route = Get.currentRoute;
     var url = Uri.parse('https://mopacademy.org/mod/page/view.php?id=80');
-    if (await canLaunchUrl(url)) {
+    if (await canLaunchUrl(url) && !isClosed && Get.currentRoute == route) {
       await launchUrl(url);
     }
   }
 
   /// Navigate to terms and conditions screen
   void onTermsAccepted() async {
+    final route = Get.currentRoute;
     var url = Uri.parse('https://mopacademy.org/mod/page/view.php?id=1829');
-    if (await canLaunchUrl(url)) {
+    if (await canLaunchUrl(url) && !isClosed && Get.currentRoute == route) {
       await launchUrl(url);
     }
   }
 
   /// Navigate to privacy policy screen
   void onPrivacyPolicy() async {
+    final route = Get.currentRoute;
     var url = Uri.parse('https://mopacademy.org/mod/page/view.php?id=1831');
-    if (await canLaunchUrl(url)) {
+    if (await canLaunchUrl(url) && !isClosed && Get.currentRoute == route) {
       await launchUrl(url);
     }
   }
@@ -184,6 +192,8 @@ class SignUpController extends GetxController {
 
   @override
   void onClose() {
+    _resetTimer?.cancel();
+
     /// Dispose controllers
     firstName.dispose();
     lastName.dispose();

@@ -6,231 +6,268 @@ import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Core/core.dart';
+import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:messengersofpeace/Data/Model/auth/otp.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
-
 import '../../../../../Core/Error/error.dart';
 import '../../../../../Data/data.dart';
 
 class LoginController extends GetxController {
-  //============================================================================
-  // Injection of required controls
-
   AppControllerX app = Get.find();
-
-  //============================================================================
-  // Variables
-
-  // Loading state
   final isLoading = false.obs;
-
-  // Button states
   final buttonStateGoogle = ButtonStateEX.normal.obs;
   final buttonStateLogin = ButtonStateEX.normal.obs;
-
-  // Google Sign In
   final GoogleSignIn googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
     clientId:
         Platform.isAndroid ? ConstantX.clientIdAndroid : ConstantX.clientIdIOS,
   );
-
-  // Form controllers
   late GlobalKey<FormState> formKey;
   final email = TextEditingController();
   final password = TextEditingController();
-
-  // Form validation
   AutovalidateMode autovalidate = AutovalidateMode.disabled;
+  Timer? _resetTimer;
+  int _submission = 0;
+  SessionLeaseX? _provisional;
 
-  //============================================================================
-  // Functions
+  SessionLeaseX _capture(String route) => SessionLeaseX.capture(
+    isActive:
+        () =>
+            !isClosed &&
+            Get.currentRoute == route &&
+            Get.isRegistered<AppControllerX>() &&
+            identical(Get.find<AppControllerX>(), app),
+  );
 
-  /// Handle Google login
-  void onLoginWithGoogle() async {
-    /// Check if loading is false
-    if (isLoading.isFalse) {
-      /// Set loading to true
-      isLoading.value = true;
-      buttonStateGoogle.value = ButtonStateEX.loading;
+  /// Profile loading needs the newly issued token. Until the profile is verified,
+  /// credentials are provisional and never select an authenticated destination.
+  Future<SessionLeaseX?> _authenticate(
+    (String, String) data,
+    SessionLeaseX owner,
+    String route,
+    void Function(SessionLeaseX) onLease,
+  ) async {
+    if (!owner.isCurrent) return null;
+    if (data.$1.trim().isEmpty || data.$2.trim().isEmpty) {
+      throw ErrorX(
+        message: 'Unable to start a secure session. Please sign in again.',
+      );
+    }
+    app.isLogin.value = false;
+    final writes = [
+      LocalDataX.put(LocalKeyX.userid, data.$1),
+      LocalDataX.put(LocalKeyX.token, data.$2),
+      LocalDataX.put(LocalKeyX.route, RouteNameX.login),
+    ];
+    _provisional = SessionLeaseX.capture();
+    final committed = _capture(route);
+    onLease(committed);
+    try {
+      await Future.wait(writes);
+      if (!committed.isCurrent) return null;
+      final user = await DatabaseX.getUser(userId: data.$1);
+      if (!committed.isCurrent) return null;
+      if (user.id != data.$1) {
+        throw ErrorX(
+          message: 'Unable to start a secure session. Please sign in again.',
+        );
+      }
+      await LocalDataX.put(LocalKeyX.route, RouteNameX.root);
+      if (!committed.isCurrent) return null;
+      app.user = user.obs;
+      app.isLogin.value = true;
+      _provisional = null;
+      return committed;
+    } catch (_) {
+      final pending = _provisional;
+      if (pending?.isCurrent == true) {
+        final clearing = app.clearLocalSession(pending!, navigate: false);
+        onLease(_capture(route));
+        await clearing;
+      }
+      _provisional = null;
+      rethrow;
+    } finally {
+      final pending = _provisional;
+      if (!committed.isCurrent && pending?.isCurrent == true) {
+        await app.clearLocalSession(pending!, navigate: false);
+        _provisional = null;
+      }
+    }
+  }
 
-      /// Try to sign in with Google
-      try {
-        /// Sign in with Google
-        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+  Future<void> onLoginWithGoogle() async {
+    if (isLoading.value || isClosed) return;
+    final route = Get.currentRoute;
+    final submission = ++_submission;
+    var lease = _capture(route);
+    isLoading.value = true;
+    buttonStateGoogle.value = ButtonStateEX.loading;
+    try {
+      final googleUser = await googleSignIn.signIn();
+      if (!lease.isCurrent) return;
+      if (googleUser == null) {
+        buttonStateGoogle.value = ButtonStateEX.normal;
+        return;
+      }
+      final googleAuth = await googleUser.authentication;
+      if (!lease.isCurrent) return;
+      final idToken = googleAuth.idToken;
+      await googleSignIn.disconnect();
+      if (!lease.isCurrent) return;
+      if (idToken == null || idToken.isEmpty) {
+        throw ErrorX(message: 'Failed to get Google token.');
+      }
+      final data = await DatabaseX.loginByGoogle(token: idToken);
+      if (!lease.isCurrent) return;
+      final authenticated = await _authenticate(
+        data,
+        lease,
+        route,
+        (next) => lease = next,
+      );
+      if (authenticated == null) return;
+      lease = authenticated;
+      if (!lease.isCurrent) return;
+      buttonStateGoogle.value = ButtonStateEX.success;
+      await Future<void>.delayed(
+        const Duration(seconds: StyleX.successButtonSecond),
+      );
+      if (!lease.isCurrent) return;
+      Get.offAndToNamed(RouteNameX.root);
+    } catch (e) {
+      if (!lease.isCurrent) return;
+      if (isClosed || Get.currentRoute != route) return;
+      buttonStateGoogle.value = ButtonStateEX.failed;
+      ToastX.error(
+        message:
+            e.toString().contains('PlatformException(') ? 'Something wrong' : e,
+      );
+      _reset(buttonStateGoogle);
+    } finally {
+      _releaseSubmission(submission, route);
+    }
+  }
 
-        /// If the user cancels the login, set the button state to normal and return
-        if (googleUser == null) {
-          buttonStateGoogle.value = ButtonStateEX.normal;
+  Future<void> onLogin() async {
+    if (isLoading.value || isClosed) return;
+    if (formKey.currentState?.validate() != true) {
+      autovalidate = AutovalidateMode.always;
+      return;
+    }
+    final submittedEmail = email.text;
+    final submittedPassword = password.text;
+    final route = Get.currentRoute;
+    final submission = ++_submission;
+    var lease = _capture(route);
+    isLoading.value = true;
+    buttonStateLogin.value = ButtonStateEX.loading;
+    try {
+      final data = await DatabaseX.login(
+        email: submittedEmail,
+        password: submittedPassword,
+      );
+      if (!lease.isCurrent) return;
+      final authenticated = await _authenticate(
+        data,
+        lease,
+        route,
+        (next) => lease = next,
+      );
+      if (authenticated == null) return;
+      lease = authenticated;
+      if (!lease.isCurrent) return;
+      buttonStateLogin.value = ButtonStateEX.success;
+      await Future<void>.delayed(
+        const Duration(seconds: StyleX.successButtonSecond),
+      );
+      if (!lease.isCurrent) return;
+      Get.offAndToNamed(RouteNameX.root);
+    } catch (e) {
+      if (!lease.isCurrent) return;
+      if (isClosed || Get.currentRoute != route) return;
+      var error = e.toErrorX;
+      if (error.details[NameX.errorcode] == 'invalidlogin') {
+        error = ErrorX(message: 'Please check your email or password');
+      } else if (error.details[NameX.errorcode] == 'usernotconfirmed') {
+        // Only the known userid response field can establish verification identity.
+        // Backend recovery without that field remains a contract blocker.
+        final value = error.details[NameX.userId];
+        final id =
+            value is String || value is num ? value.toString().trim() : '';
+        if (id.isNotEmpty) {
           isLoading.value = false;
+          buttonStateLogin.value = ButtonStateEX.normal;
+          Get.toNamed(
+            RouteNameX.otp,
+            arguments: OtpX(
+              isSignUp: true,
+              isPhone: false,
+              email: submittedEmail,
+              userid: id,
+            ),
+          );
           return;
         }
-
-        /// Get token from Google
-        final GoogleSignInAuthentication googleAuth =
-            await googleUser.authentication;
-        final String? idToken = googleAuth.idToken;
-
-        /// Disconnect from Google
-        await googleSignIn.disconnect();
-
-        /// If the token is null, throw an error
-        if (idToken == null) {
-          throw ErrorX(message: 'Failed to get Google token.');
-        }
-
-        /// Login with token to database
-        var data = await DatabaseX.loginByGoogle(token: idToken);
-
-        /// Set Local Data
-        ///
-        /// The token must be stored **before** any authenticated request,
-        /// because it is the `wstoken` used by [DBEndPointX.mainAPI]
-        LocalDataX.put(LocalKeyX.userid, data.$1);
-        LocalDataX.put(LocalKeyX.token, data.$2);
-        LocalDataX.put(LocalKeyX.route, RouteNameX.root);
-
-        /// Set user on app controller
-        app.user = (await DatabaseX.getUser(userId: data.$1)).obs;
-        app.isLogin.value = true;
-
-        /// Success
-        buttonStateGoogle.value = ButtonStateEX.success;
-        await Future.delayed(
-          const Duration(seconds: StyleX.successButtonSecond),
-        );
-
-        /// Navigate to Root
-        Get.offAndToNamed(RouteNameX.root);
-      } catch (e) {
-        /// Set Error
-        buttonStateGoogle.value = ButtonStateEX.failed;
-        if (e.toString().contains("PlatformException(")) {
-          ToastX.error(message: "Something wrong");
-        } else {
-          ToastX.error(message: e);
-        }
-
-        /// Set Loading to false
-        isLoading.value = false;
-
-        /// Reset button state
-        Timer(
-          const Duration(seconds: StyleX.returnButtonToNormalStateSecond),
-          () {
-            buttonStateGoogle.value = ButtonStateEX.normal;
-          },
+        error = ErrorX(
+          message:
+              'Your account still needs verification. Please contact support to recover verification access.',
         );
       }
+      buttonStateLogin.value = ButtonStateEX.failed;
+      ToastX.error(message: error.message);
+      _reset(buttonStateLogin);
+    } finally {
+      _releaseSubmission(submission, route);
     }
   }
 
-  /// Handle email/password login
-  void onLogin() async {
-    /// Check if loading is false
-    if (isLoading.isFalse) {
-      /// Check if form is valid
-      if (formKey.currentState!.validate()) {
-        /// Set Loading to true
-        isLoading.value = true;
-
-        /// Set Button State to loading
-        buttonStateLogin.value = ButtonStateEX.loading;
-
-        /// Try to login
-        try {
-          /// Login Database
-          var data = await DatabaseX.login(
-            email: email.text,
-            password: password.text,
-          );
-
-          /// Set Local Data
-          ///
-          /// The token must be stored **before** any authenticated request,
-          /// because it is the `wstoken` used by [DBEndPointX.mainAPI]
-          LocalDataX.put(LocalKeyX.userid, data.$1);
-          LocalDataX.put(LocalKeyX.token, data.$2);
-          LocalDataX.put(LocalKeyX.route, RouteNameX.root);
-
-          /// Set User on App Controller
-          app.user = (await DatabaseX.getUser(userId: data.$1)).obs;
-          app.isLogin.value = true;
-
-          /// Success
-          buttonStateLogin.value = ButtonStateEX.success;
-          await Future.delayed(
-            const Duration(seconds: StyleX.successButtonSecond),
-          );
-
-          /// Navigate to Root
-          Get.offAndToNamed(RouteNameX.root);
-        } catch (e) {
-          var error = e.toErrorX;
-
-          /// Check Error Code
-          if (error.details[NameX.errorcode] == 'invalidlogin') {
-            error = ErrorX(message: 'Please check your email or password');
-          } else if (error.details[NameX.errorcode] == 'usernotconfirmed') {
-            /// Set Button State to success
-            buttonStateLogin.value = ButtonStateEX.success;
-            await Future.delayed(
-              const Duration(seconds: StyleX.successButtonSecond),
-            );
-
-            /// Navigate to OTP Screen
-            Get.toNamed(
-              RouteNameX.otp,
-              arguments: OtpX(
-                isSignUp: true,
-                isPhone: false,
-                email: email.text,
-              ),
-            );
-          }
-
-          /// Set Button State to failed
-          buttonStateLogin.value = ButtonStateEX.failed;
-          ToastX.error(message: error.message);
-
-          /// Set Loading to false
-          isLoading.value = false;
-
-          /// Reset button state
-          Timer(
-            const Duration(seconds: StyleX.returnButtonToNormalStateSecond),
-            () {
-              buttonStateLogin.value = ButtonStateEX.normal;
-            },
-          );
-        }
-      } else {
-        /// Set Autovalidate to always
-        autovalidate = AutovalidateMode.always;
-      }
+  // Local interaction ownership is independent of permission to publish a
+  // profile. Confirmed expiry retires that permission but must leave this same
+  // login screen usable. A newer submission/controller owns its own busy state.
+  void _releaseSubmission(int submission, String route) {
+    if (submission != _submission ||
+        isClosed ||
+        Get.currentRoute != route ||
+        !Get.isRegistered<LoginController>() ||
+        !identical(Get.find<LoginController>(), this)) {
+      return;
+    }
+    isLoading.value = false;
+    if (buttonStateLogin.value == ButtonStateEX.loading) {
+      buttonStateLogin.value = ButtonStateEX.normal;
+    }
+    if (buttonStateGoogle.value == ButtonStateEX.loading) {
+      buttonStateGoogle.value = ButtonStateEX.normal;
     }
   }
 
-  /// Navigate to forgot password screen
+  void _reset(Rx<ButtonStateEX> state) {
+    _resetTimer?.cancel();
+    final lease = _capture(Get.currentRoute);
+    _resetTimer = Timer(
+      const Duration(seconds: StyleX.returnButtonToNormalStateSecond),
+      () {
+        if (lease.isCurrent) state.value = ButtonStateEX.normal;
+      },
+    );
+  }
+
   void onForgotPassword() => Get.toNamed(RouteNameX.forgotPassword);
-
-  /// Navigate to sign up screen
   void onCreateAccount() => Get.offAndToNamed(RouteNameX.signUp);
-
-  //============================================================================
-  // Lifecycle
-
   @override
   void onInit() {
     super.onInit();
-
-    /// Initialize form key
     formKey = GlobalKey<FormState>();
   }
 
   @override
   void onClose() {
-    /// Dispose controllers
+    _resetTimer?.cancel();
+    final pending = _provisional;
+    if (pending?.isCurrent == true) {
+      unawaited(app.clearLocalSession(pending!, navigate: false));
+    }
     email.dispose();
     password.dispose();
     super.onClose();

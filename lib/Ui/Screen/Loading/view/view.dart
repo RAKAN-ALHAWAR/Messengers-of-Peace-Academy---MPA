@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../../Config/config.dart';
+import '../../../../../Config/Translation/translation.dart';
 import '../../../Widget/Basic/Utils/future_builder.dart';
 import '../controller/controller.dart';
 
@@ -12,6 +13,8 @@ class LoadingView extends GetView<LoadingController> {
     /// Build loading view
     return Scaffold(
       body: FutureBuilderX(
+        requestKey: (controller, TranslationX.getLanguageCode),
+
         /// Initialize the controller
         future: controller.init,
 

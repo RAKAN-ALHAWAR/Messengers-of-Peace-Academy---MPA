@@ -93,3 +93,22 @@ on independent slices. Existing45 tests are the starting regression gate.
   controller notifications, including out-of-range position clamping. OTP manual
   entry/autofill callbacks still receive codes without payload debug output.
   Both synthetic widget tests passed. Native playback/WebView behavior stays open.
+- First combined suite found163 passed/7 failed. All7 failures are pending
+  FadeAnimation entrance timers from active session reloads in profile fixtures;
+  no failed auth assertions. M2 followup2febb90 retires stale forms and updates
+  scoped test animation drains, independently green58 in its lane; integrate next.
+- Main M7 next scope: BlogPage model, database getBlogsPage, Blog controller and
+  BlogView after b9571af date-only handoff; bounded on-demand page retrieval and
+  lazy rows. Existing recursive getBlogs remains until replacement is proved,
+  then remove separately. No guessed server page-size, cursor or grading policy.
+- Independent review found two cross-lane defects before integration: anonymous
+  startup repeatedly removed absent credentials, causing FutureBuilder session
+  reloads; confirmed profile expiry on the login route left its local busy state
+  locked. Made anonymous init idempotent and separated local submission ownership
+  from permission to publish profile data. Root60-case auth/transport gate passed,
+  including actual LoadingView reaching login and200-invalidtoken/401 recovery.
+  Independent reviewer replayed39 auth/startup cases successfully after fixes.
+- Lease checks now reject a retired owner before reading storage; a completion
+  after controller disposal cannot access a closed Hive box. Nine lease tests
+  pass. New expiry widget fixture flushes real Hive work before closing its box;
+  an initial fake-async fixture hang was corrected, not reported as app evidence.

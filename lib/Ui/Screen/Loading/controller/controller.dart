@@ -1,26 +1,24 @@
 import 'package:get/get.dart';
 import '../../../../../Core/core.dart';
+import '../../../../../Core/Service/session_lease.dart';
 import '../../../../Data/data.dart';
 
 class LoadingController extends GetxController {
-  //============================================================================
-  // Injection of required controls
-
-  /// App controller
   AppControllerX app = Get.find();
+  SessionLeaseX? _readyLease;
+  int _request = 0;
 
-  //============================================================================
-  // Functions
-
-  /// Initialize the controller
   Future<void> init() async {
-    /// Configure the global controller when it is on the home page when the application opens so that it fetches user data
-    await app.init();
+    final request = ++_request;
+    _readyLease = null;
+    final ready = await app.init();
+    if (isClosed || request != _request || ready?.isCurrent != true) return;
+    _readyLease = ready;
   }
 
-  /// Finish the controller
-  finish() {
-    /// Navigate to the home page or login page
+  void finish() {
+    if (_readyLease?.isCurrent != true) return;
+    _readyLease = null;
     Get.offAllNamed(LocalDataX.route);
   }
 }

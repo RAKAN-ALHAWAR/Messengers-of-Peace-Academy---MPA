@@ -20,10 +20,10 @@ class SessionLeaseX {
   final bool Function()? _isActive;
 
   bool get isCurrent =>
+      (_isActive?.call() ?? true) &&
       LocalDataX.userid == _userId &&
       LocalDataX.token == _token &&
-      LocalDataX.sessionRevision == _revision &&
-      (_isActive?.call() ?? true);
+      LocalDataX.sessionRevision == _revision;
 
   bool get hasAuthenticatedIdentity => _userId.isNotEmpty && _token.isNotEmpty;
 

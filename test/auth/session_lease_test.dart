@@ -43,6 +43,13 @@ void main() {
     },
   );
 
+  test('retired owner does not access disposed storage', () async {
+    final lease = SessionLeaseX.capture(isActive: () => false);
+    await HiveX.box.close();
+    expect(lease.isCurrent, isFalse);
+    HiveX.box = await Hive.openBox('app');
+  });
+
   test('unrelated preferences keep a lease valid', () {
     final lease = SessionLeaseX.capture();
     LocalDataX.put(LocalKeyX.language, 'ar');
