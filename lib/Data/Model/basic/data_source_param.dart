@@ -1,4 +1,3 @@
-
 import '../../Enum/transmission_method_status.dart';
 
 /// A class to hold various parameters used for data source configuration.
@@ -258,7 +257,6 @@ class DataSourceParamX {
   /// ما إذا كان يجب تجاهل الأخطاء غير المصرح بها.
   late final bool ignoreUnauthorized;
 
-
   /// Constructor for [DataSourceParamX].
   ///
   /// Constructor لكلاس [DataSourceParamX].
@@ -314,14 +312,16 @@ class DataSourceParamX {
   }) {
     useLocalCache = localCacheKey != null;
     this.ignoreError = fallbackResponse != null ? true : ignoreError;
-    this.ignoreUnauthorized = this.ignoreError? true : ignoreUnauthorized;
+    // A general error fallback never opts out of session expiry. This policy
+    // must be requested explicitly by the caller.
+    this.ignoreUnauthorized = ignoreUnauthorized;
   }
 
   /// Creates a copy of this [DataSourceParamX] object with the given fields replaced by new values.
   ///
   /// ينشئ نسخة من كائن [DataSourceParamX] هذا مع استبدال الحقول المحددة بالقيم الجديدة.
   DataSourceParamX copyWith({
-    Map<String,dynamic>? requestBody,
+    Map<String, dynamic>? requestBody,
     dynamic fallbackResponse,
     Duration? requestTimeout,
     int? maxRetries,
@@ -395,8 +395,7 @@ class DataSourceParamX {
       filterMethod: filterMethod ?? this.filterMethod,
       additionalQueryParams:
           additionalQueryParams ?? this.additionalQueryParams,
-      pathParams:
-      pathParams ?? this.pathParams,
+      pathParams: pathParams ?? this.pathParams,
       queryMethod: queryMethod ?? this.queryMethod,
       authToken: authToken ?? this.authToken,
       authType: authType ?? this.authType,
@@ -430,55 +429,12 @@ class DataSourceParamX {
   /// يعيد تمثيل نصي لكائن [DataSourceParamX] هذا.
   @override
   String toString() {
-    return 'DataSourceParameters('
-        'requestBody: $requestBody, '
-        'fallbackResponse: $fallbackResponse, '
+    return 'DataSourceParamX('
         'requestTimeout: $requestTimeout, '
-        'maxRetryCount: $maxRetries, '
-        'start: $start, '
-        'startKey: $startKey, '
-        'page: $page, '
-        'pageKey: $pageKey, '
-        'limit: $limit, '
-        'limitKey: $limitKey, '
-        'paginationMethod: $paginationMethod, '
-        'search: $search, '
-        'searchKey: $searchKey, '
-        'searchMethod: $searchMethod, '
-        'sort: $sort, '
-        'sortKey: $sortKey, '
-        'sortMethod: $sortMethod, '
-        'order: $order, '
-        'orderKey: $orderKey, '
-        'orderMethod: $orderMethod, '
-        'additionalFilterParameters: $filterParams, '
-        'filterMethod: $filterMethod, '
-        'additionalQueryParameters: $additionalQueryParams, '
-        'queryMethod: $queryMethod, '
-        'authToken: $authToken, '
-        'authType: $authType, '
-        'authTypeKey: $authTypeKey, '
-        'authMethod: $authMethod, '
-        'languageCode: $languageCode, '
-        'languageKey: $languageKey, '
-        'languageMethod: $languageMethod, '
-        'apiVersion: $apiVersion, '
-        'versionKey: $apiVersionKey, '
-        'versionMethod: $apiVersionMethod, '
-        'contentTypeHeader: $contentTypeHeader, '
-        'acceptHeader: $acceptHeader, '
-        'acceptEncodingHeader: $acceptEncodingHeader, '
-        'userAgentHeader: $userAgentHeader, '
-        'hostHeader: $hostHeader, '
-        'originHeader: $originHeader, '
-        'cookieHeader: $cookieHeader, '
-        'additionalHttpHeaders: $additionalHttpHeaders, '
-        'customHttpHeaders: $customHttpHeaders, '
+        'maxRetries: $maxRetries, '
+        'page: $page, limit: $limit, '
         'useLocalCache: $useLocalCache, '
-        'localCacheKey: $localCacheKey, '
-        'localCacheMaxAge: $localCacheMaxAge, '
-        'shouldIgnoreErrors: $ignoreError, '
-        'shouldIgnoreUnauthorizedErrors: $ignoreUnauthorized'
-        ')';
+        'ignoreError: $ignoreError, '
+        'ignoreUnauthorized: $ignoreUnauthorized)';
   }
 }

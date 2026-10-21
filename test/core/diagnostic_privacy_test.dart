@@ -1,8 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:messengersofpeace/Core/Error/error.dart';
+import 'package:messengersofpeace/Data/Model/basic/data_source_param.dart';
 
 void main() {
+  test(
+    'request parameter diagnostics exclude all payload and header values',
+    () {
+      const secret = 'synthetic-sensitive';
+      final param = DataSourceParamX(
+        requestBody: {'unknown': secret},
+        authToken: secret,
+        cookieHeader: secret,
+        search: secret,
+        fallbackResponse: {'unknown': secret},
+        additionalQueryParams: {'unknown': secret},
+        customHttpHeaders: {'unknown': secret},
+      );
+      expect(param.toString(), isNot(contains(secret)));
+    },
+  );
   test('Flutter reporting never exposes arbitrary nested response payloads', () {
     FlutterErrorDetails? report;
     final previous = FlutterError.onError;

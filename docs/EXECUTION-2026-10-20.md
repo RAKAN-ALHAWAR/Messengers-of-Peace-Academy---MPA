@@ -112,3 +112,7 @@ on independent slices. Existing45 tests are the starting regression gate.
   after controller disposal cannot access a closed Hive box. Nine lease tests
   pass. New expiry widget fixture flushes real Hive work before closing its box;
   an initial fake-async fixture hang was corrected, not reported as app evidence.
+- General Remote fallback no longer implicitly opts out of authenticated401.
+  Explicit ignoreUnauthorized remains available and tested. Request-parameter
+  diagnostics now omit arbitrary body/query/auth/header values.18 focused
+  transport/privacy cases pass, including both Remote fallback policies.

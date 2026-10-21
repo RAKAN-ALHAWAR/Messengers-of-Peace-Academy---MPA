@@ -100,6 +100,36 @@ void main() {
     expect(expirations, isEmpty);
     expect(LocalDataX.userid, 'synthetic-B');
   });
+  test('Remote fallback does not implicitly ignore authenticated401', () async {
+    await http.runWithClient(() async {
+      await expectLater(
+        RemoteDataSourceX.get<Map<String, dynamic>>(
+          url,
+          param: DataSourceParamX(
+            languageCode: 'ar',
+            fallbackResponse: {'fallback': true},
+          ),
+        ),
+        throwsA(unauthorized),
+      );
+    }, () => MockClient((_) async => http.Response('Expired', 401)));
+    expect(expirations, hasLength(1));
+  });
+  test('Remote explicit ignored401 preserves its fallback', () async {
+    await http.runWithClient(() async {
+      final result = await RemoteDataSourceX.get<Map<String, dynamic>>(
+        url,
+        param: DataSourceParamX(
+          languageCode: 'ar',
+          ignoreUnauthorized: true,
+          fallbackResponse: {'fallback': true},
+        ),
+      );
+      expect(result.$1, {'fallback': true});
+    }, () => MockClient((_) async => http.Response('Expired', 401)));
+    expect(expirations, isEmpty);
+  });
+
   test('public wire401 cannot expire an unrelated user token', () async {
     await http.runWithClient(() async {
       await expectLater(
