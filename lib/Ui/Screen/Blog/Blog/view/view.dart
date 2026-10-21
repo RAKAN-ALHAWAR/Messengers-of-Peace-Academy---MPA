@@ -1,7 +1,7 @@
 import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
+import 'package:messengersofpeace/Core/Extension/date_time.dart';
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Ui/Animation/fade/fade_animation.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
@@ -85,7 +85,9 @@ class BlogView extends GetView<BlogController> {
                                   /// Blog date
                                   TextX(
                                     blog.createdAt != null
-                                        ? "${DateFormat('d MMMM', 'ar').format(blog.createdAt!)} . ${DateFormat('hh:mm a', 'ar').format(blog.createdAt!)}"
+                                        ? blog.createdAt!.formatDateAndTime(
+                                          TranslationX.getLanguageCode,
+                                        )
                                         : '',
                                     style: TextStyleX.labelMedium,
                                     color:

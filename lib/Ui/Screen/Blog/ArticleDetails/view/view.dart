@@ -1,6 +1,7 @@
+import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
+import 'package:messengersofpeace/Core/Extension/date_time.dart';
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Ui/Animation/fade/fade_animation.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
@@ -23,7 +24,9 @@ class ArticleDetailsView extends GetView<ArticleDetailsController> {
               /// Article date
               TextX(
                 controller.blog.createdAt != null
-                    ? "${DateFormat('d MMMM', 'ar').format(controller.blog.createdAt!)} . ${DateFormat('hh:mm a', 'ar').format(controller.blog.createdAt!)}"
+                    ? controller.blog.createdAt!.formatDateAndTime(
+                      TranslationX.getLanguageCode,
+                    )
                     : '',
                 style: TextStyleX.labelMedium,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
