@@ -194,6 +194,10 @@ void main() {
           await tester.pumpWidget(const SizedBox());
         },
         () => MockClient((request) {
+          if (request.url.queryParameters['wsfunction'] ==
+              function(DBEndPointX.postGetEvents)) {
+            return Future.value(http.Response('[]', 200));
+          }
           deletes++;
           return pending.future;
         }),
@@ -224,6 +228,10 @@ void main() {
           await tester.pumpWidget(const SizedBox());
         },
         () => MockClient((request) {
+          if (request.url.queryParameters['wsfunction'] ==
+              function(DBEndPointX.postGetEvents)) {
+            return Future.value(http.Response('[]', 200));
+          }
           requests++;
           return pending.future;
         }),

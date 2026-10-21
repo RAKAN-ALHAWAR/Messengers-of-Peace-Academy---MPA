@@ -167,7 +167,9 @@ class CalendarController extends GetxController {
       var result = await Get.toNamed(RouteNameX.eventDetails, arguments: event);
 
       /// If the result is true, get data
-      if (lease.isCurrent && result == true) {
+      // Native Back/gestures carry no result. Re-read instead of inventing a
+      // changed flag; explicit false is the toolbar's known-unchanged result.
+      if (lease.isCurrent && (result == true || result == null)) {
         await getData(isMust: true);
       }
     }
