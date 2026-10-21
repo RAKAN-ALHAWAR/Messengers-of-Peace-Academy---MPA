@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Core/Extension/date_time.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -49,11 +50,7 @@ class _TextFieldTimeXState extends State<TextFieldTimeX> {
     initializeDateFormatting(widget.locale.languageCode, null);
     time = widget.initialTime ?? TimeOfDay.now();
     if (widget.initialTime != null) {
-      widget.controller.text = '${(time!.hour > 12
-          ? time!.hour - 12
-          : time!.hour == 0
-          ? 12
-          : time!.hour).toString().padLeft(2, '0')}:${time!.minute.toString().padLeft(2, '0')} ${time!.period.name.toUpperCase().tr}';
+      widget.controller.text = time!.format12Hour(am: 'AM'.tr, pm: 'PM'.tr);
     }
     super.initState();
   }
@@ -102,11 +99,10 @@ class _TextFieldTimeXState extends State<TextFieldTimeX> {
                       text: "Ok",
                       onTap: () {
                         if (time != null) {
-                          widget.controller.text = '${(time!.hour > 12
-                              ? time!.hour - 12
-                              : time!.hour == 0
-                              ? 12
-                              : time!.hour).toString().padLeft(2, '0')}:${time!.minute.toString().padLeft(2, '0')} ${time!.period.name.toUpperCase().tr}';
+                          widget.controller.text = time!.format12Hour(
+                            am: 'AM'.tr,
+                            pm: 'PM'.tr,
+                          );
                           widget.onChange?.call(time);
                         }
                         Get.back();

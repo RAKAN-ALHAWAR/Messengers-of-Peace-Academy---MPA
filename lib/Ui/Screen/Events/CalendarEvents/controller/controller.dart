@@ -14,7 +14,7 @@ class CalendarController extends GetxController {
   // Variables
 
   /// Selected date
-  final Rx<DateTime> selectedDate = DateTime.now().obs;
+  final Rx<DateTime> selectedDate = DateTime.now().toDateOnly.obs;
 
   /// Week days
   late RxList<DateTime> weekDays;
@@ -105,24 +105,8 @@ class CalendarController extends GetxController {
   }
 
   /// Get hour show
-  String getHourShow(int val) {
-    /// Get symbol
-    String sym = val > 12 ? "PM" : "AM";
-
-    /// Get hour
-    String hour =
-        "${val > 12
-            ? (val - 12)
-            : val == 0
-            ? 12
-            : val}:00";
-
-    /// Add zero to hour
-    hour = hour.length == 4 ? "0$hour" : hour;
-
-    /// Return hour and symbol
-    return "$hour ${sym.tr}";
-  }
+  String getHourShow(int val) =>
+      TimeOfDay(hour: val, minute: 0).format12Hour(am: 'AM'.tr, pm: 'PM'.tr);
 
   /// Get events of day
   void getEventsOfDay() {
@@ -159,17 +143,22 @@ class CalendarController extends GetxController {
 
   /// Handle add event
   Future<void> onAddEvent() async {
+    final lease = SessionLeaseX.capture(isActive: () => !isClosed);
+
     /// Open add event screen
     var result = await Get.toNamed(RouteNameX.addEvent);
 
     /// If the result is not null, get data
-    if (result != null) {
+    if (lease.isCurrent && result != null) {
       await getData(isMust: true);
     }
   }
 
   /// Handle open event
   void onOpenEvent(EventX event) async {
+    if (isClosed) return;
+    final lease = SessionLeaseX.capture(isActive: () => !isClosed);
+
     /// Check if the event is system
     if (event.isSystem) {
       Get.toNamed(RouteNameX.meetingDetails, arguments: event.id);
@@ -178,7 +167,7 @@ class CalendarController extends GetxController {
       var result = await Get.toNamed(RouteNameX.eventDetails, arguments: event);
 
       /// If the result is true, get data
-      if (result == true) {
+      if (lease.isCurrent && result == true) {
         await getData(isMust: true);
       }
     }
@@ -186,38 +175,19 @@ class CalendarController extends GetxController {
 
   /// Handle change date from picker
   void onChangeDateFromPicker(DateTime date) {
-    /// Set selected date
-    selectedDate.value = date;
-
-    /// Set week days
-    weekDays.value = getWeekDays();
-
-    /// Back to previous screen
+    selectDay(date);
     Get.back();
   }
 
-  /// Handle previous week
+  /// Change a civil day instead of adding 24-hour blocks across DST boundaries.
   void onPreviousWeek() {
-    /// Set selected date
-    selectedDate.value = selectedDate.value.subtract(Duration(days: 7));
-
-    /// Set week days
-    weekDays.value = getWeekDays();
-
-    /// Get events of day
-    getEventsOfDay();
+    final date = selectedDate.value;
+    selectDay(DateTime(date.year, date.month, date.day - 7));
   }
 
-  /// Handle next week
   void onNextWeek() {
-    /// Set selected date
-    selectedDate.value = selectedDate.value.add(Duration(days: 7));
-
-    /// Set week days
-    weekDays.value = getWeekDays();
-
-    /// Get events of day
-    getEventsOfDay();
+    final date = selectedDate.value;
+    selectDay(DateTime(date.year, date.month, date.day + 7));
   }
 
   /// Get week days
@@ -227,12 +197,18 @@ class CalendarController extends GetxController {
 
     /// Get days since saturday
     int daysSinceSaturday = (current.weekday + 1) % 7;
-    DateTime startOfWeek = current.subtract(Duration(days: daysSinceSaturday));
+    DateTime startOfWeek = DateTime(
+      current.year,
+      current.month,
+      current.day - daysSinceSaturday,
+    );
 
     /// Add week days to list
     List<DateTime> weekDays = [];
     for (int i = 0; i < 7; i++) {
-      weekDays.add(startOfWeek.add(Duration(days: i)));
+      weekDays.add(
+        DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day + i),
+      );
     }
 
     /// Return week days
@@ -250,7 +226,7 @@ class CalendarController extends GetxController {
   /// Select day
   void selectDay(DateTime day) {
     /// Set selected date
-    selectedDate.value = day;
+    selectedDate.value = day.toLocal().toDateOnly;
 
     /// Set week days
     weekDays.value = getWeekDays();

@@ -23,3 +23,11 @@ extension ConvertExtensionX on DateTime {
     return isAtSameMomentAs(date);
   }
 }
+
+/// Consistent 12-hour presentation for picker inputs and event surfaces.
+extension TimeDisplayExtensionX on TimeOfDay {
+  String format12Hour({required String am, required String pm}) {
+    final displayHour = hourOfPeriod == 0 ? 12 : hourOfPeriod;
+    return '${displayHour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} ${period == DayPeriod.am ? am : pm}';
+  }
+}

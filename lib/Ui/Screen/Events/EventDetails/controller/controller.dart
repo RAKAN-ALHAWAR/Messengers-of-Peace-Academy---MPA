@@ -1,6 +1,8 @@
+import 'package:messengersofpeace/Core/Extension/date_time.dart';
 import 'dart:async';
 
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Data/Enum/event_option.dart';
@@ -152,21 +154,8 @@ class EventDetailsController extends GetxController {
   }
 
   /// Get time show
-  String getTimeShow(DateTime val) {
-    /// Get symbol
-    String sym = val.hour > 12 ? "PM" : "AM";
-
-    /// Get hour
-    String hour =
-        "${val.hour > 12
-            ? (val.hour - 12).toString().padLeft(2, '0')
-            : val.hour == 0
-            ? 12
-            : val.hour.toString().padLeft(2, '0')}:${val.minute.toString().padLeft(2, '0')}";
-
-    /// Return time show
-    return "$hour ${sym.tr}";
-  }
+  String getTimeShow(DateTime val) =>
+      TimeOfDay.fromDateTime(val).format12Hour(am: 'AM'.tr, pm: 'PM'.tr);
 
   //============================================================================
   // Lifecycle
