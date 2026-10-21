@@ -18,7 +18,7 @@ class NotificationsView extends GetView<NotificationsController> {
     return Scaffold(
       appBar: AppBarX(
         title: 'Notifications',
-        backValue: controller.getCountUnreadNotifications,
+        onBack: () => Get.back(result: controller.getCountUnreadNotifications),
       ),
       body: SafeArea(
         child: FutureBuilderX(
