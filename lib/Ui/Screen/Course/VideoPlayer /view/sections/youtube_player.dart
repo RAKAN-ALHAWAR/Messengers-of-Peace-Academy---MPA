@@ -56,36 +56,43 @@ class YoutubePlayerSection extends GetView<VideoPlayerController> {
               Container(
                 color: Colors.black.withValues(alpha: 0.8),
                 padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        controller.isPlaying ? Icons.pause : Icons.play_arrow,
-                        color: Colors.white,
-                        size: 32,
+                child: ValueListenableBuilder<YoutubePlayerValue>(
+                  valueListenable: controller.youtubeController!,
+                  builder:
+                      (context, value, child) => Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              controller.isPlaying
+                                  ? Icons.pause
+                                  : Icons.play_arrow,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                            onPressed: controller.togglePlayPause,
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.volume_up,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                            onPressed: controller.toggleMute,
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.fullscreen,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                            onPressed: () {
+                              controller.youtubeController
+                                  ?.toggleFullScreenMode();
+                            },
+                          ),
+                        ],
                       ),
-                      onPressed: controller.togglePlayPause,
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.volume_up,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                      onPressed: controller.toggleMute,
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.fullscreen,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                      onPressed: () {
-                        controller.youtubeController?.toggleFullScreenMode();
-                      },
-                    ),
-                  ],
                 ),
               ),
             ],

@@ -111,10 +111,14 @@ class VideoPlayerController extends GetxController {
       videoPlayerController!
           .initialize()
           .then((_) {
+            if (isClosed) return;
+
             /// Set loading state to false
             isLoading.value = false;
           })
           .catchError((error) {
+            if (isClosed) return;
+
             /// Set error message
             hasError.value = true;
             errorMessage.value = 'Video is not available';
