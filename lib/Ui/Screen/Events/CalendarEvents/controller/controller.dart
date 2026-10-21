@@ -5,6 +5,7 @@ import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Core/Extension/date_time.dart';
 
 import '../../../../../Config/Translation/translation.dart';
+import '../../../../../Core/Service/session_lease.dart';
 import '../../../../../Data/Model/event.dart';
 import '../../../../../Data/data.dart';
 
@@ -43,40 +44,47 @@ class CalendarController extends GetxController {
 
   /// Is initialized
   bool isInit = false;
+  (int, String)? _loadedKey;
+  int _loadGeneration = 0;
 
   //============================================================================
   // Functions
 
   /// Get data from database
   Future<void> getData({bool isMust = false}) async {
+    if (isClosed) return;
+    final locale = TranslationX.getLanguageCode;
+    final key = (LocalDataX.sessionRevision, locale);
+    if (!isMust &&
+        isInit &&
+        _loadedKey == key &&
+        lastUpdate.isAfter(
+          DateTime.now().subtract(const Duration(minutes: 1)),
+        )) {
+      return;
+    }
+    final generation = ++_loadGeneration;
+    final lease = SessionLeaseX.capture(
+      isActive:
+          () =>
+              !isClosed &&
+              generation == _loadGeneration &&
+              TranslationX.getLanguageCode == locale,
+    );
     try {
-      /// Check if the data is not initialized or the last update is less than 1 minute
-      if (isMust == false &&
-          isInit &&
-          lastUpdate.isAfter(DateTime.now().subtract(Duration(minutes: 1)))) {
-        return;
-      }
-
-      /// Get events from database
-      events.value = await DatabaseX.getEvents();
-
-      /// Get hours
+      final loadedEvents = await DatabaseX.getEvents();
+      if (!lease.isCurrent) return;
+      events.value = loadedEvents;
       getHours();
-
-      /// Get events of day
       getEventsOfDay();
-
-      /// Set index color card event
       indexColorCardEvent = 0;
-
-      /// Set last update
       lastUpdate = DateTime.now();
-
-      /// Set is initialized
+      _loadedKey = key;
       isInit = true;
-    } catch (e) {
-      /// If the data is not initialized, rethrow the error
-      if (!isInit) rethrow;
+    } catch (_) {
+      if (!lease.isCurrent) return;
+      // An older account or locale is never a fallback for this request.
+      if (!isInit || _loadedKey != key) rethrow;
     }
   }
 

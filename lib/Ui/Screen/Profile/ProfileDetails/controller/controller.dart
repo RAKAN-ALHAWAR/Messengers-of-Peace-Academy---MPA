@@ -4,6 +4,7 @@ import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:messengersofpeace/Core/core.dart';
 
 import '../../../../../Config/config.dart';
+import '../../../../../Core/Service/session_lease.dart';
 import '../../../../../Data/Model/badge.dart';
 import '../../../../../Data/Model/user/user.dart';
 import '../../../../../Data/Model/user/user_statistics.dart';
@@ -44,55 +45,65 @@ class ProfileDetailsController extends GetxController {
 
   /// Is init
   bool isInit = false;
+  (int, String)? _loadedKey;
+  int _loadGeneration = 0;
 
   //============================================================================
   // Functions
 
   /// Get data from database
   Future<void> getData() async {
-    try {
-      /// Check if the data is already initialized and the last update is not more than 1 minute ago
-      if (isInit &&
-          lastUpdate.isAfter(DateTime.now().subtract(Duration(minutes: 1)))) {
-        return;
-      }
-
-      /// Get user data from database
-      user = (await DatabaseX.getUser()).obs;
-
-      /// Update the user in the app controller
-      app.user.value = user.value;
-
-      /// Get user statistics from database
-      statistics = (await DatabaseX.getUserStatistics()).obs;
-
-      /// Get badges from database
-      final badges = await DatabaseX.getBadges();
-
-      /// Check if there are badges
-      if (badges.isNotEmpty) {
-        currentBadge =
-            badges
-                .firstWhere(
-                  (badge) =>
-                      badge.requiredPoints > app.user.value.points &&
-                      badge.earned == false,
-                  orElse: () => badges.last,
-                )
-                .obs;
-      }
-
-      /// Update the last update time
-      lastUpdate = DateTime.now();
-
-      /// Update initilization
-      isInit = true;
-    } catch (e) {
-      /// Check if the data is not initialized
-      if (!isInit) {
-        rethrow;
-      }
+    if (isClosed) return;
+    final locale = TranslationX.getLanguageCode;
+    final key = (LocalDataX.sessionRevision, locale);
+    if (isInit &&
+        _loadedKey == key &&
+        lastUpdate.isAfter(
+          DateTime.now().subtract(const Duration(minutes: 1)),
+        )) {
+      return;
     }
+    final generation = ++_loadGeneration;
+    final lease = SessionLeaseX.capture(
+      isActive:
+          () =>
+              !isClosed &&
+              generation == _loadGeneration &&
+              TranslationX.getLanguageCode == locale,
+    );
+    try {
+      final loadedUser = await DatabaseX.getUser();
+      if (!lease.isCurrent) return;
+      final loadedStatistics = await DatabaseX.getUserStatistics();
+      if (!lease.isCurrent) return;
+      final badges = await DatabaseX.getBadges();
+      if (!lease.isCurrent) return;
+
+      // Publish one complete snapshot only while its identity is still current.
+      user = loadedUser.obs;
+      statistics = loadedStatistics.obs;
+      app.user.value = loadedUser;
+      currentBadge.value =
+          badges.isEmpty
+              ? null
+              : badges.firstWhere(
+                (badge) =>
+                    badge.requiredPoints > loadedUser.points && !badge.earned,
+                orElse: () => badges.last,
+              );
+      lastUpdate = DateTime.now();
+      _loadedKey = key;
+      isInit = true;
+    } catch (_) {
+      if (!lease.isCurrent) return;
+      if (!isInit || _loadedKey != key) rethrow;
+    }
+  }
+
+  @override
+  void onClose() {
+    complaintController.dispose();
+    super.onClose();
   }
 
   /// Navigate to achievements board
