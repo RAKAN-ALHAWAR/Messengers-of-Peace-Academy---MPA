@@ -574,7 +574,6 @@ class DatabaseX {
     var data = await RemoteDataSourceX.post(
       DBEndPointX.postSubmitQuiz,
       body: {NameX.userId: LocalDataX.userid, NameX.attemptId: attemptId},
-      isSkeepStatus: true,
     );
     return data.$2;
   }
