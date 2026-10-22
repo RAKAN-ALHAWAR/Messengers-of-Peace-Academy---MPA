@@ -166,6 +166,40 @@ void main() {
       },
     );
   }
+  testWidgets('a pending list cannot undo acknowledged mark-all', (
+    tester,
+  ) async {
+    final stale = Completer<http.Response>();
+    var lists = 0;
+    await http.runWithClient(
+      () async {
+        await mount(tester);
+        Get.toNamed('/notifications');
+        await tester.pumpAndSettle();
+        final pending = controller.getData();
+        await tester.pump();
+        controller.onMarkAllAsRead();
+        await tester.pumpAndSettle();
+        expect(controller.getCountUnreadNotifications, 0);
+        stale.complete(response(notifications()));
+        await pending;
+        await tester.pumpAndSettle();
+        final actual = controller.getCountUnreadNotifications;
+        ToastX.dismiss();
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpAndSettle();
+        expect(actual, 0);
+      },
+      () => MockClient((request) async {
+        if (request.url.queryParameters['wsfunction'] ==
+            function(DBEndPointX.postGetNotifications)) {
+          lists++;
+          return lists > 1 ? stale.future : response(notifications());
+        }
+        return response({'status': 'success'});
+      }),
+    );
+  });
   for (final abandonedBy in ['session', 'locale', 'disposal']) {
     test('list load ignores late response after $abandonedBy', () async {
       Get.locale = const Locale('en');

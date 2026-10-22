@@ -75,6 +75,9 @@ class NotificationsController extends GetxController {
       /// Mark all as read
       await DatabaseX.readNotifications();
       if (!lease.isCurrent) return;
+      // A list started before this acknowledgement may still contain unread
+      // rows. Only a new read may replace the acknowledged local snapshot.
+      _loadGeneration++;
 
       /// Show the localized message instead of the raw backend one
       ToastX.success(message: "All notifications have been marked as read".tr);
