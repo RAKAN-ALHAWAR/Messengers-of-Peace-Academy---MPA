@@ -15,6 +15,5 @@ flutter_checks:
     - flutter config --no-analytics
     - flutter pub get
   script:
-    # Existing informational deprecations remain visible; errors/warnings fail.
-    - flutter analyze --no-pub --no-fatal-infos
+    - flutter analyze --no-pub
     - flutter test --no-pub --reporter expanded
