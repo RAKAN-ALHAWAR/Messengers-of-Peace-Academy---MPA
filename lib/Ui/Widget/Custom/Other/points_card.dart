@@ -15,28 +15,30 @@ class PointsCardX extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 160,
       decoration: BoxDecoration(
         gradient: ColorX.goldGradient,
         borderRadius: BorderRadius.circular(StyleX.radiusMd),
       ),
       child: Stack(
         children: [
-          Opacity(
-            opacity: 0.2,
-            child: Image.asset(
-              ImageX.background,
-              height: 160,
-              width: double.infinity,
-              fit: BoxFit.fitHeight,
-              alignment: Alignment.center,
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.2,
+              child: Image.asset(
+                ImageX.background,
+                fit: BoxFit.fitHeight,
+                alignment: Alignment.center,
+              ),
             ),
           ),
           Container(
-            height: 160,
+            // Keep the original compact geometry while allowing full scaled
+            // translations and long badge names to determine the card height.
+            constraints: const BoxConstraints(minHeight: 160),
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(

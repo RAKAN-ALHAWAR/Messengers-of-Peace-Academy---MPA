@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Data/data.dart';
 import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -34,72 +35,72 @@ class BadgesView extends GetView<BadgesController> {
             }
 
             /// Content
-            return SingleChildScrollView(
+            return ListView.builder(
+              key: PageStorageKey((
+                controller,
+                LocalDataX.sessionRevision,
+                TranslationX.getLanguageCode,
+                'badges',
+              )),
               padding: StyleX.paddingApp,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  /// Title
-                  TextX('Badges List', style: TextStyleX.titleMedium),
-                  const SizedBox(height: 12),
-
-                  /// Description
-                  TextX(
-                    'Badges description',
-                    style: TextStyleX.bodyMedium,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(height: 18),
-
-                  /// Badge Cards
-                  for (var badge in data)
-                    ContainerX(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 12,
+              itemCount: data.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextX('Badges List', style: TextStyleX.titleMedium),
+                      const SizedBox(height: 12),
+                      TextX(
+                        'Badges description',
+                        style: TextStyleX.bodyMedium,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
-                      margin: EdgeInsets.only(bottom: 12),
-                      radius: StyleX.radiusMd,
-                      child: Row(
-                        children: [
-                          /// Badge image
-                          Image.asset(ImageX.badge3, width: 60),
+                      const SizedBox(height: 18),
+                    ],
+                  );
+                }
+                final badge = data[index - 1];
+                return ContainerX(
+                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  margin: EdgeInsets.only(bottom: 12),
+                  radius: StyleX.radiusMd,
+                  child: Row(
+                    children: [
+                      /// Badge image
+                      Image.asset(ImageX.badge3, width: 60),
 
-                          /// Spacer
-                          const SizedBox(width: 15),
+                      /// Spacer
+                      const SizedBox(width: 15),
 
-                          /// Badge name and description
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                /// Badge name
-                                TextX(
-                                  badge.name,
-                                  style: TextStyleX.titleMedium,
-                                ),
+                      /// Badge name and description
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            /// Badge name
+                            TextX(badge.name, style: TextStyleX.titleMedium),
 
-                                /// Spacer
-                                const SizedBox(height: 4),
+                            /// Spacer
+                            const SizedBox(height: 4),
 
-                                /// Badge description
-                                TextX(
-                                  "${"Awarded upon reaching".tr} ${FunctionX.formatLargeNumber(badge.requiredPoints)} ${"points".tr} - ${badge.description}",
-                                  style: TextStyleX.labelMedium,
-                                  color:
-                                      Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                ),
-                              ],
+                            /// Badge description
+                            TextX(
+                              "${"Awarded upon reaching".tr} ${FunctionX.formatLargeNumber(badge.requiredPoints)} ${"points".tr} - ${badge.description}",
+                              style: TextStyleX.labelMedium,
+                              color:
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ).fadeAnimation200,
-                ],
-              ),
+                    ],
+                  ),
+                ).fadeAnimation200;
+              },
             );
           },
         ),

@@ -5,7 +5,8 @@ import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Data/Model/activity_point.dart';
 import 'package:messengersofpeace/Ui/Animation/fade/fade_animation.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
-import '../../../../Core/core.dart';
+import '../../../../Data/data.dart';
+import '../../../Widget/Custom/Card/activity_points_card.dart';
 import '../../../Widget/Basic/Utils/future_builder.dart';
 import '../../../Widget/Custom/Other/empty_message.dart';
 import '../controller/controller.dart';
@@ -34,87 +35,41 @@ class ActivityPiontsView extends GetView<ActivityPiontsController> {
             }
 
             /// Content
-            return SingleChildScrollView(
+            return ListView.builder(
+              key: PageStorageKey((
+                controller,
+                LocalDataX.sessionRevision,
+                TranslationX.getLanguageCode,
+                'activity-catalog',
+              )),
               padding: StyleX.paddingApp,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  /// Title
-                  TextX(
-                    'List of activities that give you points',
-                    style: TextStyleX.titleMedium,
-                  ),
-                  const SizedBox(height: 12),
-
-                  /// Description
-                  TextX(
-                    'Points description',
-                    style: TextStyleX.bodyMedium,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(height: 18),
-
-                  /// Activities and Points Cards
-                  for (var activity in data)
-                    ContainerX(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 16,
+              itemCount: data.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextX(
+                        'List of activities that give you points',
+                        style: TextStyleX.titleMedium,
                       ),
-                      margin: EdgeInsets.only(bottom: 12),
-                      radius: StyleX.radiusMd,
-                      child: Row(
-                        children: [
-                          /// Name and note
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                /// Name
-                                TextX(
-                                  activity.activityName,
-                                  style: TextStyleX.labelLarge,
-                                  fontWeight: FontWeight.w600,
-                                ),
-
-                                /// Note
-                                if (activity.note.isNotEmpty)
-                                  TextX(
-                                    activity.note,
-                                    style: TextStyleX.labelMedium,
-                                    color:
-                                        Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
-                                  ).marginOnly(top: 4),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-
-                          /// Points
-                          Row(
-                            children: [
-                              /// Point icon
-                              Image.asset(ImageX.point, width: 11, height: 11),
-
-                              /// Spacer
-                              const SizedBox(width: 6),
-
-                              /// Points number
-                              TextX(
-                                "${FunctionX.formatLargeNumber(activity.points)}+",
-                                style: TextStyleX.labelLarge,
-                              ),
-                            ],
-                          ),
-                        ],
+                      const SizedBox(height: 12),
+                      TextX(
+                        'Points description',
+                        style: TextStyleX.bodyMedium,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
-                    ).fadeAnimation200,
-                ],
-              ),
+                      const SizedBox(height: 18),
+                    ],
+                  );
+                }
+                final activity = data[index - 1];
+                return ActivityPointsCard(
+                  name: activity.activityName,
+                  points: activity.points,
+                  secondaryText: activity.note,
+                ).fadeAnimation200;
+              },
             );
           },
         ),

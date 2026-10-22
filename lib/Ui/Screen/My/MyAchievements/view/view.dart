@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Data/data.dart';
 import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -28,28 +29,44 @@ class MyAchievementsView extends GetView<MyAchievementsController> {
 
           /// Data state
           child: (_) {
-            return SingleChildScrollView(
-              padding: StyleX.paddingApp,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  /// Points Card
-                  if (controller.currentBadge != null)
-                    PointsCardX(
-                      points: controller.app.user.value.points,
-                      badge: controller.currentBadge!,
-                    ).fadeAnimation150.marginOnly(bottom: 24),
-
-                  /// Badges Section
-                  MyAchievementsBadgesSection(),
-
-                  /// Spacer
-                  SizedBox(height: 16),
-
-                  /// Activities Section
-                  MyAchievementsActivitiesSection(),
-                ],
-              ),
+            return CustomScrollView(
+              key: PageStorageKey((
+                controller,
+                LocalDataX.sessionRevision,
+                TranslationX.getLanguageCode,
+                'achievement-history',
+              )),
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.only(
+                    left: StyleX.hPaddingApp,
+                    right: StyleX.hPaddingApp,
+                    top: StyleX.vPaddingApp,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (controller.currentBadge != null)
+                          PointsCardX(
+                            points: controller.app.user.value.points,
+                            badge: controller.currentBadge!,
+                          ).fadeAnimation150.marginOnly(bottom: 24),
+                        const MyAchievementsBadgesSection(),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
+                  ),
+                ),
+                const SliverPadding(
+                  padding: EdgeInsets.only(
+                    left: StyleX.hPaddingApp,
+                    right: StyleX.hPaddingApp,
+                    bottom: StyleX.vPaddingApp,
+                  ),
+                  sliver: MyAchievementsActivitiesSection(),
+                ),
+              ],
             );
           },
         ),

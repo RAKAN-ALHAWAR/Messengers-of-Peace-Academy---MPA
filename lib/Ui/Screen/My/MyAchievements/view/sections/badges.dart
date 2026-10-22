@@ -17,23 +17,28 @@ class MyAchievementsBadgesSection extends GetView<MyAchievementsController> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         /// Badges Label
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            /// Badges Label
-            TextX('Achieved Badges', style: TextStyleX.titleMedium),
+        SizedBox(
+          width: double.infinity,
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              /// Badges Label
+              TextX('Achieved Badges', style: TextStyleX.titleMedium),
 
-            /// See all badges button
-            if (controller.badges.isNotEmpty)
-              GestureDetector(
-                onTap: controller.onAllBadges,
-                child: TextX(
-                  'Badges List',
-                  style: TextStyleX.labelLarge,
-                  color: Theme.of(context).colorScheme.primary,
+              /// See all badges button
+              if (controller.badges.isNotEmpty)
+                GestureDetector(
+                  onTap: controller.onAllBadges,
+                  child: TextX(
+                    'Badges List',
+                    style: TextStyleX.labelLarge,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ).fadeAnimation150,
 
         /// Spacer
