@@ -21,14 +21,15 @@ class MyCoursesController extends GetxController {
   /// Get data from database
   int _loadGeneration = 0;
   bool _openingCourse = false;
-  Future<void> getData() async {
-    if (isClosed) return;
+  Future<void> getData({SessionLeaseX? owner}) async {
+    if (isClosed || owner?.isCurrent == false) return;
     final generation = ++_loadGeneration;
     final locale = TranslationX.getLanguageCode;
     final lease = SessionLeaseX.capture(
       isActive:
           () =>
               !isClosed &&
+              owner?.isCurrent != false &&
               generation == _loadGeneration &&
               TranslationX.getLanguageCode == locale,
     );
@@ -53,6 +54,7 @@ class MyCoursesController extends GetxController {
       isActive:
           () =>
               !isClosed &&
+              origin?.isActive == true &&
               Get.isRegistered<MyCoursesController>() &&
               identical(Get.find<MyCoursesController>(), this) &&
               TranslationX.getLanguageCode == locale,
@@ -61,7 +63,7 @@ class MyCoursesController extends GetxController {
     _openingCourse = true;
     try {
       await Get.toNamed(RouteNameX.courseDetails, arguments: course.id);
-      if (lease.isCurrent && origin?.isActive == true) await getData();
+      if (lease.isCurrent) await getData(owner: lease);
     } catch (error) {
       if (lease.isCurrent) ToastX.error(message: error);
     } finally {

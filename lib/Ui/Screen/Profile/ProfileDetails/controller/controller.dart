@@ -50,13 +50,14 @@ class ProfileDetailsController extends GetxController {
   (int, String)? _loadedKey;
   int _loadGeneration = 0;
   int _navigationGeneration = 0;
+  bool _openingProgressRoute = false;
 
   //============================================================================
   // Functions
 
   /// Get data from database
-  Future<void> getData({bool force = false}) async {
-    if (isClosed) return;
+  Future<void> getData({bool force = false, SessionLeaseX? owner}) async {
+    if (isClosed || owner?.isCurrent == false) return;
     // This authenticated screen may briefly survive logout navigation. Do not
     // let its reload adopt the public service credential.
     if (!SessionLeaseX.capture().hasAuthenticatedIdentity) {
@@ -78,6 +79,7 @@ class ProfileDetailsController extends GetxController {
       isActive:
           () =>
               !isClosed &&
+              owner?.isCurrent != false &&
               generation == _loadGeneration &&
               TranslationX.getLanguageCode == locale,
     );
@@ -141,6 +143,7 @@ class ProfileDetailsController extends GetxController {
   Future<void> onCoursesAttended() => _openAndRefresh(RouteNameX.myCourses);
 
   Future<void> _openAndRefresh(String destination) async {
+    if (isClosed || _openingProgressRoute) return;
     final origin = Get.rawRoute;
     final locale = TranslationX.getLanguageCode;
     final generation = ++_navigationGeneration;
@@ -155,13 +158,16 @@ class ProfileDetailsController extends GetxController {
               TranslationX.getLanguageCode == locale,
     );
     if (!lease.hasAuthenticatedIdentity || !lease.isCurrent) return;
+    _openingProgressRoute = true;
     try {
       await Get.toNamed(destination);
-      if (lease.isCurrent) await getData(force: true);
+      if (lease.isCurrent) await getData(force: true, owner: lease);
     } catch (error) {
       if (!lease.isCurrent) return;
       ErrorX.console(error);
       ToastX.error(message: error);
+    } finally {
+      if (!isClosed) _openingProgressRoute = false;
     }
   }
 

@@ -22,8 +22,8 @@ class AllCoursesController extends GetxController {
   // Functions
 
   /// Get levels with courses from database
-  Future<void> getData() async {
-    if (isClosed) return;
+  Future<void> getData({SessionLeaseX? owner}) async {
+    if (isClosed || owner?.isCurrent == false) return;
     final locale = TranslationX.getLanguageCode;
     final key = (LocalDataX.sessionRevision, locale);
     final generation = ++_loadGeneration;
@@ -31,6 +31,7 @@ class AllCoursesController extends GetxController {
       isActive:
           () =>
               !isClosed &&
+              owner?.isCurrent != false &&
               generation == _loadGeneration &&
               TranslationX.getLanguageCode == locale,
     );
@@ -103,7 +104,7 @@ class AllCoursesController extends GetxController {
     try {
       await Get.toNamed(RouteNameX.courseDetails, arguments: course.id);
       if (!lease.isCurrent) return;
-      await getData();
+      await getData(owner: lease);
     } catch (error) {
       if (lease.isCurrent) ToastX.error(message: error);
     } finally {

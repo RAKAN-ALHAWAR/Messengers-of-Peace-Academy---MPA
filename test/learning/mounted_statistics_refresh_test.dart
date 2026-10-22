@@ -79,8 +79,9 @@ void main() {
           () => MockClient((request) async {
             if (fail) return fixtureResponse({}, 500);
             final method = request.url.queryParameters['wsfunction']!;
-            if (method == functionOf(DBEndPointX.postGetBadges))
+            if (method == functionOf(DBEndPointX.postGetBadges)) {
               return fixtureResponse(<Object>[]);
+            }
             return fixtureResponse(homeResponse(method, empty: true));
           }),
         );
@@ -147,10 +148,12 @@ void main() {
       },
       () => MockClient((request) async {
         final method = request.url.queryParameters['wsfunction']!;
-        if (method == functionOf(DBEndPointX.postGetUserStatistics))
+        if (method == functionOf(DBEndPointX.postGetUserStatistics)) {
           return fixtureResponse({...statsFixture(), NameX.minutes: minutes});
-        if (method == functionOf(DBEndPointX.postGetBadges))
+        }
+        if (method == functionOf(DBEndPointX.postGetBadges)) {
           return fixtureResponse(<Object>[]);
+        }
         return fixtureResponse(homeResponse(method, empty: true));
       }),
     );

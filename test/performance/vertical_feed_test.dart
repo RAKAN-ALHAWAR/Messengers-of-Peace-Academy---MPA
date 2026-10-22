@@ -8,6 +8,7 @@ import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:messengersofpeace/Core/Helper/http/http.dart';
+import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Data/data.dart';
 import 'package:messengersofpeace/Data/Model/course/my_course.dart';
@@ -34,7 +35,7 @@ class _Courses extends MyCoursesController {
   _Courses(this.count);
   final int count;
   @override
-  Future<void> getData() async =>
+  Future<void> getData({SessionLeaseX? owner}) async =>
       myCourses.assignAll(List.generate(count, fixture));
 }
 

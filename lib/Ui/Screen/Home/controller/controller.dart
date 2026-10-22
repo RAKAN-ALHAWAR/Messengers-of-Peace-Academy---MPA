@@ -61,11 +61,13 @@ class HomeController extends GetxController {
   static const _cacheLifetime = Duration(minutes: 1);
   SessionLeaseX? _cacheLease;
   SessionLeaseX? _pendingLease;
+  SessionLeaseX? _pendingOwner;
   Future<void>? _pendingLoad;
   int _loadGeneration = 0;
   int _notificationGeneration = 0;
   int _unreadRevision = 0;
   int _progressNavigationGeneration = 0;
+  bool _openingProgressRoute = false;
 
   bool get _ownsHome =>
       !isClosed &&
@@ -76,8 +78,8 @@ class HomeController extends GetxController {
 
   /// Keep one owned snapshot. Independent responses must never partly replace
   /// another account's state or be published with the wrong locale.
-  Future<void> getData({bool force = false}) {
-    if (!_ownsHome) return Future.value();
+  Future<void> getData({bool force = false, SessionLeaseX? owner}) {
+    if (!_ownsHome || owner?.isCurrent == false) return Future.value();
     final language = TranslationX.getLanguageCode;
     final ownedCache =
         isInit && _cacheLease?.isCurrent == true && currentLanguage == language;
@@ -86,7 +88,10 @@ class HomeController extends GetxController {
         lastUpdate.isAfter(DateTime.now().subtract(_cacheLifetime))) {
       return Future.value();
     }
-    if (!force && _pendingLease?.isCurrent == true && _pendingLoad != null) {
+    if (!force &&
+        identical(_pendingOwner, owner) &&
+        _pendingLease?.isCurrent == true &&
+        _pendingLoad != null) {
       return _pendingLoad!;
     }
     final request = ++_loadGeneration;
@@ -95,10 +100,12 @@ class HomeController extends GetxController {
       isActive:
           () =>
               _ownsHome &&
+              owner?.isCurrent != false &&
               request == _loadGeneration &&
               TranslationX.getLanguageCode == language,
     );
     _pendingLease = lease;
+    _pendingOwner = owner;
     if (!ownedCache) {
       isInit = false;
       _cacheLease = null;
@@ -119,6 +126,7 @@ class HomeController extends GetxController {
       if (request == _loadGeneration) {
         _pendingLoad = null;
         _pendingLease = null;
+        _pendingOwner = null;
       }
     });
     _pendingLoad = pending;
@@ -238,6 +246,7 @@ class HomeController extends GetxController {
     String destination, {
     Object? arguments,
   }) async {
+    if (_openingProgressRoute || !_ownsHome) return;
     final route = Get.rawRoute;
     final language = TranslationX.getLanguageCode;
     final request = ++_progressNavigationGeneration;
@@ -250,14 +259,17 @@ class HomeController extends GetxController {
               TranslationX.getLanguageCode == language,
     );
     if (!lease.isCurrent || !lease.hasAuthenticatedIdentity) return;
+    _openingProgressRoute = true;
     try {
       await Get.toNamed(destination, arguments: arguments);
       if (!lease.isCurrent) return;
-      await getData(force: true);
+      await getData(force: true, owner: lease);
     } catch (e) {
       if (!lease.isCurrent) return;
       ErrorX.console(e);
       ToastX.error(message: e);
+    } finally {
+      if (!isClosed) _openingProgressRoute = false;
     }
   }
 
