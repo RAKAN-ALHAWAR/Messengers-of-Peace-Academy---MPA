@@ -34,6 +34,18 @@ class RadioButtonX<T> extends StatelessWidget {
   final void Function(T? value) onChanged;
   @override
   Widget build(BuildContext context) {
+    // Default options use value equality. Hash collisions are not selections.
+    // valueCheck is a legacy explicit override whose hash-based mapping remains
+    // supported; check overrides indicator color only, not group selection.
+    final hasLegacyValue = valueCheck != null;
+    final selectedValue = hasLegacyValue ? groupValue.hashCode : groupValue;
+    final optionValue = hasLegacyValue ? valueCheck : value;
+    final selectedColor =
+        check != null
+            ? check!()
+            : hasLegacyValue
+            ? value.hashCode == groupValue.hashCode
+            : value == groupValue;
     return GestureDetector(
       onTap: () {
         onChanged(value);
@@ -45,18 +57,18 @@ class RadioButtonX<T> extends StatelessWidget {
               isCardOnly ? MainAxisAlignment.center : MainAxisAlignment.start,
           children: [
             if (!isCardOnly)
-              Radio(
-                value: valueCheck ?? value.hashCode,
-                groupValue: groupValue.hashCode,
-                fillColor: WidgetStateProperty.all(
-                  (check != null
-                          ? check!()
-                          : value.hashCode == groupValue.hashCode)
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                ), // Change the fill color when selected
-                splashRadius: 25, // Change the splash radius when clicked
+              RadioGroup<Object?>(
+                groupValue: selectedValue,
                 onChanged: (_) => onChanged(value),
+                child: Radio<Object?>(
+                  value: optionValue,
+                  fillColor: WidgetStateProperty.all(
+                    selectedColor
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  splashRadius: 25,
+                ),
               ),
             if (label != null || child != null)
               Flexible(

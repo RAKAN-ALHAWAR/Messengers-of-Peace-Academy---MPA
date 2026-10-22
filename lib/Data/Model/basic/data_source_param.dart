@@ -308,13 +308,12 @@ class DataSourceParamX {
     this.localCacheKey,
     this.localCacheMaxAge,
     bool ignoreError = false,
-    bool ignoreUnauthorized = false,
+    // A general error fallback never opts out of session expiry. This policy
+    // must be requested explicitly by the caller.
+    this.ignoreUnauthorized = false,
   }) {
     useLocalCache = localCacheKey != null;
     this.ignoreError = fallbackResponse != null ? true : ignoreError;
-    // A general error fallback never opts out of session expiry. This policy
-    // must be requested explicitly by the caller.
-    this.ignoreUnauthorized = ignoreUnauthorized;
   }
 
   /// Creates a copy of this [DataSourceParamX] object with the given fields replaced by new values.

@@ -168,15 +168,17 @@ class SearchableCountryCodeDropdown extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color:
                                       isSelected
-                                          ? Theme.of(
-                                            context,
-                                          ).colorScheme.primary.withOpacity(0.1)
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withValues(alpha: 0.1)
                                           : null,
                                   border: Border(
                                     bottom: BorderSide(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.outline.withOpacity(0.1),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .outline
+                                          .withValues(alpha: 0.1),
                                       width: 0.5,
                                     ),
                                   ),
