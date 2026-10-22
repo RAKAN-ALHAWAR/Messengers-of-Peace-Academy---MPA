@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
+import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:messengersofpeace/Ui/Animation/fade/fade_animation.dart';
 import 'package:messengersofpeace/Ui/Widget/Custom/Other/html_widget.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
@@ -10,13 +11,14 @@ import '../controller/controller.dart';
 class TestQuestionsView extends GetView<TestQuestionsController> {
   const TestQuestionsView({super.key});
   Future<void> _onWillPop(BuildContext context) async {
+    if (!controller.ownsCurrentSession) return;
     final shouldExit = await AlertDialogX.okAndCancel(
       title: 'تأكيد الخروج',
       message: 'هل أنت متأكد أنك تريد الخروج من الصفحة؟',
       onOk: () => Get.back(result: true),
       onCancel: () => Get.back(result: false),
     );
-    if (shouldExit == true) Get.back();
+    if (shouldExit == true && controller.ownsCurrentSession) Get.back();
   }
 
   @override
@@ -34,7 +36,33 @@ class TestQuestionsView extends GetView<TestQuestionsController> {
         ),
         body: FutureBuilderX<void>(
           future: controller.getData,
+          requestKey: (
+            controller,
+            controller.quizId,
+            TranslationX.getLanguageCode,
+          ),
           child: (_) {
+            if (!Get.isRegistered<TestQuestionsController>() ||
+                !controller.ownsCurrentSession) {
+              return const SizedBox.shrink();
+            }
+            if (controller.needsRecovery) {
+              return Padding(
+                padding: StyleX.paddingApp,
+                child: Column(
+                  children: [
+                    const TextX(
+                      'Your existing test attempt needs recovery. Return to test information.',
+                    ),
+                    ButtonX(
+                      text: 'Return to test information',
+                      onTap: controller.returnToTestInfo,
+                      marginVertical: 16,
+                    ),
+                  ],
+                ),
+              );
+            }
             return Padding(
               padding: StyleX.paddingApp,
               child: Obx(
@@ -93,16 +121,21 @@ class TestQuestionsView extends GetView<TestQuestionsController> {
                             textStyle: TextStyleX.titleMedium,
                           ).fadeAnimation200,
                           SizedBox(height: 16),
-                          for (var option
-                              in controller
-                                  .quizStartAttempt
-                                  .questions[controller.currentQuestionIndex]
-                                  .answers)
-                            RadioButtonX(
-                              key: Key(
-                                "question_option_${controller.currentQuestionIndex}_$option",
+                          for (
+                            var optionIndex = 0;
+                            optionIndex <
+                                controller
+                                    .quizStartAttempt
+                                    .questions[controller.currentQuestionIndex]
+                                    .answers
+                                    .length;
+                            optionIndex++
+                          )
+                            RadioButtonX<int>(
+                              key: ValueKey(
+                                "question_option_${controller.currentQuestionIndex}_$optionIndex",
                               ),
-                              value: option,
+                              value: optionIndex,
                               groupValue: controller.selectedAnswer.value,
                               color:
                                   Theme.of(
@@ -117,7 +150,12 @@ class TestQuestionsView extends GetView<TestQuestionsController> {
                                   end: 12,
                                 ),
                                 child: HtmlWidgetX(
-                                  html: option,
+                                  html:
+                                      controller
+                                          .quizStartAttempt
+                                          .questions[controller
+                                              .currentQuestionIndex]
+                                          .answers[optionIndex],
                                   textStyle: TextStyleX.bodyMedium,
                                 ),
                               ),
@@ -126,8 +164,13 @@ class TestQuestionsView extends GetView<TestQuestionsController> {
                       ),
                     ).fadeAnimation200,
                     Spacer(),
+                    if (controller.answerError.value != null)
+                      TextX(
+                        controller.answerError.value!,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                     ButtonStateX(
-                      disabled: controller.selectedAnswer.value.isEmpty,
+                      disabled: controller.selectedAnswer.value == null,
                       state: controller.buttonState.value,
                       text:
                           controller.currentQuestionIndex ==

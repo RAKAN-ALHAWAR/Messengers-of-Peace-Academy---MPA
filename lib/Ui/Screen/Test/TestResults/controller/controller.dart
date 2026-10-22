@@ -1,12 +1,24 @@
-import 'dart:developer';
-
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
+import 'package:messengersofpeace/Config/Translation/translation.dart';
+import 'package:messengersofpeace/Core/core.dart';
+import 'package:messengersofpeace/Core/Error/error.dart';
+import 'package:messengersofpeace/Core/Service/session_lease.dart';
+import 'package:messengersofpeace/Data/Model/quiz/answer.dart';
+import 'package:messengersofpeace/Data/Model/quiz/question.dart';
 import 'package:messengersofpeace/Data/Model/quiz/quiz_start_attempt.dart';
 
 import '../../../../../Data/Model/quiz/quiz.dart';
 import '../../../../../Data/Model/quiz/quiz_result.dart';
 import '../../../../../Data/data.dart';
+
+enum QuizSubmissionStateX {
+  notStarted,
+  finalizing,
+  acknowledged,
+  rejected,
+  uncertain,
+}
 
 class TestResultsController extends GetxController {
   //============================================================================
@@ -25,7 +37,7 @@ class TestResultsController extends GetxController {
   QuizStartAttemptX quizStartAttempt = Get.arguments[2];
 
   /// Selected answers
-  List<String> selectedAnswers = Get.arguments[3];
+  List<Object?> selectedAnswers = List<Object?>.from(Get.arguments[3]);
 
   /// Time taken
   int timeTaken = Get.arguments[4];
@@ -34,54 +46,161 @@ class TestResultsController extends GetxController {
   String courseId = Get.arguments[5];
 
   /// Quiz result
-  late QuizResultX quizResult;
+  QuizResultX? result;
+  QuizResultX get quizResult => result!;
+  Object? loadError;
+  QuizSubmissionStateX submissionState = QuizSubmissionStateX.notStarted;
+  Future<void>? _inFlight;
+  late final SessionLeaseX _ownerLease;
 
   /// Is success
-  bool isSuccess = false;
+  bool get isSuccess => result?.isSuccess == true;
+  bool get hasConfirmedOutcome => result?.isSuccess != null;
+  bool get ownsCurrentSession => _ownerLease.isCurrent;
+  bool get canRetrySubmission =>
+      submissionState == QuizSubmissionStateX.rejected;
+  bool get needsSubmissionRecovery =>
+      submissionState == QuizSubmissionStateX.uncertain;
 
   /// Correct answers
-  int get correctAnswers =>
-      quizResult.answers.where((answer) => answer.right).length;
+  int? get correctAnswers => _gradedCount(true);
 
   /// Wrong answers
-  int get wrongAnswers =>
-      quizResult.answers.where((answer) => !answer.right).length;
+  int? get wrongAnswers => _gradedCount(false);
+
+  AnswerX? answerForQuestion(QuestionX question) =>
+      result?.answerForSlot(question.slot);
+
+  int? selectedIndexForQuestion(QuestionX question) {
+    final selected = answerForQuestion(question)?.selectedAnswerIndex;
+    return selected != null && selected < question.answers.length
+        ? selected
+        : null;
+  }
+
+  int? _gradedCount(bool right) {
+    final answers = quizStartAttempt.questions.map(answerForQuestion).toList();
+    if (answers.any((answer) => answer?.right == null)) return null;
+    return answers.where((answer) => answer!.right == right).length;
+  }
+
+  double? get scoreFraction {
+    final value = result;
+    if (value == null ||
+        !value.grade.isFinite ||
+        !value.maxgrade.isFinite ||
+        value.maxgrade <= 0 ||
+        value.grade < 0 ||
+        value.grade > value.maxgrade) {
+      return null;
+    }
+    return value.grade / value.maxgrade;
+  }
 
   //============================================================================
   // Functions
 
-  /// Guard against submitting the same attempt twice when the user retries
-  /// after [getQuizResult] failed, the attempt is already finished by then
-  bool _isSubmitted = false;
+  Future<void> getData() =>
+      _inFlight ??= _loadData().whenComplete(() {
+        if (ownsCurrentSession) _inFlight = null;
+      });
 
-  Future<void> getData() async {
-    try {
-      if (!_isSubmitted) {
+  Future<void> _loadData() async {
+    final lease = SessionLeaseX.capture(isActive: () => _ownerLease.isCurrent);
+    if (!lease.isCurrent) return;
+    if (submissionState == QuizSubmissionStateX.rejected ||
+        needsSubmissionRecovery) {
+      return;
+    }
+    loadError = null;
+    if (submissionState == QuizSubmissionStateX.notStarted) {
+      submissionState = QuizSubmissionStateX.finalizing;
+      try {
         await DatabaseX.submitQuiz(attemptId: quizStartAttempt.attemptId);
-        _isSubmitted = true;
+        if (!lease.isCurrent) return;
+        submissionState = QuizSubmissionStateX.acknowledged;
+      } catch (error) {
+        if (!lease.isCurrent) return;
+        final explicitRejection =
+            error is ErrorX &&
+            (error.details['status'] == 'error' ||
+                error.details['status'] == false ||
+                error.details['status'] == 'false' ||
+                error.details['errorcode'] != null);
+        submissionState =
+            explicitRejection
+                ? QuizSubmissionStateX.rejected
+                : QuizSubmissionStateX.uncertain;
+        loadError =
+            explicitRejection
+                ? error
+                : ErrorX(
+                  message:
+                      'Submission status is unknown. Return to test information before trying again.',
+                );
+        ErrorX.console(error);
+        return;
       }
-      quizResult = await DatabaseX.getQuizResult(quizId: quizId);
-      isSuccess = quizResult.isSuccess;
-    } catch (e) {
-      log("error submitQuiz / getQuizResult: $e", name: runtimeType.toString());
-
-      /// Rethrow so FutureBuilderX shows the error state
-      /// instead of building the view with an uninitialized [quizResult]
-      rethrow;
+    }
+    final locale = TranslationX.getLanguageCode;
+    try {
+      final loaded = await DatabaseX.getQuizResult(quizId: quizId);
+      if (!lease.isCurrent) return;
+      if (locale != TranslationX.getLanguageCode) return _loadData();
+      if (loaded.status == 'error' || loaded.status == 'false') {
+        throw ErrorX(message: loaded.message);
+      }
+      result = loaded;
+    } catch (error) {
+      if (!lease.isCurrent) return;
+      if (locale != TranslationX.getLanguageCode) return _loadData();
+      loadError = error;
+      ErrorX.console(error);
     }
   }
 
+  /// Only the explicit recovery action may repeat a known rejected mutation.
+  /// Locale changes/read retries cannot silently resubmit an attempt.
+  void retryRejectedSubmission() {
+    if (!ownsCurrentSession || !canRetrySubmission || _inFlight != null) return;
+    submissionState = QuizSubmissionStateX.notStarted;
+    loadError = null;
+    result = null;
+  }
+
   onTapButton() {
+    if (!ownsCurrentSession) return;
     if (isSuccess) {
-      /// إغلاق شاشة المعلومات وإعادة تحميل بيانات تفاصيل الدورة
+      // Return to the course after a confirmed pass.
       Get.offNamedUntil(
         RouteNameX.courseDetails,
         (route) => route.settings.name == RouteNameX.root,
         arguments: courseId,
       );
     } else {
-      /// Close the screen and navigate to test info screen
-      Get.offAndToNamed(RouteNameX.testInfo, arguments: [quizId, courseId]);
+      returnToTestInfo();
     }
+  }
+
+  void returnToTestInfo() {
+    if (!ownsCurrentSession) return;
+    Get.offAndToNamed(RouteNameX.testInfo, arguments: [quizId, courseId]);
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    final app = Get.find<AppControllerX>();
+    final accountId = app.user.value.id;
+    _ownerLease = SessionLeaseX.capture(
+      isActive:
+          () =>
+              !isClosed &&
+              Get.isRegistered<TestResultsController>() &&
+              identical(Get.find<TestResultsController>(), this) &&
+              Get.isRegistered<AppControllerX>() &&
+              identical(Get.find<AppControllerX>(), app) &&
+              app.user.value.id == accountId,
+    );
   }
 }

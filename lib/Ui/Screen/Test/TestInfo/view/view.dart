@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
+import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:messengersofpeace/Ui/Animation/fade/fade_animation.dart';
 import 'package:messengersofpeace/Ui/Widget/Custom/Card/statistics_card.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
@@ -18,15 +19,28 @@ class TestInfoView extends GetView<TestInfoController> {
         child: Obx(() {
           return AppBarX(
             /// Change title based on initialization
-            title: controller.isInit.value ? controller.quiz.name : "Test",
+            title:
+                controller.ownsCurrentSession && controller.isInit.value
+                    ? controller.quiz.name
+                    : "Test",
           );
         }),
       ),
       body: SafeArea(
         child: FutureBuilderX<void>(
           future: controller.getData,
+          requestKey: (
+            controller,
+            controller.quizId,
+            TranslationX.getLanguageCode,
+          ),
           loading: TestInfoLoading(),
           child: (_) {
+            if (!Get.isRegistered<TestInfoController>() ||
+                !controller.ownsCurrentSession ||
+                !controller.isInit.value) {
+              return const SizedBox.shrink();
+            }
             return Padding(
               padding: StyleX.paddingApp,
               child: Column(
@@ -140,8 +154,7 @@ class TestInfoView extends GetView<TestInfoController> {
                         Expanded(
                           child: StatisticsCardX(
                             title: "Pass rate",
-                            value:
-                                "${(controller.quiz.gradeToPass / controller.quiz.gradeTotal * 100).toInt()}",
+                            value: controller.passRate,
                             subValue: "%",
                             icon: IconX.verified,
                           ),

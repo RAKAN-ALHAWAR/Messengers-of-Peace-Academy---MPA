@@ -1,175 +1,185 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Data/data.dart';
-
 import '../../../../../Config/config.dart';
 import '../../../../../Core/core.dart';
+import '../../../../../Core/Error/error.dart';
+import '../../../../../Core/Service/session_lease.dart';
 import '../../../../../Data/Model/quiz/quiz.dart';
 import '../../../../../Data/Model/quiz/quiz_start_attempt.dart';
 
 class TestQuestionsController extends GetxController {
-  //============================================================================
-  // Injection of required controls
-
-  //============================================================================
-  // Variables
-
-  /// Quiz
   QuizX quiz = Get.arguments[0];
   String quizId = Get.arguments[1];
   String courseId = Get.arguments[2];
   late QuizStartAttemptX quizStartAttempt;
-  List<String> selectedAnswers = [];
-
-  /// Current question index
+  List<int?> selectedAnswers = [];
   int currentQuestionIndex = 0;
-
-  /// Time remaining
   late RxString timeRemaining =
       FunctionX.formatDuration(Duration(seconds: quiz.timelimit)).obs;
-
-  /// Selected answer
-  RxString selectedAnswer = "".obs;
-
-  /// Start time and end time for quiz
-  late DateTime _startTime;
+  final selectedAnswer = Rxn<int>();
   late DateTime _endTime;
   Timer? _timer;
   int remainingTime = 0;
+  final isLoading = false.obs;
+  final answerError = Rxn<String>();
+  final buttonState = ButtonStateEX.normal.obs;
+  late final SessionLeaseX _ownerLease;
+  Future<void>? _loading;
+  bool _hasAttempt = false;
+  bool _ready = false;
+  bool _finishRequested = false;
+  bool _transitioned = false;
+  bool needsRecovery = false;
+  bool get ownsCurrentSession => _ownerLease.isCurrent;
 
-  RxBool isLoading = false.obs;
-  Rx<ButtonStateEX> buttonState = ButtonStateEX.normal.obs;
+  Future<void> getData() =>
+      _loading ??= _loadData().whenComplete(() {
+        if (ownsCurrentSession) _loading = null;
+      });
 
-  //============================================================================
-  // Functions
-
-  /// Get data from database
-  Future<void> getData() async {
+  Future<void> _loadData() async {
+    final lease = SessionLeaseX.capture(isActive: () => ownsCurrentSession);
+    if (!lease.isCurrent || _ready || needsRecovery) return;
+    // The current response has no authoritative saved selections/current slot.
+    // Replaying a known resumed attempt from question zero could overwrite it.
+    if (quiz.lastAttemptStatus == QuizAttemptStatusX.inProgress) {
+      needsRecovery = true;
+      return;
+    }
     try {
-      /// Get quiz start attempt (starts a new attempt or resumes the running one)
-      quizStartAttempt = await DatabaseX.getQuizStartAttempt(quizId: quizId);
-
-      selectedAnswers.addAll(
-        quizStartAttempt.questions.map((e) => "").toList(),
-      );
-
-      /// Set start time and end time
-      ///
-      /// A resumed attempt keeps the deadline of the moment it was created on
-      /// the server, otherwise the app would grant a fresh [quiz.timelimit]
-      /// while the backend keeps counting from the original start
-      _startTime = await _attemptStartTime();
-      _endTime = _startTime.add(Duration(seconds: quiz.timelimit));
-
-      /// Show the real remaining time on the first frame, the timer only
-      /// ticks after one second and would otherwise flash the full time limit
+      if (!_hasAttempt) {
+        final attempt = await DatabaseX.getQuizStartAttempt(quizId: quizId);
+        if (!lease.isCurrent) return;
+        quizStartAttempt = attempt;
+        _hasAttempt = true;
+        selectedAnswers = List<int?>.filled(attempt.questions.length, null);
+      }
+      final questions = quizStartAttempt.questions;
+      if (questions.isEmpty ||
+          quizStartAttempt.totalQuestions != questions.length ||
+          questions.any((q) => q.answers.isEmpty) ||
+          questions.map((q) => q.slot).toSet().length != questions.length) {
+        needsRecovery = true;
+        return;
+      }
+      final started = await _attemptStartTime();
+      if (!lease.isCurrent) return;
+      _endTime = started.add(Duration(seconds: quiz.timelimit));
+      _ready = true;
       _updateRemaining(_endTime.difference(DateTime.now()));
-
-      /// A resumed attempt may already be expired, [_updateRemaining] then
-      /// submitted it and there is nothing left to count down
-      if (remainingTime > 0) startTimer();
-    } catch (e) {
-      log(
-        "error getQuizStartAttempt for quiz $quizId: $e",
-        name: runtimeType.toString(),
-      );
-
-      /// Rethrow so FutureBuilderX shows the error state
-      /// instead of building the view with an uninitialized [quizStartAttempt]
+      if (remainingTime > 0 && !_finishRequested) startTimer();
+    } catch (error) {
+      if (!lease.isCurrent) return;
+      ErrorX.console(error);
       rethrow;
     }
   }
 
-  /// Real start time of the running attempt.
-  ///
-  /// Falls back to "now" when the backend does not report it, which is the
-  /// correct value for a freshly created attempt anyway.
   Future<DateTime> _attemptStartTime() async {
     try {
       return await DatabaseX.getQuizAttemptStartTime(quizId: quizId) ??
           DateTime.now();
-    } catch (e) {
-      /// Never block the quiz because of this secondary lookup
-      log("error getQuizAttemptStartTime: $e", name: runtimeType.toString());
+    } catch (error) {
+      if (ownsCurrentSession) ErrorX.console(error);
+      // Preserve the existing fresh-attempt fallback; server timing semantics
+      // (including zero time limits) require a backend contract.
       return DateTime.now();
     }
   }
 
-  /// Handle change answer
-  void onChangeAnswer(String? value) =>
-      selectedAnswer.value = value ?? selectedAnswer.value;
+  void onChangeAnswer(int? value) {
+    if (!ownsCurrentSession ||
+        !_ready ||
+        isLoading.value ||
+        _finishRequested ||
+        value == null) {
+      return;
+    }
+    if (value >= 0 &&
+        value <
+            quizStartAttempt.questions[currentQuestionIndex].answers.length) {
+      selectedAnswer.value = value;
+    }
+  }
 
-  /// Handle next question
   Future<void> onNextQuestion() async {
-    /// Check if button is loading
-    if (isLoading.value) return;
+    if (!ownsCurrentSession || !_ready || _finishRequested || isLoading.value) {
+      return;
+    }
+    final index = currentQuestionIndex;
+    final question = quizStartAttempt.questions[index];
+    final answer = selectedAnswer.value;
+    if (answer == null || answer < 0 || answer >= question.answers.length) {
+      return;
+    }
+    final lease = SessionLeaseX.capture(isActive: () => ownsCurrentSession);
+    isLoading.value = true;
+    answerError.value = null;
+    buttonState.value = ButtonStateEX.loading;
     try {
-      isLoading.value = true;
-
-      /// Set button state to loading
-      buttonState.value = ButtonStateEX.loading;
-
-      var question = quizStartAttempt.questions[currentQuestionIndex];
-
-      /// Submit question answer
       await DatabaseX.submitQuizQuestionAnswer(
         quizId: quizId,
         attemptId: quizStartAttempt.attemptId,
         questionNumber: question.slot,
-        answerIndex: question.answers.indexOf(selectedAnswer.value),
+        answerIndex: answer,
       );
-
-      /// Add selected answer to list
-      selectedAnswers[currentQuestionIndex] = selectedAnswer.value;
-
-      /// Reset selected answer
-      selectedAnswer.value = "";
-
-      /// Check if there is a next question
-      if (currentQuestionIndex < quizStartAttempt.questions.length - 1) {
-        /// Increment current question index
+      if (!lease.isCurrent) return;
+      selectedAnswers[index] = answer;
+      if (!_finishRequested && index < quizStartAttempt.questions.length - 1) {
         currentQuestionIndex++;
+        selectedAnswer.value = null;
       } else {
-        /// Submit quiz if there is no next question
-        submitQuiz();
+        _finishRequested = true;
       }
-    } catch (e) {
-      log("error submitQuizQuestionAnswer: $e", name: runtimeType.toString());
+      buttonState.value = ButtonStateEX.normal;
+    } catch (error) {
+      if (!lease.isCurrent) return;
+      ErrorX.console(error);
+      answerError.value = error.toString();
       buttonState.value = ButtonStateEX.failed;
-      await Future.delayed(const Duration(seconds: 2));
+    } finally {
+      if (lease.isCurrent) {
+        isLoading.value = false;
+        if (_finishRequested) _showResults();
+      }
     }
-
-    /// Reset loading
-    isLoading.value = false;
-    buttonState.value = ButtonStateEX.normal;
   }
 
-  /// Refresh the countdown, submitting the quiz once the deadline has passed
   void _updateRemaining(Duration remaining) {
+    if (!ownsCurrentSession || _finishRequested) {
+      _timer?.cancel();
+      return;
+    }
     remainingTime = remaining.inSeconds;
-
-    /// Check if time is up
     if (remaining.isNegative) {
-      /// Submit quiz if time is up
       submitQuiz();
     } else {
-      /// Update time remaining
       timeRemaining.value = FunctionX.formatDuration(remaining);
     }
   }
 
-  /// Start timer for quiz
   void startTimer() {
+    if (!ownsCurrentSession || !_ready || _finishRequested) return;
+    _timer?.cancel();
     _timer = Timer.periodic(
-      Duration(seconds: 1),
+      const Duration(seconds: 1),
       (_) => _updateRemaining(_endTime.difference(DateTime.now())),
     );
   }
 
-  /// Submit quiz
   void submitQuiz() {
+    if (!ownsCurrentSession || !_ready || _transitioned) return;
+    _finishRequested = true;
+    _timer?.cancel();
+    // Wait for the bounded in-flight answer before finalizing the same attempt.
+    if (!isLoading.value) _showResults();
+  }
+
+  void _showResults() {
+    if (!ownsCurrentSession || _transitioned) return;
+    _transitioned = true;
     _timer?.cancel();
     Get.offAndToNamed(
       RouteNameX.testResults,
@@ -177,15 +187,34 @@ class TestQuestionsController extends GetxController {
         quiz,
         quizId,
         quizStartAttempt,
-        selectedAnswers,
-        (quiz.timelimit - remainingTime),
+        List<int?>.of(selectedAnswers),
+        quiz.timelimit - remainingTime,
         courseId,
       ],
     );
   }
 
-  //============================================================================
-  // Lifecycle
+  void returnToTestInfo() {
+    if (!ownsCurrentSession) return;
+    Get.offAndToNamed(RouteNameX.testInfo, arguments: [quizId, courseId]);
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    final app = Get.find<AppControllerX>();
+    final accountId = app.user.value.id;
+    _ownerLease = SessionLeaseX.capture(
+      isActive:
+          () =>
+              !isClosed &&
+              Get.isRegistered<TestQuestionsController>() &&
+              identical(Get.find<TestQuestionsController>(), this) &&
+              Get.isRegistered<AppControllerX>() &&
+              identical(Get.find<AppControllerX>(), app) &&
+              app.user.value.id == accountId,
+    );
+  }
 
   @override
   void onClose() {

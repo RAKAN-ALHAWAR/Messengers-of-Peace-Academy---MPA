@@ -21,13 +21,18 @@ class QuizResultX {
     _ => null,
   };
 
-  /// Duplicate slots are ambiguous and must not grade a different question.
-  AnswerX? answerForSlot(int slot) {
-    final matches = answers.whereType<AnswerX>().where(
-      (answer) => answer.slot == slot,
-    );
-    return matches.length == 1 ? matches.single : null;
+  late final Map<int, AnswerX?> _answersBySlot = _indexAnswers();
+
+  Map<int, AnswerX?> _indexAnswers() {
+    final indexed = <int, AnswerX?>{};
+    for (final answer in answers.whereType<AnswerX>()) {
+      indexed.update(answer.slot, (_) => null, ifAbsent: () => answer);
+    }
+    return Map.unmodifiable(indexed);
   }
+
+  /// Duplicate slots are ambiguous and must not grade a different question.
+  AnswerX? answerForSlot(int slot) => _answersBySlot[slot];
 
   QuizResultX({
     required this.status,
@@ -37,8 +42,8 @@ class QuizResultX {
     required this.gradepass,
     required this.passed,
     required this.feedback,
-    required this.answers,
-  });
+    required List<AnswerX?> answers,
+  }) : answers = List.unmodifiable(answers);
   factory QuizResultX.fromJson(Map<String, dynamic> json) {
     return ModelUtilX.checkFromJson(
       json,
