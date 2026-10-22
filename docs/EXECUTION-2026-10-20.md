@@ -45,6 +45,11 @@ on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
 
+- Q02 fresh control: same arm64 simulator command without the deployment-target
+  override exits65 before compilation. Current Xcode27.1 accepts15.0-27.1.x and
+  rejects Runner13.0/Pods9.0-13.0. Log/private/tmp/mopa-ios-declared-target-20261022.log.
+  Known toolchain/target acceptance remains open, no minimum-OS source change.
+
 - Continuation2026-10-22: catalog/history worker remains active in its registered
   isolated scope. Main has the reviewed source checkpoint7868801 and records
   througha3d10cb;520 tests, strict analyzer and both native builds are green

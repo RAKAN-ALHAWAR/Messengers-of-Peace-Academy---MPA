@@ -33,6 +33,14 @@ arm64 build only, existing plugin warnings remain. No minimum-OS source change,
 installation, launch or interactive/account QA. The prior generic universal
 attempt failed Flutter's architecture unpack check, documented in execution.
 
+The declared-target control build was re-run2026-10-22 using a fresh derived
+directory, arm64 and no IPHONEOS_DEPLOYMENT_TARGET override. It exits65 before
+compilation: Xcode27.1 rejects Runner13.0/Pods9.0-13.0 against the simulator
+SDK's15.0-27.1.x range. Log/private/tmp/mopa-ios-declared-target-20261022.log.
+This known Q02 control failure is distinct from the successful command-only
+15.0 build, and does not select a product minimum-OS change. Concrete options
+and the protected-lock delta remain proposed in DEPENDENCY-LOCK-REVIEW-2026-10-22.md.
+
 Independent scoped reviews replayed mounted progress, uncertain-answer recovery,
 notification mutation races, owned caches, full-font lazy lists and shared button
 geometry/state callbacks. Carousel preparation at1000 records is still O(N):

@@ -49,3 +49,11 @@ Q02 remains a separate minimum-OS decision: Runner declares13.0; Podfile's13.0
 platform line is commented. Local successful simulator builds use a command-only
 15.0 override. No permanent supported-OS change or dependency downgrade is
 selected here; actual older-device support remains unverified.
+
+Reproduced2026-10-22 with the same arm64 command in a fresh derived-data folder
+and no deployment-target override: xcodebuild exits65 before compilation.
+Installed Xcode27.1 rejects Runner13.0 and Pods9.0-13.0 because this simulator
+SDK accepts15.0-27.1.x. The diagnostic establishes a local toolchain/target
+incompatibility, not a server/plugin requirement to drop iOS13 support. Log:
+/private/tmp/mopa-ios-declared-target-20261022.log. No source, Pod installation
+or persistent build setting changed in this comparison.
