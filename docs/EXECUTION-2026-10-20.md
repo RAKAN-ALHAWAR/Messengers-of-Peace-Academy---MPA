@@ -45,6 +45,13 @@ on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
 
+- Catalog/history worker reproduced shared PointsCardX fixed160px overflow at
+  width320/scale2 in all four locales (256/336/404/472px). Allocated the shared
+  points-card source and focused full-screen/caller regressions additionally to
+  the same isolated lane. Preserve full content/styles and normal geometry,
+  natural/minimum height for accessibility; original failing probes retained.
+  Personal atomic-ownership18 cases are green; lazy-view slice/reviews pending.
+
 - Q02 fresh control: same arm64 simulator command without the deployment-target
   override exits65 before compilation. Current Xcode27.1 accepts15.0-27.1.x and
   rejects Runner13.0/Pods9.0-13.0. Log/private/tmp/mopa-ios-declared-target-20261022.log.

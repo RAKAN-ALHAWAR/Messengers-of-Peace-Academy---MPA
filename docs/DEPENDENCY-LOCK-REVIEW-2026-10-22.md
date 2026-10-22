@@ -40,6 +40,15 @@ consistently. Candidate B: keep the foreign lock untouched and continue running
 verification from the isolated worktree; release/CI reproducibility remains Q01.
 No option has been selected by this document.
 
+The isolated ios/Podfile.lock also remains excluded. Compared with the tracked
+original Pod lock, it records open_file_ios pod0.0.1 to1.0.3 and seven changed
+local plugin spec checksums (image_picker_ios, open_file_ios,
+path_provider_foundation, pointer_interceptor_ios, url_launcher_ios,
+video_player_avfoundation, webview_flutter_wkwebview). These are actual observed
+lock differences, not approval to update CocoaPods dependencies. A later Q01
+adoption must review and regenerate both locks consistently rather than commit
+only the Dart lock or hand-edit generated checksums.
+
 Separately, pub reports72 packages with newer versions outside current
 constraints. That is an inventory signal, not an upgrade plan or approval to
 change them. Dependency upgrades require their own staged changelog/security/
