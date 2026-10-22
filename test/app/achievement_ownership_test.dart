@@ -412,4 +412,67 @@ void main() {
       );
     },
   );
+  for (final invalid in [
+    'mismatch',
+    'uninitialized',
+    'missing',
+    'anonymous-uninitialized',
+  ]) {
+    test(
+      'badge app ownership rejects $invalid before a protected read',
+      () async {
+        if (invalid == 'mismatch') {
+          app.user.value = user('synthetic-B');
+        } else {
+          await Get.delete<AppControllerX>(force: true);
+          if (invalid != 'missing') Get.put<AppControllerX>(AppControllerX());
+          if (invalid == 'anonymous-uninitialized') {
+            await LocalDataX.remove(LocalKeyX.userid);
+          }
+        }
+        final c = Get.put<BadgesController>(BadgesController());
+        var requests = 0;
+        await http.runWithClient(
+          () async {
+            expect(await c.getData(), isEmpty);
+            expect(requests, 0);
+          },
+          () => MockClient((request) async {
+            requests++;
+            return response([badge('unowned')]);
+          }),
+        );
+      },
+    );
+  }
+  for (final invalid in ['user-change', 'instance-replacement']) {
+    test('badge app ownership retires a pending $invalid result', () async {
+      final c = Get.put<BadgesController>(BadgesController());
+      final pending = Completer<http.Response>();
+      final started = Completer<void>();
+      var requests = 0;
+      await http.runWithClient(
+        () async {
+          final work = c.getData();
+          await started.future;
+          if (invalid == 'user-change') {
+            app.user.value = user('synthetic-B');
+          } else {
+            await Get.delete<AppControllerX>(force: true);
+            Get.put<AppControllerX>(
+              AppControllerX()..user = user('synthetic-A').obs,
+            );
+          }
+          pending.complete(response([badge('retired')]));
+          expect(await work, isEmpty);
+          expect(requests, 1);
+        },
+        () => MockClient((request) async {
+          requests++;
+          started.complete();
+          return pending.future;
+        }),
+      );
+    });
+  }
 }
