@@ -5,7 +5,20 @@ import '../../../../Data/Model/course/mini_course.dart';
 import '../../widget.dart';
 
 class CourseCard extends StatelessWidget {
-  const CourseCard({super.key, required this.course, required this.onTap});
+  const CourseCard({
+    super.key,
+    required this.course,
+    required this.onTap,
+    this.width = preferredWidth,
+  });
+  // Existing visual dimensions are shared with the carousel's text metrics.
+  static const preferredWidth = 290.0;
+  static const cardPadding = 16.0;
+  static const imageHeight = 160.0;
+  static const cardGap = 16.0;
+  static double progressHeight(BuildContext context) =>
+      ProgressIndicatorTheme.of(context).linearMinHeight ?? 4.0;
+  final double width;
   final MiniCourseX course;
   final Function(MiniCourseX) onTap;
 
@@ -19,10 +32,10 @@ class CourseCard extends StatelessWidget {
         }
       },
       child: ContainerX(
-        width: 290,
+        width: width,
         radius: StyleX.radiusLg,
-        padding: EdgeInsets.all(16),
-        margin: EdgeInsetsDirectional.only(end: 16),
+        padding: const EdgeInsets.all(cardPadding),
+        margin: const EdgeInsetsDirectional.only(end: cardGap),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -32,7 +45,7 @@ class CourseCard extends StatelessWidget {
                 ImageNetworkX(
                   imageUrl: course.image,
                   width: double.maxFinite,
-                  height: 160,
+                  height: imageHeight,
                   radius: StyleX.radiusLg,
                 ),
 
@@ -108,6 +121,7 @@ class CourseCard extends StatelessWidget {
 
                   /// Completion percentage
                   LinearProgressIndicator(
+                    minHeight: progressHeight(context),
                     value: course.completionPercent / 100,
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -136,10 +150,12 @@ class CourseCard extends StatelessWidget {
                   SizedBox(width: 4),
 
                   /// Lesson text
-                  TextX(
-                    "${course.numSections} ${"lesson".tr}",
-                    style: TextStyleX.labelMedium,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  Expanded(
+                    child: TextX(
+                      "${course.numSections} ${"lesson".tr}",
+                      style: TextStyleX.labelMedium,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),

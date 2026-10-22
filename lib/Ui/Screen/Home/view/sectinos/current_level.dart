@@ -4,7 +4,7 @@ import 'package:messengersofpeace/Ui/Animation/fade/fade_animation.dart';
 
 import '../../../../../Config/config.dart';
 import '../../../../Widget/Basic/Other/label.dart';
-import '../../../../Widget/Custom/Card/course_card.dart';
+import '../../../../Widget/Custom/Other/course_carousel.dart';
 import '../../controller/controller.dart';
 
 class CurrentLevelSection extends GetView<HomeController> {
@@ -26,24 +26,9 @@ class CurrentLevelSection extends GetView<HomeController> {
           ).fadeAnimation350.marginSymmetric(horizontal: StyleX.hPaddingApp),
 
           /// Current level courses
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsetsDirectional.only(
-              start: StyleX.hPaddingApp,
-              bottom: 24,
-            ),
-            child: IntrinsicHeight(
-              child: Row(
-                children: [
-                  /// Current level courses
-                  for (var course in level.courses)
-                    CourseCard(
-                      course: course,
-                      onTap: (course) => controller.onCourseTap(course),
-                    ),
-                ],
-              ),
-            ),
+          CourseCarousel(
+            courses: level.courses,
+            onTap: controller.onCourseTap,
           ).fadeAnimation400,
         ],
       );

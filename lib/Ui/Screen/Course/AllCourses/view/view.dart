@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Ui/Animation/fade/fade_animation.dart';
 import 'package:messengersofpeace/Ui/Widget/Basic/Utils/future_builder.dart';
-import '../../../../Widget/Custom/Card/course_card.dart';
+import '../../../../Widget/Custom/Other/course_carousel.dart';
 import '../../../../Widget/Custom/Other/empty_message.dart';
 import '../controller/controller.dart';
 import 'sections/loading.dart';
@@ -24,30 +24,29 @@ class AllCoursesView extends GetView<AllCoursesController> {
           loading: const AllCoursesLoading(),
 
           /// Data state
-          child: (data) {
-            /// Empty message
-            if (controller.levels.isEmpty) {
-              return const EmptyMessage('No courses found');
-            }
+          child:
+              (data) => Obx(() {
+                /// Empty message
+                if (controller.levels.isEmpty) {
+                  return const EmptyMessage('No courses found');
+                }
 
-            /// Content
-            return SingleChildScrollView(
-              padding: EdgeInsets.symmetric(vertical: StyleX.vPaddingApp),
-              child: Column(
-                children: [
-                  /// Level sections
-                  for (var level in controller.levels)
-                    Column(
+                /// Content
+                return ListView.builder(
+                  padding: EdgeInsets.symmetric(vertical: StyleX.vPaddingApp),
+                  itemCount: controller.levels.length,
+                  itemBuilder: (context, index) {
+                    final level = controller.levels[index];
+                    return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         /// Level name and course count
-                        Row(
+                        Wrap(
+                          spacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             /// Level name
                             Text(level.name, style: TextStyleX.titleMedium),
-
-                            /// Spacer
-                            SizedBox(width: 4),
 
                             /// Course count
                             Text(
@@ -58,34 +57,18 @@ class AllCoursesView extends GetView<AllCoursesController> {
                         ).paddingSymmetric(horizontal: StyleX.hPaddingApp),
 
                         /// Course cards for each level
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          padding: EdgeInsetsDirectional.only(
-                            start: StyleX.hPaddingApp,
-                            top: 14,
-                            bottom: 24,
-                          ),
-                          child: IntrinsicHeight(
-                            child: Row(
-                              children: [
-                                /// Course cards
-                                for (var course in level.courses)
-                                  CourseCard(
-                                    course: course,
-                                    onTap: (course) {
-                                      controller.onCourseTap(course);
-                                    },
-                                  ),
-                              ],
-                            ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 14),
+                          child: CourseCarousel(
+                            courses: level.courses,
+                            onTap: controller.onCourseTap,
                           ),
                         ),
                       ],
-                    ).fadeAnimation150,
-                ],
-              ),
-            );
-          },
+                    ).fadeAnimation150;
+                  },
+                );
+              }),
         ),
       ),
     );
