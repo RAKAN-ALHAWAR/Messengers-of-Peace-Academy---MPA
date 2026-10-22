@@ -57,12 +57,15 @@ class LevelsProgressSection extends GetView<HomeController> {
                                 ),
                                 child: LinearProgressIndicator(
                                   value:
-                                      controller.levels
-                                          .where(
-                                            (element) => element.isCompleted,
-                                          )
-                                          .length /
-                                      controller.levels.length,
+                                      controller.levels.isEmpty
+                                          ? 0
+                                          : controller.levels
+                                                  .where(
+                                                    (element) =>
+                                                        element.isCompleted,
+                                                  )
+                                                  .length /
+                                              controller.levels.length,
                                   backgroundColor: ColorX.yellow.shade100,
                                   color: ColorX.yellow.shade400,
                                   borderRadius: BorderRadius.circular(100),

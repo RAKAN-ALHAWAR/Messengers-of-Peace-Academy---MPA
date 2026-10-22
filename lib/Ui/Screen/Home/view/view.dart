@@ -5,6 +5,7 @@ import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Ui/Screen/Home/view/sectinos/levels_progress.dart';
 import '../../../Widget/Basic/Utils/future_builder.dart';
 import '../../../Widget/widget.dart';
+import '../../../Widget/Custom/Other/empty_message.dart';
 import '../controller/controller.dart';
 import 'sectinos/appbar_card.dart';
 import 'sectinos/current_level.dart';
@@ -37,11 +38,21 @@ class HomeView extends GetView<HomeController> {
             padding: const EdgeInsets.only(bottom: StyleX.vPaddingApp),
             child: Column(
               children: [
-                /// Level progress card
-                LevelProgressCard(),
-
-                /// Levels progress section
-                LevelsProgressSection(),
+                /// Empty levels are valid data, not a fabricated first level.
+                Obx(
+                  () =>
+                      controller.levels.isEmpty
+                          ? const Padding(
+                            padding: StyleX.paddingApp,
+                            child: EmptyMessage('No courses found'),
+                          )
+                          : const Column(
+                            children: [
+                              LevelProgressCard(),
+                              LevelsProgressSection(),
+                            ],
+                          ),
+                ),
 
                 /// My progress section
                 MyProgressSection(),
@@ -50,7 +61,12 @@ class HomeView extends GetView<HomeController> {
                 NavCardsSection(),
 
                 /// Current level section
-                CurrentLevelSection(),
+                Obx(
+                  () =>
+                      controller.currentLevel.value == null
+                          ? const SizedBox.shrink()
+                          : const CurrentLevelSection(),
+                ),
 
                 /// Meetings section
                 MeetingsSection(),

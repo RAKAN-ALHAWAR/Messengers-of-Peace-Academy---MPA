@@ -5,10 +5,14 @@ import 'package:intl/date_symbol_data_local.dart';
 import '../../../../Config/Translation/translation.dart';
 import '../../../../Config/config.dart';
 import '../../../../Core/core.dart';
+import '../../../../Core/Error/error.dart';
+import '../../../../Core/Service/session_lease.dart';
+import '../../../Widget/widget.dart';
 import '../../../../Data/Enum/meeting_option.dart';
 import '../../../../Data/Model/course/level.dart';
 import '../../../../Data/Model/course/mini_course.dart';
 import '../../../../Data/Model/meeting.dart';
+import '../../../../Data/Model/notification.dart';
 import '../../../../Data/Model/user/user.dart';
 import '../../../../Data/Model/user/user_statistics.dart';
 import '../../../../Data/data.dart';
@@ -32,7 +36,7 @@ class HomeController extends GetxController {
   RxList<LevelX> levels = <LevelX>[].obs;
 
   /// Current level
-  late Rx<LevelX> currentLevel;
+  final Rx<LevelX?> currentLevel = Rx<LevelX?>(null);
 
   /// Unread notifications count
   Rx<int> unreadNotificationsCount = 0.obs;
@@ -53,83 +57,149 @@ class HomeController extends GetxController {
   //============================================================================
   // Functions
 
-  /// Get data from database
-  Future<void> getData() async {
+  static const _cacheLifetime = Duration(minutes: 1);
+  SessionLeaseX? _cacheLease;
+  SessionLeaseX? _pendingLease;
+  Future<void>? _pendingLoad;
+  int _loadGeneration = 0;
+  int _notificationGeneration = 0;
+
+  bool get _ownsHome =>
+      !isClosed &&
+      Get.isRegistered<HomeController>() &&
+      identical(Get.find<HomeController>(), this) &&
+      Get.isRegistered<AppControllerX>() &&
+      identical(Get.find<AppControllerX>(), app);
+
+  /// Keep one owned snapshot. Independent responses must never partly replace
+  /// another account's state or be published with the wrong locale.
+  Future<void> getData() {
+    if (!_ownsHome) return Future.value();
+    final language = TranslationX.getLanguageCode;
+    final ownedCache =
+        isInit && _cacheLease?.isCurrent == true && currentLanguage == language;
+    if (ownedCache &&
+        lastUpdate.isAfter(DateTime.now().subtract(_cacheLifetime))) {
+      return Future.value();
+    }
+    if (_pendingLease?.isCurrent == true && _pendingLoad != null) {
+      return _pendingLoad!;
+    }
+    final request = ++_loadGeneration;
+    final id = LocalDataX.userid;
+    final lease = SessionLeaseX.capture(
+      isActive:
+          () =>
+              _ownsHome &&
+              request == _loadGeneration &&
+              TranslationX.getLanguageCode == language,
+    );
+    _pendingLease = lease;
+    if (!ownedCache) {
+      isInit = false;
+      _cacheLease = null;
+      levels.clear();
+      currentLevel.value = null;
+      meetings.clear();
+      unreadNotificationsCount.value = 0;
+      user.value = app.user.value;
+    }
+    final pending = _loadSnapshot(lease, id, language, ownedCache).whenComplete(
+      () {
+        if (request == _loadGeneration) {
+          _pendingLoad = null;
+          _pendingLease = null;
+        }
+      },
+    );
+    _pendingLoad = pending;
+    return pending;
+  }
+
+  Future<void> _loadSnapshot(
+    SessionLeaseX lease,
+    String id,
+    String language,
+    bool ownedCache,
+  ) async {
     try {
-      /// If initialized and last update is after 1 minute, return
-      if (isInit &&
-          lastUpdate.isAfter(DateTime.now().subtract(Duration(minutes: 1))) &&
-          currentLanguage == TranslationX.getLanguageCode) {
-        return;
+      if (!lease.hasAuthenticatedIdentity) {
+        throw ErrorX(message: 'Session changed. Please try again.');
       }
-
-      /// Update current language
-      currentLanguage = TranslationX.getLanguageCode;
-
-      /// Get data from database
-      await Future.wait<void>([
-        /// Update user
-        DatabaseX.getUser().then((value) {
-          user.value = value;
-          app.user.value = value;
-        }),
-
-        /// Get statistics
-        DatabaseX.getUserStatistics().then((value) => statistics = value.obs),
-
-        /// Get levels
-        DatabaseX.getLevelsWithCourses().then((value) => levels = value.obs),
-
-        /// Get meetings
-        DatabaseX.getMeetings(
-          option: MeetingOptionEX.all,
-        ).then((value) => meetings = value.obs),
-
-        /// Get unread notifications count
-        _getUnreadNotificationsCount(),
+      final values = await Future.wait<Object>([
+        DatabaseX.getUser(userId: id),
+        DatabaseX.getUserStatistics(),
+        DatabaseX.getLevelsWithCourses(),
+        DatabaseX.getMeetings(option: MeetingOptionEX.all),
+        DatabaseX.getNotifications(),
       ]);
-
-      /// Get current level
-      currentLevel =
-          levels
-              .firstWhere(
-                (element) => element.isOpen && element.isCompleted == false,
-                orElse:
-                    () => levels.firstWhere(
-                      (element) => element.isCompleted,
-                      orElse: () => levels.first,
-                    ),
-              )
-              .obs;
-
-      /// Update last update and is initialized
+      if (!lease.isCurrent) return;
+      final profile = values[0] as UserX;
+      if (profile.id != id) {
+        throw ErrorX(message: 'Session changed. Please try again.');
+      }
+      final nextLevels = values[2] as List<LevelX>;
+      LevelX? selected;
+      if (nextLevels.isNotEmpty) {
+        selected = nextLevels.firstWhere(
+          (level) => level.isOpen && !level.isCompleted,
+          orElse:
+              () => nextLevels.firstWhere(
+                (level) => level.isCompleted,
+                orElse: () => nextLevels.first,
+              ),
+        );
+      }
+      user.value = profile;
+      app.user.value = profile;
+      statistics = (values[1] as UserStatisticsX).obs;
+      levels.assignAll(nextLevels);
+      currentLevel.value = selected;
+      meetings.assignAll(values[3] as List<MeetingX>);
+      unreadNotificationsCount.value =
+          (values[4] as List<NotificationX>).where((item) => !item.read).length;
+      currentLanguage = language;
       lastUpdate = DateTime.now();
       isInit = true;
+      // Cache ownership is independent of the next refresh's request generation.
+      _cacheLease = SessionLeaseX.capture(
+        isActive: () => _ownsHome && TranslationX.getLanguageCode == language,
+      );
     } catch (e) {
-      if (!isInit) rethrow;
+      if (!lease.isCurrent) return;
+      if (!ownedCache) rethrow;
+      // An expired, same-owner snapshot remains available after a failed refresh;
+      // its timestamp is not renewed, so a retry still performs the request.
+      ErrorX.console(e);
     }
   }
 
-  /// Get unread notifications count
-  Future<void> _getUnreadNotificationsCount() async {
-    /// Get notifications from database
-    var notifications = await DatabaseX.getNotifications();
-
-    /// Update unread notifications count
-    unreadNotificationsCount.value =
-        notifications.where((e) => e.read == false).length;
-  }
-
-  /// Handle tap on notifications
-  onNotifications() async {
-    /// Go to notifications screen
-    var result = await Get.toNamed(RouteNameX.notifications);
-
-    /// If result is not null, update unread notifications count
-    if (result != null) {
-      unreadNotificationsCount.value = result;
-    } else {
-      await _getUnreadNotificationsCount();
+  Future<void> onNotifications() async {
+    final request = ++_notificationGeneration;
+    final language = TranslationX.getLanguageCode;
+    final lease = SessionLeaseX.capture(
+      isActive:
+          () =>
+              _ownsHome &&
+              request == _notificationGeneration &&
+              TranslationX.getLanguageCode == language,
+    );
+    if (!lease.isCurrent || !lease.hasAuthenticatedIdentity) return;
+    try {
+      final result = await Get.toNamed(RouteNameX.notifications);
+      if (!lease.isCurrent) return;
+      if (result is int && result >= 0) {
+        unreadNotificationsCount.value = result;
+      } else {
+        final notifications = await DatabaseX.getNotifications();
+        if (!lease.isCurrent) return;
+        unreadNotificationsCount.value =
+            notifications.where((item) => !item.read).length;
+      }
+    } catch (e) {
+      if (!lease.isCurrent) return;
+      ErrorX.console(e);
+      ToastX.error(message: e);
     }
   }
 
@@ -157,6 +227,14 @@ class HomeController extends GetxController {
 
   //============================================================================
   // Lifecycle
+
+  @override
+  void onClose() {
+    _loadGeneration++;
+    _notificationGeneration++;
+    complaintController.dispose();
+    super.onClose();
+  }
 
   @override
   void onInit() {

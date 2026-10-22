@@ -13,13 +13,15 @@ class CurrentLevelSection extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     /// Build current level section
-    return Obx(
-      () => Column(
+    return Obx(() {
+      final level = controller.currentLevel.value;
+      if (level == null) return const SizedBox.shrink();
+      return Column(
         children: [
           /// Current level label
           LabelX(
             "Your courses at current level",
-            hint: "(${controller.currentLevel.value.name})",
+            hint: "(${level.name})",
             marginBottom: 12,
           ).fadeAnimation350.marginSymmetric(horizontal: StyleX.hPaddingApp),
 
@@ -34,7 +36,7 @@ class CurrentLevelSection extends GetView<HomeController> {
               child: Row(
                 children: [
                   /// Current level courses
-                  for (var course in controller.currentLevel.value.courses)
+                  for (var course in level.courses)
                     CourseCard(
                       course: course,
                       onTap: (course) => controller.onCourseTap(course),
@@ -44,7 +46,7 @@ class CurrentLevelSection extends GetView<HomeController> {
             ),
           ).fadeAnimation400,
         ],
-      ),
-    );
+      );
+    });
   }
 }

@@ -13,51 +13,53 @@ class LevelProgressCard extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     /// Build level progress card
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16),
-      child: Stack(
-        children: [
-          /// Background
-          Container(
-            width: double.infinity,
-            height: 80,
-            decoration: BoxDecoration(gradient: ColorX.primaryGradient),
-          ),
-
-          /// Content
-          Padding(
-            padding: EdgeInsets.only(
-              top: 16,
-              right: StyleX.hPaddingApp,
-              left: StyleX.hPaddingApp,
+    return Obx(() {
+      final level = controller.currentLevel.value;
+      if (level == null) return const SizedBox.shrink();
+      return Padding(
+        padding: EdgeInsets.only(bottom: 16),
+        child: Stack(
+          children: [
+            /// Background
+            Container(
+              width: double.infinity,
+              height: 80,
+              decoration: BoxDecoration(gradient: ColorX.primaryGradient),
             ),
-            child: Column(
-              children: [
-                /// Level Progress
-                Container(
-                  height: 126,
-                  decoration: BoxDecoration(
-                    gradient: ColorX.goldGradient,
-                    borderRadius: BorderRadius.circular(StyleX.radiusLg),
-                    border: Border.all(color: Color(0xFFFEF4D5), width: 2),
-                  ),
-                  child: Stack(
-                    children: [
-                      /// Background Image
-                      Opacity(
-                        opacity: 0.2,
-                        child: Image.asset(
-                          ImageX.background,
-                          height: 126,
-                          width: double.infinity,
-                          fit: BoxFit.fitHeight,
-                          alignment: Alignment.center,
-                        ),
-                      ),
 
-                      /// Content
-                      Obx(
-                        () => Container(
+            /// Content
+            Padding(
+              padding: EdgeInsets.only(
+                top: 16,
+                right: StyleX.hPaddingApp,
+                left: StyleX.hPaddingApp,
+              ),
+              child: Column(
+                children: [
+                  /// Level Progress
+                  Container(
+                    height: 126,
+                    decoration: BoxDecoration(
+                      gradient: ColorX.goldGradient,
+                      borderRadius: BorderRadius.circular(StyleX.radiusLg),
+                      border: Border.all(color: Color(0xFFFEF4D5), width: 2),
+                    ),
+                    child: Stack(
+                      children: [
+                        /// Background Image
+                        Opacity(
+                          opacity: 0.2,
+                          child: Image.asset(
+                            ImageX.background,
+                            height: 126,
+                            width: double.infinity,
+                            fit: BoxFit.fitHeight,
+                            alignment: Alignment.center,
+                          ),
+                        ),
+
+                        /// Content
+                        Container(
                           height: 126,
                           width: double.infinity,
                           padding: EdgeInsets.all(16),
@@ -75,7 +77,7 @@ class LevelProgressCard extends GetView<HomeController> {
                                   ),
                                   SizedBox(width: 6),
                                   TextX(
-                                    controller.currentLevel.value.name,
+                                    level.name,
                                     style: TextStyleX.titleMedium,
                                     color: ColorX.yellow.shade900,
                                   ),
@@ -97,12 +99,7 @@ class LevelProgressCard extends GetView<HomeController> {
                                       /// Level Progress Bar
                                       Expanded(
                                         child: GradientProgressBar(
-                                          value:
-                                              controller
-                                                  .currentLevel
-                                                  .value
-                                                  .completionPercent /
-                                              100,
+                                          value: level.completionPercent / 100,
                                         ),
                                       ),
 
@@ -111,7 +108,7 @@ class LevelProgressCard extends GetView<HomeController> {
 
                                       /// Level courses count text
                                       TextX(
-                                        "${controller.currentLevel.value.completedCourses}/${controller.currentLevel.value.totalCourses} ${"Course (session)".tr}",
+                                        "${level.completedCourses}/${level.totalCourses} ${"Course (session)".tr}",
                                         style: TextStyleX.labelMedium,
                                         color: ColorX.yellow.shade900,
                                       ),
@@ -122,27 +119,27 @@ class LevelProgressCard extends GetView<HomeController> {
 
                               /// Level progress text
                               TextX(
-                                "${"I have completed".tr} ${controller.currentLevel.value.completionPercent.toInt()}%"
+                                "${"I have completed".tr} ${level.completionPercent.toInt()}%"
                                 " "
-                                "${"from".tr} ${controller.currentLevel.value.name}",
+                                "${"from".tr} ${level.name}",
                                 style: TextStyleX.labelLarge,
                                 color: ColorX.yellow.shade900,
                               ),
                             ],
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
 
-                /// Spacer
-                SizedBox(height: 6),
-              ],
-            ),
-          ).fadeAnimation150,
-        ],
-      ),
-    );
+                  /// Spacer
+                  SizedBox(height: 6),
+                ],
+              ),
+            ).fadeAnimation150,
+          ],
+        ),
+      );
+    });
   }
 }
