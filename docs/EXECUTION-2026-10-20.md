@@ -48,6 +48,15 @@ on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
 
+- Android catalog attempt using the level-track SDK copy stalled while fetching
+  android-x64-profile tools, before Gradle. Clock/process recheck showed53min
+  elapsed. Root terminated only its owned Dart download process42531 and retried
+  with the already-populated identical validation SDK. The interrupted wrapper
+  printed exit0 despite no APK/build summary; it is explicitly NOT build proof.
+  Log/private/tmp/mopa-android-catalog-20261022.log retained as interruption
+  evidence. Cached retry log/private/tmp/mopa-android-catalog-cached-20261022.log.
+  No source/foreign lock/shared process changed; reviewer progress requested.
+
 - Combined sourcebf1b52d: full581/581 tests and strict analyzer0 issues, logs
   /private/tmp/mopa-full-20261022-v4.log and
   /private/tmp/mopa-catalog-full-analyze-20261022.log. iOS arm64 simulator build

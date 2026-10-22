@@ -1,6 +1,6 @@
 # Local remediation status
 
-Checkpoint7868801,2026-10-22. Implementation authorized by repeated 'اكمل'.
+Checkpointbf1b52d,2026-10-22. Implementation authorized by repeated 'اكمل'.
 This records source/local observations, not release, live account, backend,
 remote CI or issue closure. Commands/logs: LOCAL-VERIFICATION.md. Active owners
 and exact review evidence: EXECUTION-2026-10-20.md. Full acceptance plan remains
@@ -8,12 +8,13 @@ REMEDIATION-PLAN-2026-10-18.md; backend questions remain explicit there.
 
 ## Observed local results
 
-520/520 tests; strict analyzer0 issues. Independent scoped auth/transport,
+581/581 tests; strict analyzer0 issues. Independent scoped auth/transport,
 profile, quiz, learning/session, list/performance and shared-control reviews
 passed after their reported findings were repaired and rechecked. Android debug
-build succeeds. iOS arm64 simulator rebuild also succeeds through7868801.
+build succeeds. iOS arm64 simulator rebuild also succeeds throughbf1b52d.
 Native warnings and device gaps remain. Reviewed checkpointb89fc4a was integrated
-into original main locally; catalog/history continuation stays isolated.
+into original main locally; catalog/history sourcebf1b52d stays isolated until
+its list/card review closes. Catalog data-ownership review passes32/32.
 Original foreign pubspec.lock stays excluded and byte-identical.
 
 | Findings | Locally observed disposition | Remaining acceptance |
@@ -27,7 +28,7 @@ Original foreign pubspec.lock stays excluded and byte-identical.
 | L07,L12,V01 | Empty Home, mounted stats, all owned course returns/tab entries and regular player controls repaired | Server checkmarks/minutes/grades and native regular/YouTube playback matrix |
 | A03,A05,A06,X01,X02,X06 | UI locale/backend mapping, calendar filtering/noon, notification Back/ack races, dated articles and acknowledged event return repaired | Real API timezone/status/notification sentinel and device/locale scenarios |
 | P01 | One initial blog page, on-demand retry/dedup/overlap handling verified | Live pagination/payload/query contract and device profile |
-| P02 | Blog/Leaderboard/Notifications/MyCourses/Certificates/Meetings/AllCourses/Home course+level virtualization verified | Badge/points catalogs and personal history are active counterpart work |
+| P02 | Earlier lists/course+level virtualization verified; badge/points catalogs and personal history implemented with bounded viewport rows and61 focused cases | Fresh catalog/list/card performance review pending; backend still retrieves whole lists and history grouping remains O(N log N) |
 | Q04 | Existing model diagnostic and5 remaining analyzer infos removed; strict CI configuration | Actual remote runner result, not inferred from local checks |
 | B01 | Case-sensitive import corrected and retained | Clean Linux runner result |
 

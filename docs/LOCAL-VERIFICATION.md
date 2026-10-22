@@ -2,6 +2,21 @@
 
 ## Continuation checkpoint2026-10-22
 
+Latest integrated isolated sourcebf1b52d adds catalog/history ownership, lazy
+rows and shared points-card sizing. Root full581/581 cases pass, strict analyzer
+0 issues. Logs/private/tmp/mopa-full-20261022-v4.log and
+/private/tmp/mopa-catalog-full-analyze-20261022.log. Data-ownership review32/32
+passes after the Badges app-identity correction; list/card review is pending.
+The520-case checkpoint below precedes this slice.
+
+Both native incremental builds atbf1b52d completed: iOS arm64 simulator exit0,
+/private/tmp/mopa-ios-catalog-20261022.log, same command-only15.0 override as
+below; Android debug cached retry exit0 with actual Built APK summary in5.6s,
+/private/tmp/mopa-android-catalog-cached-20261022.log, same isolated native tree
+and pinned validation SDK. An earlier SDK-copy attempt was terminated during
+engine artifact download before Gradle; its wrapper exit0 is not build proof.
+No device/runtime, production/server, remote runner or supported-OS acceptance.
+
 Current execution lives in EXECUTION-2026-10-20.md. Original audit evidence below
 is historical. Root worktree /private/tmp/mopa-urgent-fixes-20261018 uses pinned
 Flutter3.41.6/db50e20168 (Dart3.11.4), with exact APFS validation copies when an
