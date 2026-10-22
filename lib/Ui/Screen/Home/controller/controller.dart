@@ -31,6 +31,7 @@ class HomeController extends GetxController {
 
   /// Statistics
   late Rx<UserStatisticsX> statistics;
+  bool _statisticsInitialized = false;
 
   /// Levels
   RxList<LevelX> levels = <LevelX>[].obs;
@@ -160,7 +161,14 @@ class HomeController extends GetxController {
       }
       user.value = profile;
       app.user.value = profile;
-      statistics = (values[1] as UserStatisticsX).obs;
+      // Mounted Obx consumers retain this Rx subscription across refreshes.
+      final nextStatistics = values[1] as UserStatisticsX;
+      if (_statisticsInitialized) {
+        statistics.value = nextStatistics;
+      } else {
+        statistics = nextStatistics.obs;
+        _statisticsInitialized = true;
+      }
       levels.assignAll(nextLevels);
       currentLevel.value = selected;
       meetings.assignAll(values[3] as List<MeetingX>);

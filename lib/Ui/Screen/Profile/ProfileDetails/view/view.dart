@@ -44,8 +44,10 @@ class ProfileDetailsView extends GetView<ProfileDetailsController> {
                       LabelX("My Progress", marginBottom: 12).fadeAnimation150,
 
                       /// User statistics
-                      UserStatisticsSection(
-                        statistics: controller.statistics.value,
+                      Obx(
+                        () => UserStatisticsSection(
+                          statistics: controller.statistics.value,
+                        ),
                       ).fadeAnimation200,
 
                       /// Spacer

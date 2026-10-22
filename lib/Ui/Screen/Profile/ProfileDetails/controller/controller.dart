@@ -34,6 +34,7 @@ class ProfileDetailsController extends GetxController {
 
   /// User statistics
   late Rx<UserStatisticsX> statistics;
+  bool _snapshotInitialized = false;
 
   /// Current badge
   Rx<BadgeX?> currentBadge = Rx<BadgeX?>(null);
@@ -92,8 +93,15 @@ class ProfileDetailsController extends GetxController {
       if (!lease.isCurrent) return;
 
       // Publish one complete snapshot only while its identity is still current.
-      user = loadedUser.obs;
-      statistics = loadedStatistics.obs;
+      // Keep the same observable containers for already-mounted consumers.
+      if (_snapshotInitialized) {
+        user.value = loadedUser;
+        statistics.value = loadedStatistics;
+      } else {
+        user = loadedUser.obs;
+        statistics = loadedStatistics.obs;
+        _snapshotInitialized = true;
+      }
       app.user.value = loadedUser;
       currentBadge.value =
           badges.isEmpty
