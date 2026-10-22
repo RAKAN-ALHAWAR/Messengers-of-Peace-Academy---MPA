@@ -49,12 +49,13 @@ class ProfileDetailsController extends GetxController {
   bool isInit = false;
   (int, String)? _loadedKey;
   int _loadGeneration = 0;
+  int _navigationGeneration = 0;
 
   //============================================================================
   // Functions
 
   /// Get data from database
-  Future<void> getData() async {
+  Future<void> getData({bool force = false}) async {
     if (isClosed) return;
     // This authenticated screen may briefly survive logout navigation. Do not
     // let its reload adopt the public service credential.
@@ -63,7 +64,8 @@ class ProfileDetailsController extends GetxController {
     }
     final locale = TranslationX.getLanguageCode;
     final key = (LocalDataX.sessionRevision, locale);
-    if (isInit &&
+    if (!force &&
+        isInit &&
         _loadedKey == key &&
         lastUpdate.isAfter(
           DateTime.now().subtract(const Duration(minutes: 1)),
@@ -116,7 +118,7 @@ class ProfileDetailsController extends GetxController {
       isInit = true;
     } catch (_) {
       if (!lease.isCurrent) return;
-      if (!isInit || _loadedKey != key) rethrow;
+      if (force || !isInit || _loadedKey != key) rethrow;
     }
   }
 
@@ -133,10 +135,35 @@ class ProfileDetailsController extends GetxController {
   onLeaderboard() => Get.toNamed(RouteNameX.leaderboard);
 
   /// Navigate to edit profile
-  onEditPersonalData() => Get.toNamed(RouteNameX.editProfile);
+  Future<void> onEditPersonalData() => _openAndRefresh(RouteNameX.editProfile);
 
   /// Navigate to my courses
-  onCoursesAttended() => Get.toNamed(RouteNameX.myCourses);
+  Future<void> onCoursesAttended() => _openAndRefresh(RouteNameX.myCourses);
+
+  Future<void> _openAndRefresh(String destination) async {
+    final origin = Get.rawRoute;
+    final locale = TranslationX.getLanguageCode;
+    final generation = ++_navigationGeneration;
+    final lease = SessionLeaseX.capture(
+      isActive:
+          () =>
+              !isClosed &&
+              generation == _navigationGeneration &&
+              Get.isRegistered<ProfileDetailsController>() &&
+              identical(Get.find<ProfileDetailsController>(), this) &&
+              origin?.isActive == true &&
+              TranslationX.getLanguageCode == locale,
+    );
+    if (!lease.hasAuthenticatedIdentity || !lease.isCurrent) return;
+    try {
+      await Get.toNamed(destination);
+      if (lease.isCurrent) await getData(force: true);
+    } catch (error) {
+      if (!lease.isCurrent) return;
+      ErrorX.console(error);
+      ToastX.error(message: error);
+    }
+  }
 
   /// Navigate to my grades and certificates
   onMyGradesAndCertificates() => Get.toNamed(RouteNameX.myCertificates);

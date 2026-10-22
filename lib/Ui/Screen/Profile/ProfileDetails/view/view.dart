@@ -18,7 +18,7 @@ class ProfileDetailsView extends GetView<ProfileDetailsController> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: FutureBuilderX(
-        future: controller.getData,
+        future: () => controller.getData(force: true),
         requestKey: (controller, TranslationX.getLanguageCode),
 
         /// Loading state

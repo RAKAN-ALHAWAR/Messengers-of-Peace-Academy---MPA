@@ -114,6 +114,7 @@ class HomeController extends GetxController {
       language,
       ownedCache,
       _unreadRevision,
+      force,
     ).whenComplete(() {
       if (request == _loadGeneration) {
         _pendingLoad = null;
@@ -130,6 +131,7 @@ class HomeController extends GetxController {
     String language,
     bool ownedCache,
     int unreadRevision,
+    bool force,
   ) async {
     try {
       if (!lease.hasAuthenticatedIdentity) {
@@ -188,7 +190,7 @@ class HomeController extends GetxController {
       );
     } catch (e) {
       if (!lease.isCurrent) return;
-      if (!ownedCache) rethrow;
+      if (!ownedCache || force) rethrow;
       // An expired, same-owner snapshot remains available after a failed refresh;
       // its timestamp is not renewed, so a retry still performs the request.
       ErrorX.console(e);

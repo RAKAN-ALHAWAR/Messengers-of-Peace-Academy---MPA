@@ -26,7 +26,9 @@ class HomeView extends GetView<HomeController> {
         leading: AppBarCard(),
       ),
       body: FutureBuilderX(
-        future: controller.getData,
+        // Root tabs dispose views while retaining controllers. A new visible
+        // entry must refresh progress changed through a different tab.
+        future: () => controller.getData(force: true),
         requestKey: (controller, TranslationX.getLanguageCode),
 
         /// Loading
