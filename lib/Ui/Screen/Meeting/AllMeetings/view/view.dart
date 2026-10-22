@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Data/data.dart';
 import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -19,79 +20,61 @@ class AllMeetingsView extends GetView<AllMeetingsController> {
     return Scaffold(
       appBar: AppBarX(title: 'Meetings and Encounters'),
       body: SafeArea(
-        child: Obx(
-          () => Column(
-            children: [
-              /// Tab meetings segment
-              Padding(
-                padding: EdgeInsets.only(
-                  left: StyleX.hPaddingApp,
-                  right: StyleX.hPaddingApp,
-                  top: StyleX.vPaddingApp,
-                  bottom: 16,
-                ),
-                child: TabSegmentX(
-                  controller: controller.tabController,
-                  tabs: {1: 'All'.tr, 2: 'Upcoming'.tr, 3: 'Ended'.tr},
-                ),
-              ).fadeAnimation150,
+        child: Column(
+          children: [
+            /// Tab meetings segment
+            Padding(
+              padding: EdgeInsets.only(
+                left: StyleX.hPaddingApp,
+                right: StyleX.hPaddingApp,
+                top: StyleX.vPaddingApp,
+                bottom: 16,
+              ),
+              child: TabSegmentX(
+                controller: controller.tabController,
+                tabs: {1: 'All'.tr, 2: 'Upcoming'.tr, 3: 'Ended'.tr},
+              ),
+            ).fadeAnimation150,
 
-              /// Get data from the database and show loading state
-              if (controller.isLoading.value)
-                Expanded(
-                  child: FutureBuilderX(
-                    future: controller.getData,
-                    requestKey: (controller, TranslationX.getLanguageCode),
-
-                    /// Loading state
-                    loading: const AllMeetingsLoading(),
-                    child: (_) => SizedBox(),
-                  ),
-                ),
-
-              /// Content if not loading
-              if (!controller.isLoading.value)
-                Expanded(
-                  child: Obx(
-                    () => Column(
-                      children: [
-                        /// Empty state
-                        if (controller.selectedMeetings.isEmpty)
-                          Center(
-                            child: TextX(
-                              "No meetings and encounters currently",
-                              style: TextStyleX.titleMedium,
-                              color: Theme.of(context).colorScheme.secondary,
-                            ).fadeAnimation200.marginOnly(top: 150),
-                          ),
-
-                        /// Meetings list by tab
-                        if (controller.selectedMeetings.isNotEmpty)
-                          Expanded(
-                            child: SingleChildScrollView(
-                              padding: EdgeInsets.only(
-                                left: StyleX.hPaddingApp,
-                                right: StyleX.hPaddingApp,
-                                bottom: StyleX.vPaddingApp,
-                              ),
-                              child: Column(
-                                children: [
-                                  /// Meetings cards
-                                  for (var meeting
-                                      in controller.selectedMeetings)
-                                    MeetingCardX(
-                                      meeting: meeting,
-                                    ).fadeAnimation200,
-                                ],
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
+            Expanded(
+              child: FutureBuilderX<void>(
+                future: controller.getData,
+                requestKey: (controller, TranslationX.getLanguageCode),
+                loading: const AllMeetingsLoading(),
+                child:
+                    (_) => Obx(() {
+                      if (controller.selectedMeetings.isEmpty) {
+                        return Center(
+                          child:
+                              TextX(
+                                'No meetings and encounters currently',
+                                style: TextStyleX.titleMedium,
+                                color: Theme.of(context).colorScheme.secondary,
+                              ).fadeAnimation200,
+                        );
+                      }
+                      return ListView.builder(
+                        key: PageStorageKey((
+                          LocalDataX.sessionRevision,
+                          TranslationX.getLanguageCode,
+                          controller.tabController.value,
+                        )),
+                        padding: EdgeInsets.only(
+                          left: StyleX.hPaddingApp,
+                          right: StyleX.hPaddingApp,
+                          bottom: StyleX.vPaddingApp,
+                        ),
+                        itemCount: controller.selectedMeetings.length,
+                        itemBuilder:
+                            (_, index) =>
+                                MeetingCardX(
+                                  meeting: controller.selectedMeetings[index],
+                                ).fadeAnimation200,
+                      );
+                    }),
+              ),
+            ),
+          ],
         ),
       ),
     );

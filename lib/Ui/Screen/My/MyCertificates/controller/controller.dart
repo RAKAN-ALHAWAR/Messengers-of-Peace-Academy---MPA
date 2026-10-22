@@ -1,3 +1,5 @@
+import 'package:messengersofpeace/Config/Translation/translation.dart';
+import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Data/Model/course/my_course.dart';
@@ -24,20 +26,48 @@ class MyCertificatesController extends GetxController {
 
   /// Is loading
   RxBool isLoading = true.obs;
+  int _loadGeneration = 0;
+  (int, String)? _ownerKey;
 
   //============================================================================
   // Functions
 
   /// Get data from database
   Future<void> getData() async {
-    /// Get certificates
-    certificates = await DatabaseX.getMyCertificates();
-
-    /// Get courses
-    courses = await DatabaseX.getMyCourses();
-
-    /// Set loading to false
-    isLoading.value = false;
+    if (isClosed) return;
+    final locale = TranslationX.getLanguageCode;
+    final key = (LocalDataX.sessionRevision, locale);
+    final generation = ++_loadGeneration;
+    final lease = SessionLeaseX.capture(
+      isActive:
+          () =>
+              !isClosed &&
+              generation == _loadGeneration &&
+              TranslationX.getLanguageCode == locale,
+    );
+    if (_ownerKey != key || !lease.hasAuthenticatedIdentity) {
+      certificates = [];
+      courses = [];
+      _ownerKey = key;
+    }
+    if (!lease.hasAuthenticatedIdentity) {
+      isLoading.value = false;
+      return;
+    }
+    isLoading.value = true;
+    try {
+      final loadedCertificates = await DatabaseX.getMyCertificates();
+      if (!lease.isCurrent) return;
+      final loadedCourses = await DatabaseX.getMyCourses();
+      if (!lease.isCurrent) return;
+      certificates = loadedCertificates;
+      courses = loadedCourses;
+    } catch (_) {
+      if (!lease.isCurrent) return;
+      rethrow;
+    } finally {
+      if (lease.isCurrent) isLoading.value = false;
+    }
   }
 
   /// Download certificate
@@ -61,8 +91,17 @@ class MyCertificatesController extends GetxController {
     super.onInit();
 
     /// Add listener to tab controller
-    tabController.addListener(() {
-      isCourseGrades.value = tabController.value == 1;
-    });
+    tabController.addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    isCourseGrades.value = tabController.value == 1;
+  }
+
+  @override
+  void onClose() {
+    tabController.removeListener(_onTabChanged);
+    tabController.dispose();
+    super.onClose();
   }
 }

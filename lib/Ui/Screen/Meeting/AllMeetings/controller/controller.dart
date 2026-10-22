@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -37,38 +38,59 @@ class AllMeetingsController extends GetxController {
 
   /// Is loading
   RxBool isLoading = true.obs;
+  int _loadGeneration = 0;
+  (int, String)? _ownerKey;
 
   //============================================================================
   // Functions
 
   /// Get data from the database
   Future<void> getData() async {
+    if (isClosed) return;
+    final locale = TranslationX.getLanguageCode;
+    final key = (LocalDataX.sessionRevision, locale);
+    final generation = ++_loadGeneration;
+    final lease = SessionLeaseX.capture(
+      isActive:
+          () =>
+              !isClosed &&
+              generation == _loadGeneration &&
+              TranslationX.getLanguageCode == locale,
+    );
+    if (_ownerKey != key || !lease.hasAuthenticatedIdentity) {
+      allMeetings = [];
+      upcomingMeetings = [];
+      endedMeetings = [];
+      selectedMeetings.clear();
+      _ownerKey = key;
+    }
+    if (!lease.hasAuthenticatedIdentity) {
+      isLoading.value = false;
+      return;
+    }
+    isLoading.value = true;
     try {
-      /// Get all meetings from the database
-      allMeetings = await DatabaseX.getMeetings(option: MeetingOptionEX.all);
-
-      /// Get upcoming meetings from the database
-      upcomingMeetings = await DatabaseX.getMeetings(
+      final loadedAll = await DatabaseX.getMeetings(
+        option: MeetingOptionEX.all,
+      );
+      if (!lease.isCurrent) return;
+      final loadedUpcoming = await DatabaseX.getMeetings(
         option: MeetingOptionEX.future,
       );
-
-      /// Get ended meetings from the database
-      endedMeetings = await DatabaseX.getMeetings(
+      if (!lease.isCurrent) return;
+      final loadedEnded = await DatabaseX.getMeetings(
         option: MeetingOptionEX.ended,
       );
-
-      /// Set selected meetings
-      selectedMeetings.value =
-          isAll.value
-              ? allMeetings
-              : isUpcoming.value
-              ? upcomingMeetings
-              : endedMeetings;
-
-      /// Set loading to false
-      isLoading.value = false;
-    } catch (e) {
+      if (!lease.isCurrent) return;
+      allMeetings = loadedAll;
+      upcomingMeetings = loadedUpcoming;
+      endedMeetings = loadedEnded;
+      _selectMeetings();
+    } catch (_) {
+      if (!lease.isCurrent) return;
       rethrow;
+    } finally {
+      if (lease.isCurrent) isLoading.value = false;
     }
   }
 
@@ -80,19 +102,32 @@ class AllMeetingsController extends GetxController {
     super.onInit();
 
     /// Tab controller listener
-    tabController.addListener(() {
-      isAll.value = tabController.value == 1;
-      isUpcoming.value = tabController.value == 2;
-      isEnded.value = tabController.value == 3;
-      selectedMeetings.value =
-          isAll.value
-              ? allMeetings
-              : isUpcoming.value
-              ? upcomingMeetings
-              : endedMeetings;
-    });
+    tabController.addListener(_onTabChanged);
 
     /// Initialize date format
     initializeDateFormatting(TranslationX.getLanguageCode, null);
+  }
+
+  void _onTabChanged() {
+    isAll.value = tabController.value == 1;
+    isUpcoming.value = tabController.value == 2;
+    isEnded.value = tabController.value == 3;
+    _selectMeetings();
+  }
+
+  void _selectMeetings() {
+    selectedMeetings.value =
+        isAll.value
+            ? allMeetings
+            : isUpcoming.value
+            ? upcomingMeetings
+            : endedMeetings;
+  }
+
+  @override
+  void onClose() {
+    tabController.removeListener(_onTabChanged);
+    tabController.dispose();
+    super.onClose();
   }
 }

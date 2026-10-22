@@ -1,3 +1,5 @@
+import 'package:messengersofpeace/Data/data.dart';
+import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
@@ -11,42 +13,36 @@ class CertificatesSection extends GetView<MyCertificatesController> {
   const CertificatesSection({super.key});
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: StyleX.hPaddingApp),
-        child: Column(
-          children: [
-            /// Certificates label
-            LabelX(
-              "List of certificates I have obtained",
-            ).fadeAnimation200.marginOnly(bottom: 12),
-
-            /// If there are no certificates, show empty message
-            if (controller.certificates.isEmpty)
-              EmptyMessage(
-                'No certificates',
-              ).fadeAnimation250.marginOnly(top: 150),
-
-            /// If there are certificates, show them
-            if (controller.certificates.isNotEmpty)
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      /// Certificates list cards
-                      for (var certificate in controller.certificates)
-                        CertificateCard(
-                          certificate: certificate,
-                          onShareCertificate: controller.onShareCertificate,
-                          onDownloadCertificate:
-                              controller.onDownloadCertificate,
-                        ).fadeAnimation200,
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: StyleX.hPaddingApp),
+      child: Column(
+        children: [
+          LabelX(
+            'List of certificates I have obtained',
+          ).fadeAnimation200.marginOnly(bottom: 12),
+          Expanded(
+            child:
+                controller.certificates.isEmpty
+                    ? const Center(child: EmptyMessage('No certificates'))
+                    : ListView.builder(
+                      key: PageStorageKey((
+                        LocalDataX.sessionRevision,
+                        TranslationX.getLanguageCode,
+                        'certificates',
+                      )),
+                      itemCount: controller.certificates.length,
+                      itemBuilder:
+                          (_, index) =>
+                              CertificateCard(
+                                certificate: controller.certificates[index],
+                                onShareCertificate:
+                                    controller.onShareCertificate,
+                                onDownloadCertificate:
+                                    controller.onDownloadCertificate,
+                              ).fadeAnimation200,
+                    ),
+          ),
+        ],
       ),
     );
   }

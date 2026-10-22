@@ -18,45 +18,37 @@ class MyCertificatesView extends GetView<MyCertificatesController> {
     return Scaffold(
       appBar: AppBarX(title: 'My Grades and Certificates'),
       body: SafeArea(
-        child: Obx(
-          () => Column(
-            children: [
-              /// Tab segment
-              Padding(
-                padding: EdgeInsets.only(
-                  left: StyleX.hPaddingApp,
-                  right: StyleX.hPaddingApp,
-                  top: StyleX.vPaddingApp,
-                  bottom: 28,
-                ),
-                child: TabSegmentX(
-                  controller: controller.tabController,
-                  tabs: {1: 'Course Grades'.tr, 2: 'Certificates'.tr},
-                ),
-              ).fadeAnimation100,
+        child: Column(
+          children: [
+            /// Tab segment
+            Padding(
+              padding: EdgeInsets.only(
+                left: StyleX.hPaddingApp,
+                right: StyleX.hPaddingApp,
+                top: StyleX.vPaddingApp,
+                bottom: 28,
+              ),
+              child: TabSegmentX(
+                controller: controller.tabController,
+                tabs: {1: 'Course Grades'.tr, 2: 'Certificates'.tr},
+              ),
+            ).fadeAnimation100,
 
-              /// Get data and show loading
-              if (controller.isLoading.value)
-                Expanded(
-                  child: FutureBuilderX(
-                    future: controller.getData,
-                    requestKey: (controller, TranslationX.getLanguageCode),
-                    loading: MyCertificatesLoading(),
-                    child: (_) => SizedBox(),
-                  ),
-                ),
-
-              /// Course grades
-              if (controller.isCourseGrades.value &&
-                  !controller.isLoading.value)
-                CourseGradesSection(),
-
-              /// Certificates
-              if (!controller.isCourseGrades.value &&
-                  !controller.isLoading.value)
-                CertificatesSection(),
-            ],
-          ),
+            Expanded(
+              child: FutureBuilderX<void>(
+                future: controller.getData,
+                requestKey: (controller, TranslationX.getLanguageCode),
+                loading: const MyCertificatesLoading(),
+                child:
+                    (_) => Obx(
+                      () =>
+                          controller.isCourseGrades.value
+                              ? const CourseGradesSection()
+                              : const CertificatesSection(),
+                    ),
+              ),
+            ),
+          ],
         ),
       ),
     );
