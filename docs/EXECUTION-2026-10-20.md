@@ -45,6 +45,11 @@ on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
 
+- Catalog ownership slice364e66e integrated into isolated root asb6bcd4a after
+  actual diff review. Root independently replayed19/19 HTTP/Hive cases; source
+  publication guards and same-owner atomic failure retention are under fresh
+  blind security/correctness review. View/card work remains worker-owned.
+
 - Catalog/history worker reproduced shared PointsCardX fixed160px overflow at
   width320/scale2 in all four locales (256/336/404/472px). Allocated the shared
   points-card source and focused full-screen/caller regressions additionally to
