@@ -21,13 +21,14 @@ and entry/route refresh, and precedes the catalog/history counterpart slice.
 An earlier run447pass/8fail exposed the new accessibility test's non-scrollable
 host at scale3; correcting its host did not suppress app rendering errors.
 
-Current native build command completed with explicit exit0 at6e6ae2f:
+Current native build command completed with explicit exit0 through7868801:
 
 ```sh
 xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath /private/tmp/mopa-remediation-derived-20261022 ARCHS=arm64 ONLY_ACTIVE_ARCH=YES IPHONEOS_DEPLOYMENT_TARGET=15.0 CODE_SIGNING_ALLOWED=NO -quiet build
 ```
 
-Log: /private/tmp/mopa-remediation-ios-arm64-20261022.log. Xcode27.1; simulator
+Logs: /private/tmp/mopa-remediation-ios-arm64-20261022.log and latest
+/private/tmp/mopa-ios-final-20261022.log (quiet build, explicit exit0). Xcode27.1; simulator
 arm64 build only, existing plugin warnings remain. No minimum-OS source change,
 installation, launch or interactive/account QA. The prior generic universal
 attempt failed Flutter's architecture unpack check, documented in execution.
@@ -50,6 +51,12 @@ build/app/outputs/flutter-apk/app-debug.apk (debug/unoptimized,157MB in the firs
 build). Log /private/tmp/mopa-android-final-20261022.log. Kotlin daemon fallback
 and Android SDK XML warnings are retained; no toolchain upgrade, license
 acceptance, emulator install or Android runtime scenario is claimed.
+
+Reviewed checkpointb89fc4a was fast-forwarded into original main locally.
+Original pubspec.lock SHA256 remains9ad24bce6ed2b390ee55772a69c51798d36c313c016841a36c44fa24941ad9c7,
+the only original-checkout modification. Its ignored package configuration was
+not regenerated; verification and native outputs remain in the isolated trees.
+No remote push, CI run or deployment followed this local integration.
 
 This is observed audit evidence, not a passing release checklist. Commands below
 refer to the isolated checkout used on 2026-10-17. They do not modify servers.

@@ -11,8 +11,9 @@ REMEDIATION-PLAN-2026-10-18.md; backend questions remain explicit there.
 520/520 tests; strict analyzer0 issues. Independent scoped auth/transport,
 profile, quiz, learning/session, list/performance and shared-control reviews
 passed after their reported findings were repaired and rechecked. Android debug
-build succeeds. iOS arm64 simulator build succeeds at the earlier checkpoint;
-current incremental rebuild is pending. Native warnings and device gaps remain.
+build succeeds. iOS arm64 simulator rebuild also succeeds through7868801.
+Native warnings and device gaps remain. Reviewed checkpointb89fc4a was integrated
+into original main locally; catalog/history continuation stays isolated.
 Original foreign pubspec.lock stays excluded and byte-identical.
 
 | Findings | Locally observed disposition | Remaining acceptance |

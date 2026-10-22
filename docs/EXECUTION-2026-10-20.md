@@ -312,3 +312,10 @@ on independent slices. Existing45 tests are the starting regression gate.
   suite520/520 now passes and strict analyzer reports no issues. Latest Android
   debug rebuild at7868801 exit0 in19.6s, iOS incremental arm64 rebuild pending.
   Catalog/history work is not included in that520-case checkpoint.
+- iOS incremental arm64 simulator build at7868801 completed explicit exit0;
+  log/private/tmp/mopa-ios-final-20261022.log is quiet, status returned by the
+  owned command. Reviewed checkpointb89fc4a then fast-forwarded into original
+  main locally. Before/after original status contains only foreign pubspec.lock;
+  SHA256 remains9ad24bce6ed2b390ee55772a69c51798d36c313c016841a36c44fa24941ad9c7.
+  Original ignored package configuration was not regenerated. No push/deploy or
+  runtime/account operation. Catalog/history continuation remains isolated.
