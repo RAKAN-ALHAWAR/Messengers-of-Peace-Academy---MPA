@@ -246,12 +246,14 @@ class _ButtonStateXState extends State<ButtonStateX>
               const SizedBox(width: 8.0),
 
             if (widget.text != null)
-              TextX(
-                widget.text!,
-                color:
-                    widget.disabled
-                        ? widget.colorDisabledText ?? ColorX.grey.shade400
-                        : widget.colorText,
+              Flexible(
+                child: TextX(
+                  widget.text!,
+                  color:
+                      widget.disabled
+                          ? widget.colorDisabledText ?? ColorX.grey.shade400
+                          : widget.colorText,
+                ),
               ),
           ],
         ),
@@ -259,27 +261,21 @@ class _ButtonStateXState extends State<ButtonStateX>
     } else if (widget.state == ButtonStateEX.loading) {
       return SizedBox(
         width: 100,
-        height: 40,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(4),
-              child: Center(
-                child: SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: CircularProgressIndicator(
-                    backgroundColor: stateColors[widget.state],
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      Colors.white,
-                    ),
-                  ),
-                ),
-              ),
+        // The decorated parent owns its border and padding. Fit the spinner
+        // inside its minimum height without adding another two border pixels.
+        height: (widget.height - widget.padding.vertical - 2).clamp(
+          32.0,
+          double.infinity,
+        ),
+        child: Center(
+          child: SizedBox(
+            width: 32,
+            height: 32,
+            child: CircularProgressIndicator(
+              backgroundColor: stateColors[widget.state],
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
             ),
-          ],
+          ),
         ),
       );
     } else {
@@ -292,7 +288,6 @@ class _ButtonStateXState extends State<ButtonStateX>
               widget.disabled
                   ? widget.colorDisabledText ?? ColorX.grey.shade400
                   : Colors.white,
-          maxLines: 1,
         ),
       );
     }
@@ -310,7 +305,7 @@ class _ButtonStateXState extends State<ButtonStateX>
         builder: (context, child) {
           return AnimatedContainer(
             width: width,
-            height: widget.height,
+            constraints: BoxConstraints(minHeight: widget.height),
             duration: widget.animationDuration,
             child: AbsorbPointer(
               absorbing: widget.disabled,
@@ -329,6 +324,7 @@ class _ButtonStateXState extends State<ButtonStateX>
                     color: backgroundColor,
                   ),
                   child: Center(
+                    heightFactor: 1,
                     child: getButtonChild(
                       colorAnimation == null
                           ? true

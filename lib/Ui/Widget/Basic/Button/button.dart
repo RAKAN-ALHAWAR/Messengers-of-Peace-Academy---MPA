@@ -121,7 +121,8 @@ class ButtonX extends StatelessWidget {
         }
       },
       child: Container(
-        height: height ?? StyleX.buttonHeight,
+        // Height is a minimum so translated and scaled labels remain readable.
+        constraints: BoxConstraints(minHeight: height ?? StyleX.buttonHeight),
         width: width ?? (isMaxFinite ? double.maxFinite : null),
         padding: padding,
         margin: EdgeInsets.symmetric(
@@ -134,11 +135,18 @@ class ButtonX extends StatelessWidget {
           color: disabled ? ColorX.grey : colorButton,
         ),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (icon != null) icon!,
             if (text != null && isTextFirst)
-              TextX(text!, color: colorText, style: TextStyleX.labelLarge),
+              Flexible(
+                child: TextX(
+                  text!,
+                  color: colorText,
+                  style: TextStyleX.labelLarge,
+                ),
+              ),
             if ((iconData != null || icon != null) &&
                 text != null &&
                 isTextFirst)
@@ -150,7 +158,13 @@ class ButtonX extends StatelessWidget {
                 !isTextFirst)
               const SizedBox(width: 8),
             if (text != null && !isTextFirst)
-              TextX(text!, color: colorText, style: TextStyleX.labelLarge),
+              Flexible(
+                child: TextX(
+                  text!,
+                  color: colorText,
+                  style: TextStyleX.labelLarge,
+                ),
+              ),
           ],
         ),
       ),
