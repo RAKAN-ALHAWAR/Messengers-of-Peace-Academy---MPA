@@ -4,7 +4,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:messengersofpeace/Data/Model/blog.dart';
 import 'package:messengersofpeace/Data/Model/meeting.dart';
 import 'package:messengersofpeace/Data/Model/my_activity_point.dart';
 import 'package:messengersofpeace/Data/Model/notification.dart';

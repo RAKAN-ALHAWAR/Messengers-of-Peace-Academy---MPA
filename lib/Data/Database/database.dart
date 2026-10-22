@@ -353,47 +353,6 @@ class DatabaseX {
     return BlogPageX.fromJson(data.$1);
   }
 
-  static Future<List<BlogX>> getBlogs({
-    required String lang,
-    int page = 0,
-  }) async {
-    List<BlogX> blogs = [];
-    var tagid =
-        lang == "ar"
-            ? 1
-            : lang == "en"
-            ? 2
-            : lang == "es"
-            ? 3
-            : lang == "ph"
-            ? 4
-            : 2;
-    var data = await RemoteDataSourceX.post(
-      DBEndPointX.postGetBlogs,
-      body: {
-        "filters[0][name]": NameX.tagid,
-        "filters[0][value]": tagid.toString(),
-        NameX.page: page.toString(),
-      },
-    );
-    if (data.$1?[NameX.entries] is List) {
-      blogs = ModelUtilX.generateItems(
-        data.$1?[NameX.entries] ?? [],
-        BlogX.fromJson,
-      );
-    } else {
-      throw ErrorX(details: data.$1);
-    }
-    if (data.$1?[NameX.totalentries] != null) {
-      var totalEntries = data.$1?[NameX.totalentries] as int;
-      var totalPages = (totalEntries / 10).ceil();
-      if (page < totalPages) {
-        blogs.addAll(await getBlogs(lang: lang, page: page + 1));
-      }
-    }
-    return blogs;
-  }
-
   //============================================================================
   // Notifications
   static Future<List<NotificationX>> getNotifications() async {

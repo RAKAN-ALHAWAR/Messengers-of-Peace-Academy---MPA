@@ -130,3 +130,6 @@ on independent slices. Existing45 tests are the starting regression gate.
   frame/memory benchmarks or server query-cost proof. Independent review next.
 - Added all four locale copies for quiz recovery and pagination; signup now uses
   the backend language getter so UI fil never changes the existing wire ph.
+- Removed superseded recursive article loader and its unused import only after
+  one-page replacement worked. Re-observed16/16 pagination and real dated-view
+  cases after removal. Git history retains the previous implementation.
