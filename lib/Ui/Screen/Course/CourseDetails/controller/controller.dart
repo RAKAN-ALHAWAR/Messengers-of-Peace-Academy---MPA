@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
@@ -7,6 +5,9 @@ import 'package:messengersofpeace/Ui/Widget/widget.dart';
 
 import '../../../../../Core/Service/download_file_form_url.dart';
 import '../../../../../Core/core.dart';
+import '../../../../../Core/Error/error.dart';
+import '../../../../../Core/Service/session_lease.dart';
+import '../../../../../Config/Translation/translation.dart';
 import '../../../../../Data/Model/course/activity.dart';
 import '../../../../../Data/Model/course/course.dart';
 import '../../../../../Data/data.dart';
@@ -27,24 +28,83 @@ class CourseDetailsController extends GetxController {
   //============================================================================
   // Functions
 
-  /// Get course data from database
-  ///
-  /// Assign to [course.value], replacing the Rx itself would detach every
-  /// Obx that already subscribed to the original one
-  Future<void> getData() async {
-    course.value = await DatabaseX.getCourse(courseId: courseId);
+  int _loadGeneration = 0;
+  int _visitGeneration = 0;
+  bool _videoBusy = false;
+  SessionLeaseX? _contentLease;
+
+  bool get _ownsCourse =>
+      !isClosed &&
+      Get.isRegistered<CourseDetailsController>() &&
+      identical(Get.find<CourseDetailsController>(), this) &&
+      Get.isRegistered<AppControllerX>() &&
+      identical(Get.find<AppControllerX>(), app);
+
+  SessionLeaseX _captureScope(
+    String id,
+    String language, {
+    bool Function()? operation,
+  }) => SessionLeaseX.capture(
+    isActive:
+        () =>
+            _ownsCourse &&
+            courseId == id &&
+            TranslationX.getLanguageCode == language &&
+            (operation?.call() ?? true),
+  );
+
+  void _publishCourse(CourseX value, String id, String language) {
+    if (value.id != id) {
+      throw ErrorX(message: 'Session changed. Please try again.');
+    }
+    _contentLease = _captureScope(id, language);
+    course.value = value;
   }
 
-  /// Reload the course after a lesson was completed.
-  ///
-  /// The checkmark and the unlocking of the next lesson are both decided by
-  /// the backend (`isCompleted`, `isOpen`), so the course has to be fetched
-  /// again. A failure here must keep the current content on screen.
-  Future<void> _refreshCourse() async {
+  /// The request owns its account, course and locale. A same-course reload also
+  /// retires an older navigation callback; its old index cannot target new data.
+  Future<void> getData() async {
+    if (!_ownsCourse) return;
+    final request = ++_loadGeneration;
+    _visitGeneration++;
+    _videoBusy = false;
+    isLoading = false;
+    final id = courseId;
+    final language = TranslationX.getLanguageCode;
+    final lease = _captureScope(
+      id,
+      language,
+      operation: () => request == _loadGeneration,
+    );
+    if (_contentLease?.isCurrent != true) course.value = null;
+    if (!lease.hasAuthenticatedIdentity) {
+      throw ErrorX(message: 'Session changed. Please try again.');
+    }
     try {
-      await getData();
+      final value = await DatabaseX.getCourse(courseId: id);
+      if (!lease.isCurrent) return;
+      _publishCourse(value, id, language);
+    } catch (_) {
+      if (!lease.isCurrent) return;
+      rethrow;
+    }
+  }
+
+  /// Checkmarks and unlocking come only from the current backend snapshot. A
+  /// failed refresh retains prior content and leaves retry available.
+  Future<void> _refreshCourse(
+    SessionLeaseX lease,
+    String id,
+    String language,
+  ) async {
+    try {
+      final value = await DatabaseX.getCourse(courseId: id);
+      if (!lease.isCurrent) return;
+      _publishCourse(value, id, language);
     } catch (e) {
-      log("error refreshing course $courseId: $e", name: runtimeType.toString());
+      if (!lease.isCurrent) return;
+      ErrorX.console(e);
+      ToastX.error(message: '${"Something wrong".tr}. ${"Try again".tr}');
     }
   }
 
@@ -102,74 +162,109 @@ class CourseDetailsController extends GetxController {
     }
   }
 
-  /// Navigate to lesson video
+  /// Keep the existing five-second route-dwell trigger until the backend owner
+  /// supplies a playback completion contract. This is not measured watch time:
+  /// paused/background/seeking rules, minutes and unlocking remain blocked.
   Future<void> onTapLessonVideo(int index) async {
-    if (course.value!.activities[index].isOpen) {
-      if (course.value!.activities[index].videoUrl.isEmpty) {
-        ToastX.error(message: "Video is not available");
-      } else {
-        // إضافة مؤقت لحساب مدة مشاهدة الفيديو
-        final DateTime startTime = DateTime.now();
-
-        await Get.toNamed(
-          RouteNameX.videoPlayer,
-          arguments: course.value!.activities[index].videoUrl,
-        );
-
-        // إعادة تعيين اتجاه الشاشة للوضع الرأسي بعد إغلاق الفيديو
-        SystemChrome.setPreferredOrientations([
-          DeviceOrientation.portraitUp,
-          DeviceOrientation.portraitDown,
-        ]);
-
-        // حساب مدة المشاهدة
-        final Duration watchDuration = DateTime.now().difference(startTime);
-
-        // إذا لم يكن الفيديو مكتمل وتمت مشاهدته أكثر من 5 ثواني، يتم تحديث قاعدة البيانات
-        if (!course.value!.activities[index].isCompleted &&
-            watchDuration.inSeconds >= 5) {
-          try {
-            await DatabaseX.completeVideoOfCourse(
-              cmId: course.value!.activities[index].cmId,
-            );
-
-            /// Reload so the checkmark shows and the next lesson unlocks
-            /// without having to leave the screen and come back
-            await _refreshCourse();
-          } catch (e) {
-            log(
-              "error completeVideoOfCourse: $e",
-              name: runtimeType.toString(),
-            );
-
-            /// Keep the local checkmark, the video really was watched
-            course.value!.activities[index].isCompleted = true;
-            course.refresh();
-          }
-        }
+    if (!_ownsCourse || _videoBusy || _contentLease?.isCurrent != true) return;
+    final selectedCourse = course.value;
+    if (selectedCourse == null ||
+        index < 0 ||
+        index >= selectedCourse.activities.length) {
+      return;
+    }
+    final activity = selectedCourse.activities[index];
+    if (!activity.isOpen) return;
+    final url = activity.videoUrl;
+    final moduleId = activity.cmId;
+    if (url.isEmpty) {
+      ToastX.error(message: 'Video is not available');
+      return;
+    }
+    final id = courseId;
+    final language = TranslationX.getLanguageCode;
+    final route = Get.currentRoute;
+    final request = _loadGeneration;
+    final visit = ++_visitGeneration;
+    final lease = _captureScope(
+      id,
+      language,
+      operation:
+          () =>
+              visit == _visitGeneration &&
+              request == _loadGeneration &&
+              Get.currentRoute == route &&
+              identical(course.value, selectedCourse) &&
+              selectedCourse.activities.contains(activity),
+    );
+    final startTime = DateTime.now();
+    _videoBusy = true;
+    try {
+      await Get.toNamed(RouteNameX.videoPlayer, arguments: url);
+      if (!lease.isCurrent) return;
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+      if (!lease.isCurrent) return;
+      final dwell = DateTime.now().difference(startTime);
+      if (!activity.isCompleted && dwell.inSeconds >= 5) {
+        await DatabaseX.completeVideoOfCourse(cmId: moduleId);
+        if (!lease.isCurrent) return;
+        await _refreshCourse(lease, id, language);
       }
+    } catch (e) {
+      if (!lease.isCurrent) return;
+      ErrorX.console(e);
+      ToastX.error(message: '${"Something wrong".tr}. ${"Try again".tr}');
+    } finally {
+      if (_ownsCourse && visit == _visitGeneration) _videoBusy = false;
     }
   }
 
   /// Navigate to lesson quiz
   void onTapLessonQuiz(ActivityX activity) {
-    if (activity.isOpen) {
+    if (_ownsCourse &&
+        _contentLease?.isCurrent == true &&
+        course.value?.activities.contains(activity) == true &&
+        activity.isOpen) {
       Get.toNamed(RouteNameX.testInfo, arguments: [activity.quizId, courseId]);
     }
   }
 
   /// Download lesson summary
   Future<void> onTapLessonSummary(ActivityX activity) async {
-    if (isLoading) return;
+    if (isLoading ||
+        !_ownsCourse ||
+        _contentLease?.isCurrent != true ||
+        course.value?.activities.contains(activity) != true) {
+      return;
+    }
+    final selectedCourse = course.value!;
+    final url = activity.downloadUrl;
+    final fileName = '${selectedCourse.name}_${activity.name}';
+    final lease = _captureScope(
+      courseId,
+      TranslationX.getLanguageCode,
+      operation: () => identical(course.value, selectedCourse),
+    );
 
     /// Download lesson summary
     try {
       isLoading = true;
-      await DownloadFileFormUrl.download(
-        activity.downloadUrl,
-        "${course.value?.name}_${activity.name}",
-      );
-    } catch (_) {}
-    isLoading = false;
+      await DownloadFileFormUrl.download(url, fileName);
+    } catch (e) {
+      if (!lease.isCurrent) return;
+      ErrorX.console(e);
+    } finally {
+      if (lease.isCurrent) isLoading = false;
+    }
+  }
+
+  @override
+  void onClose() {
+    _loadGeneration++;
+    _visitGeneration++;
+    super.onClose();
   }
 }
