@@ -6,6 +6,7 @@ import 'package:messengersofpeace/Core/Extension/date_time.dart';
 
 import '../../../../../Config/Translation/translation.dart';
 import '../../../../../Core/Service/session_lease.dart';
+import '../../../../../Core/Error/error.dart';
 import '../../../../../Data/Model/event.dart';
 import '../../../../../Data/data.dart';
 
@@ -53,6 +54,11 @@ class CalendarController extends GetxController {
   /// Get data from database
   Future<void> getData({bool isMust = false}) async {
     if (isClosed) return;
+    // This authenticated screen may briefly survive logout navigation. Do not
+    // let its reload adopt the public service credential.
+    if (!SessionLeaseX.capture().hasAuthenticatedIdentity) {
+      throw ErrorX.createErrorByCode(ErrorCodesX.unauthorized);
+    }
     final locale = TranslationX.getLanguageCode;
     final key = (LocalDataX.sessionRevision, locale);
     if (!isMust &&

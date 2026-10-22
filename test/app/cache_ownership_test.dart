@@ -9,6 +9,7 @@ import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:messengersofpeace/Core/core.dart';
+import 'package:messengersofpeace/Core/Error/error.dart';
 import 'package:messengersofpeace/Core/Helper/http/http.dart';
 import 'package:messengersofpeace/Data/data.dart';
 import 'package:messengersofpeace/Data/Database/config/database_end_point.dart';
@@ -60,6 +61,52 @@ void main() {
     await Hive.close();
     await directory.delete(recursive: true);
   });
+
+  test(
+    'retired protected screens cannot request through an anonymous identity',
+    () async {
+      final calendar = Get.put(CalendarController());
+      final profile = Get.put(ProfileDetailsController());
+      await LocalDataX.remove(LocalKeyX.userid);
+      await LocalDataX.remove(LocalKeyX.token);
+      var requests = 0;
+      await http.runWithClient(
+        () async {
+          final unauthorized = isA<ErrorX>().having(
+            (e) => e.errorCode,
+            'status',
+            401,
+          );
+          await expectLater(calendar.getData(), throwsA(unauthorized));
+          await expectLater(profile.getData(), throwsA(unauthorized));
+        },
+        () => MockClient((_) async {
+          requests++;
+          return response({});
+        }),
+      );
+      expect(requests, 0);
+    },
+  );
+  test(
+    'profile snapshot rejects a mismatched account before follow-up reads',
+    () async {
+      final profile = Get.put(ProfileDetailsController());
+      var requests = 0;
+      await http.runWithClient(
+        () async {
+          await expectLater(profile.getData(), throwsA(isA<ErrorX>()));
+        },
+        () => MockClient((_) async {
+          requests++;
+          return response(user('synthetic-other'));
+        }),
+      );
+      expect(requests, 1);
+      expect(Get.find<AppControllerX>().user.value.id, 'initial');
+      expect(profile.isInit, isFalse);
+    },
+  );
 
   test('calendar cache is reused only for its session and locale', () async {
     final controller = Get.put(CalendarController());
@@ -213,7 +260,7 @@ void main() {
             requests++;
             final method = request.url.queryParameters['wsfunction'];
             if (method == function(DBEndPointX.postGetUser)) {
-              return response(user('not-yet-published'));
+              return response(user(LocalDataX.userid));
             }
             final isStatistics =
                 method == function(DBEndPointX.postGetUserStatistics);
@@ -317,7 +364,7 @@ void main() {
             if (screen == 'calendar') return response([event('old-owner')]);
             final method = request.url.queryParameters['wsfunction'];
             if (method == function(DBEndPointX.postGetUser)) {
-              return response(user('old-owner'));
+              return response(user(LocalDataX.userid));
             }
             if (method == function(DBEndPointX.postGetUserStatistics)) {
               return response(statistics());

@@ -5,6 +5,7 @@ import 'package:messengersofpeace/Core/core.dart';
 
 import '../../../../../Config/config.dart';
 import '../../../../../Core/Service/session_lease.dart';
+import '../../../../../Core/Error/error.dart';
 import '../../../../../Data/Model/badge.dart';
 import '../../../../../Data/Model/user/user.dart';
 import '../../../../../Data/Model/user/user_statistics.dart';
@@ -54,6 +55,11 @@ class ProfileDetailsController extends GetxController {
   /// Get data from database
   Future<void> getData() async {
     if (isClosed) return;
+    // This authenticated screen may briefly survive logout navigation. Do not
+    // let its reload adopt the public service credential.
+    if (!SessionLeaseX.capture().hasAuthenticatedIdentity) {
+      throw ErrorX.createErrorByCode(ErrorCodesX.unauthorized);
+    }
     final locale = TranslationX.getLanguageCode;
     final key = (LocalDataX.sessionRevision, locale);
     if (isInit &&
@@ -63,6 +69,7 @@ class ProfileDetailsController extends GetxController {
         )) {
       return;
     }
+    final accountId = LocalDataX.userid;
     final generation = ++_loadGeneration;
     final lease = SessionLeaseX.capture(
       isActive:
@@ -74,6 +81,11 @@ class ProfileDetailsController extends GetxController {
     try {
       final loadedUser = await DatabaseX.getUser();
       if (!lease.isCurrent) return;
+      if (loadedUser.id != accountId) {
+        throw ErrorX(
+          message: 'Unable to start a secure session. Please sign in again.',
+        );
+      }
       final loadedStatistics = await DatabaseX.getUserStatistics();
       if (!lease.isCurrent) return;
       final badges = await DatabaseX.getBadges();

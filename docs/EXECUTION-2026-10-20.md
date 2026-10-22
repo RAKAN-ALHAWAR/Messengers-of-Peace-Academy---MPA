@@ -133,3 +133,14 @@ on independent slices. Existing45 tests are the starting regression gate.
 - Removed superseded recursive article loader and its unused import only after
   one-page replacement worked. Re-observed16/16 pagination and real dated-view
   cases after removal. Git history retains the previous implementation.
+- Root integration observed292/292 tests passing before additional reviewer
+  findings. Independent feed measurements show Blog1000 images1000->5 and
+  Leaderboard1000->7 at400x700 (host only). Remaining eager counterparts and
+  removed session observers in certificates/meetings require further repair.
+- Overlapping archive pages no longer count duplicate records toward the unique
+  total: pages[1,2,3],[3,4],[5] remain reachable.23 feed cases pass after correction.
+- Root protected-screen regressions exposed anonymous fallback requests and a
+  mismatched profile reaching follow-up reads. Calendar/profile now reject an
+  anonymous identity before cache/read, and profile validates initiating userid
+  before follow-ups/publication.45 app-flow cases pass, including2 new regressions;
+  fixtures that formerly mislabeled profile IDs were corrected to valid accounts.
