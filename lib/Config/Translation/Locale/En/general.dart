@@ -1,4 +1,16 @@
 const Map<String, String> enGeneral = {
+  "Test result not confirmed yet": "Test result not confirmed yet",
+  "Answer details unavailable": "Answer details unavailable",
+  "Not answered": "Not answered",
+  "Submission status is unknown. Return to test information before trying again.":
+      "Submission status is unknown. Return to test information before trying again.",
+  "Your existing test attempt needs recovery. Return to test information.":
+      "Your existing test attempt needs recovery. Return to test information.",
+  "Return to test information": "Return to test information",
+  "Load more": "Load more",
+  "Unable to load more articles. Please try again.":
+      "Unable to load more articles. Please try again.",
+  "Unable to load articles.": "Unable to load articles.",
   "Unable to start a secure session. Please sign in again.":
       "Unable to start a secure session. Please sign in again.",
   "Your account still needs verification. Please contact support to recover verification access.":

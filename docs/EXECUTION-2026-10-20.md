@@ -120,3 +120,13 @@ on independent slices. Existing45 tests are the starting regression gate.
   but uncancelled delayed callback. Timer is now cancelled on disposal; original
   delay/animation still works. Two actual widget cases pass, with no waiting
   added to mask pending callbacks.
+- M7 replacement observed27/27 parsing/pagination/actual-list cases.1000-entry
+  archive issues one initial page request; next-page failure keeps rows and
+  explicit retry requests the same page. Unknown total ends on an empty response;
+  no fixed page-size assumption. Duplicate requests/pages and stale account,
+  locale, disposal and refresh responses are guarded. Blog/Leaderboard builders
+  mount at most25 image widgets for a400x700 test viewport at0/1/20/100/1000 rows,
+  and the final row remains reachable. These are host widget tests, not device
+  frame/memory benchmarks or server query-cost proof. Independent review next.
+- Added all four locale copies for quiz recovery and pagination; signup now uses
+  the backend language getter so UI fil never changes the existing wire ph.

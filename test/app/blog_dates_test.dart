@@ -24,7 +24,10 @@ final article = BlogX(
 
 class FixtureBlogController extends BlogController {
   @override
-  Future<List<BlogX>> getData() async => [article];
+  Future<List<BlogX>> getData() async {
+    blogs.assignAll([article]);
+    return [article];
+  }
 }
 
 void main() {

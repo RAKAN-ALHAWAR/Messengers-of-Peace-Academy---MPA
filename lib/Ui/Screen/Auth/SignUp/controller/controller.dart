@@ -79,7 +79,7 @@ class SignUpController extends GetxController {
     final submittedLast = lastName.text;
     final submittedEmail = email.text;
     final submittedPassword = password.text;
-    final language = TranslationX.getLanguageCode;
+    final language = TranslationX.backendLanguageCode;
     final method = verificationMethod;
     isLoading.value = true;
     buttonState.value = ButtonStateEX.loading;

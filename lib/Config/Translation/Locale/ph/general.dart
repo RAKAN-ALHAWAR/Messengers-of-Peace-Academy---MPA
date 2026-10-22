@@ -1,4 +1,17 @@
 const Map<String, String> phGeneral = {
+  "Test result not confirmed yet":
+      "Hindi pa nakumpirma ang resulta ng pagsusulit",
+  "Answer details unavailable": "Hindi available ang detalye ng sagot",
+  "Not answered": "Hindi nasagutan",
+  "Submission status is unknown. Return to test information before trying again.":
+      "Hindi alam ang katayuan ng pagpapasa. Bumalik sa impormasyon ng pagsusulit bago subukang muli.",
+  "Your existing test attempt needs recovery. Return to test information.":
+      "Kailangang maibalik ang datos ng kasalukuyan mong pagsusulit. Bumalik sa impormasyon ng pagsusulit.",
+  "Return to test information": "Bumalik sa impormasyon ng pagsusulit",
+  "Load more": "Mag-load pa",
+  "Unable to load more articles. Please try again.":
+      "Hindi makapag-load ng higit pang artikulo. Pakisubukang muli.",
+  "Unable to load articles.": "Hindi ma-load ang mga artikulo.",
   "Unable to start a secure session. Please sign in again.":
       "Hindi makapagsimula ng ligtas na session. Mag-sign in muli.",
   "Your account still needs verification. Please contact support to recover verification access.":

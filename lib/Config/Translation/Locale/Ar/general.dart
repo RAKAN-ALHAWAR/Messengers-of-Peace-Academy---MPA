@@ -1,4 +1,16 @@
 const Map<String, String> arGeneral = {
+  "Test result not confirmed yet": "لم تتأكد نتيجة الاختبار بعد",
+  "Answer details unavailable": "تفاصيل الإجابة غير متاحة",
+  "Not answered": "لم تُجب",
+  "Submission status is unknown. Return to test information before trying again.":
+      "حالة تسليم الاختبار غير معروفة. ارجع إلى معلومات الاختبار قبل المحاولة مجددًا.",
+  "Your existing test attempt needs recovery. Return to test information.":
+      "محاولة الاختبار الحالية تحتاج إلى استعادة بياناتها. ارجع إلى معلومات الاختبار.",
+  "Return to test information": "العودة إلى معلومات الاختبار",
+  "Load more": "تحميل المزيد",
+  "Unable to load more articles. Please try again.":
+      "تعذّر تحميل المزيد من المقالات. حاول مجددًا.",
+  "Unable to load articles.": "تعذّر تحميل المقالات.",
   "Unable to start a secure session. Please sign in again.":
       "تعذّر بدء جلسة آمنة. سجّل الدخول مجددًا.",
   "Your account still needs verification. Please contact support to recover verification access.":

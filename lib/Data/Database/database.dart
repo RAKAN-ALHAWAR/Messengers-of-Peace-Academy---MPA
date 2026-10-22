@@ -329,6 +329,30 @@ class DatabaseX {
 
   //============================================================================
   // Blog
+  /// Fetch exactly one server page. Page size and continuation use the response,
+  /// never an assumed fixed archive size or recursive prefetch.
+  static Future<BlogPageX> getBlogsPage({
+    required String lang,
+    int page = 0,
+  }) async {
+    if (page < 0) throw ArgumentError.value(page, 'page');
+    final tagId = switch (lang) {
+      'ar' => 1,
+      'es' => 3,
+      'ph' || 'fil' => 4,
+      _ => 2,
+    };
+    final data = await RemoteDataSourceX.post<Map<String, dynamic>>(
+      DBEndPointX.postGetBlogs,
+      body: {
+        'filters[0][name]': NameX.tagid,
+        'filters[0][value]': tagId.toString(),
+        NameX.page: page.toString(),
+      },
+    );
+    return BlogPageX.fromJson(data.$1);
+  }
+
   static Future<List<BlogX>> getBlogs({
     required String lang,
     int page = 0,

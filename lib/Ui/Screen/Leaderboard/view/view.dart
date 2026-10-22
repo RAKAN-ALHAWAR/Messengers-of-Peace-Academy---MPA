@@ -27,102 +27,126 @@ class LeaderboardView extends GetView<LeaderboardController> {
 
           /// Data state
           child: (data) {
-            return SingleChildScrollView(
-              padding: StyleX.paddingApp,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  /// Title
-                  TextX(
-                    'Top learners ranked by points 🏆',
-                    style: TextStyleX.titleMedium,
+            return CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: EdgeInsets.only(
+                    top: StyleX.vPaddingApp,
+                    left: StyleX.hPaddingApp,
+                    right: StyleX.hPaddingApp,
                   ),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        /// Title
+                        TextX(
+                          'Top learners ranked by points 🏆',
+                          style: TextStyleX.titleMedium,
+                        ),
 
-                  /// Spacer
-                  const SizedBox(height: 12),
+                        /// Spacer
+                        const SizedBox(height: 12),
 
-                  /// Description
-                  TextX(
-                    'Leaderboard description',
-                    style: TextStyleX.bodyMedium,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        /// Description
+                        TextX(
+                          'Leaderboard description',
+                          style: TextStyleX.bodyMedium,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+
+                        /// Spacer
+                        const SizedBox(height: 18),
+                      ],
+                    ),
                   ),
+                ),
+                SliverPadding(
+                  padding: EdgeInsets.only(
+                    left: StyleX.hPaddingApp,
+                    right: StyleX.hPaddingApp,
+                    bottom: StyleX.vPaddingApp,
+                  ),
+                  sliver: SliverList.builder(
+                    itemCount: data.length,
+                    itemBuilder:
+                        (context, index) => KeyedSubtree(
+                          key: ValueKey(data[index].id),
+                          child:
+                              ContainerX(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 12,
+                                  horizontal: 16,
+                                ),
+                                margin: EdgeInsets.only(bottom: 12),
+                                radius: StyleX.radiusMd,
+                                child: Row(
+                                  children: [
+                                    /// Rank
+                                    TextX(
+                                      data[index].rank.toString(),
+                                      style: TextStyleX.labelLarge,
+                                      fontWeight: FontWeight.w600,
+                                    ),
 
-                  /// Spacer
-                  const SizedBox(height: 18),
+                                    /// Spacer
+                                    const SizedBox(width: 12),
 
-                  /// Leaderboard Cards
-                  for (var leaderboard in data)
-                    ContainerX(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 16,
-                      ),
-                      margin: EdgeInsets.only(bottom: 12),
-                      radius: StyleX.radiusMd,
-                      child: Row(
-                        children: [
-                          /// Rank
-                          TextX(
-                            leaderboard.rank.toString(),
-                            style: TextStyleX.labelLarge,
-                            fontWeight: FontWeight.w600,
-                          ),
+                                    /// User Image
+                                    ImageNetworkX(
+                                      imageUrl: data[index].userImage,
+                                      width: 42,
+                                      height: 42,
+                                      radius: 100,
+                                    ),
 
-                          /// Spacer
-                          const SizedBox(width: 12),
+                                    /// Spacer
+                                    const SizedBox(width: 12),
 
-                          /// User Image
-                          ImageNetworkX(
-                            imageUrl: leaderboard.userImage,
-                            width: 42,
-                            height: 42,
-                            radius: 100,
-                          ),
+                                    /// Username
+                                    Expanded(
+                                      child: TextX(
+                                        data[index].username,
+                                        style: TextStyleX.titleSmall,
+                                      ),
+                                    ),
 
-                          /// Spacer
-                          const SizedBox(width: 12),
+                                    /// Spacer
+                                    const SizedBox(width: 12),
 
-                          /// Username
-                          Expanded(
-                            child: TextX(
-                              leaderboard.username,
-                              style: TextStyleX.titleSmall,
-                            ),
-                          ),
+                                    /// Points
+                                    Column(
+                                      children: [
+                                        /// Points
+                                        TextX(
+                                          FunctionX.formatLargeNumber(
+                                            data[index].points,
+                                          ),
+                                          style: TextStyleX.labelLarge,
+                                          fontWeight: FontWeight.w600,
+                                        ),
 
-                          /// Spacer
-                          const SizedBox(width: 12),
+                                        /// Spacer
+                                        const SizedBox(height: 4),
 
-                          /// Points
-                          Column(
-                            children: [
-                              /// Points
-                              TextX(
-                                FunctionX.formatLargeNumber(leaderboard.points),
-                                style: TextStyleX.labelLarge,
-                                fontWeight: FontWeight.w600,
-                              ),
-
-                              /// Spacer
-                              const SizedBox(height: 4),
-
-                              /// Points label
-                              TextX(
-                                'points',
-                                style: TextStyleX.labelMedium,
-                                color:
-                                    Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ).fadeAnimation200,
-                ],
-              ),
+                                        /// Points label
+                                        TextX(
+                                          'points',
+                                          style: TextStyleX.labelMedium,
+                                          color:
+                                              Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ).fadeAnimation200,
+                        ),
+                  ),
+                ),
+              ],
             );
           },
         ),

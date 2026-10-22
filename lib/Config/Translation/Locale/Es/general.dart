@@ -1,4 +1,18 @@
 const Map<String, String> esGeneral = {
+  "Test result not confirmed yet":
+      "El resultado del examen aún no está confirmado",
+  "Answer details unavailable":
+      "Los detalles de la respuesta no están disponibles",
+  "Not answered": "Sin respuesta",
+  "Submission status is unknown. Return to test information before trying again.":
+      "Se desconoce el estado del envío. Vuelve a la información del examen antes de intentarlo de nuevo.",
+  "Your existing test attempt needs recovery. Return to test information.":
+      "Tu intento de examen necesita recuperarse. Vuelve a la información del examen.",
+  "Return to test information": "Volver a la información del examen",
+  "Load more": "Cargar más",
+  "Unable to load more articles. Please try again.":
+      "No se pudieron cargar más artículos. Inténtalo de nuevo.",
+  "Unable to load articles.": "No se pudieron cargar los artículos.",
   "Unable to start a secure session. Please sign in again.":
       "No se pudo iniciar una sesión segura. Vuelve a iniciar sesión.",
   "Your account still needs verification. Please contact support to recover verification access.":

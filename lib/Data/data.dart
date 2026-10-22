@@ -19,6 +19,7 @@ import 'Enum/event_option.dart';
 import 'Enum/meeting_option.dart';
 import 'Form/update_user_form.dart';
 import 'Model/course/course.dart';
+import 'Model/blog_page.dart';
 import 'Model/course/level.dart';
 import 'Model/course/my_course.dart';
 import 'Model/activity_point.dart';
