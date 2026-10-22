@@ -16,7 +16,6 @@ class BlogController extends GetxController {
   final loadMoreError = Rxn<ErrorX>();
   int _generation = 0;
   int _nextPage = 0;
-  int _rawCount = 0;
   int? _totalEntries;
   String? _locale;
   SessionLeaseX? _lease;
@@ -34,7 +33,6 @@ class BlogController extends GetxController {
     _locale = locale;
     blogs.clear();
     _nextPage = 0;
-    _rawCount = 0;
     _totalEntries = null;
     hasMore.value = false;
     isLoadingMore.value = false;
@@ -57,12 +55,11 @@ class BlogController extends GetxController {
       throw ErrorX(message: 'Unable to load more articles. Please try again.');
     }
     blogs.addAll(additions);
-    _rawCount += page.rawCount;
     _totalEntries = page.totalEntries ?? _totalEntries;
     _nextPage++;
     hasMore.value =
         page.rawCount > 0 &&
-        (_totalEntries == null || _rawCount < _totalEntries!);
+        (_totalEntries == null || blogs.length < _totalEntries!);
   }
 
   Future<void> loadMore() async {

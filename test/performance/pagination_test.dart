@@ -94,14 +94,21 @@ void main() {
     'server page size is not assumed; final page and duplicates are handled',
     () async {
       reply =
-          (page) async => response(page == 0 ? [1, 2, 3] : [3, 4], total: 5);
+          (page) async => response(
+            page == 0
+                ? [1, 2, 3]
+                : page == 1
+                ? [3, 4]
+                : [5],
+            total: 5,
+          );
       await intercepted(() async {
         await controller.getData();
         await controller.loadMore();
         await controller.loadMore();
       });
-      expect(pages, [0, 1]);
-      expect(controller.blogs.map((b) => b.id), ['1', '2', '3', '4']);
+      expect(pages, [0, 1, 2]);
+      expect(controller.blogs.map((b) => b.id), ['1', '2', '3', '4', '5']);
       expect(controller.hasMore.value, isFalse);
     },
   );
