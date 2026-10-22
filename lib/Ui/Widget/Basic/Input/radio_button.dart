@@ -38,14 +38,16 @@ class RadioButtonX<T> extends StatelessWidget {
     // valueCheck is a legacy explicit override whose hash-based mapping remains
     // supported; check overrides indicator color only, not group selection.
     final hasLegacyValue = valueCheck != null;
-    final selectedValue = hasLegacyValue ? groupValue.hashCode : groupValue;
+    final selectedValue =
+        !isCardOnly && hasLegacyValue ? groupValue.hashCode : groupValue;
     final optionValue = hasLegacyValue ? valueCheck : value;
     final selectedColor =
-        check != null
+        !isCardOnly &&
+        (check != null
             ? check!()
             : hasLegacyValue
             ? value.hashCode == groupValue.hashCode
-            : value == groupValue;
+            : value == groupValue);
     return GestureDetector(
       onTap: () {
         onChanged(value);

@@ -199,6 +199,7 @@ void main() {
     'card-only mode retains full-card selection without a radio indicator',
     (tester) async {
       var selected = false;
+      var checks = 0;
       await tester.pumpWidget(
         GetMaterialApp(
           home: Scaffold(
@@ -207,6 +208,10 @@ void main() {
               value: true,
               groupValue: false,
               isCardOnly: true,
+              check: () {
+                checks++;
+                return true;
+              },
               child: const Text('Card'),
               onChanged: (value) => selected = value!,
             ),
@@ -217,6 +222,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('card')));
       await tester.pumpAndSettle();
       expect(selected, isTrue);
+      expect(checks, 0);
     },
   );
 }
