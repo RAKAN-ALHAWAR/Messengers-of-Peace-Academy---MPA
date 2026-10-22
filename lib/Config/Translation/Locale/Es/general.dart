@@ -1,4 +1,6 @@
 const Map<String, String> esGeneral = {
+  "Answer saving status is unknown. Return to test information before trying again.":
+      "Se desconoce el estado de guardado de la respuesta. Vuelve a la información del examen antes de intentarlo de nuevo.",
   "Test result not confirmed yet":
       "El resultado del examen aún no está confirmado",
   "Answer details unavailable":

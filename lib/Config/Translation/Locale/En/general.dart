@@ -1,4 +1,6 @@
 const Map<String, String> enGeneral = {
+  "Answer saving status is unknown. Return to test information before trying again.":
+      "Answer saving status is unknown. Return to test information before trying again.",
   "Test result not confirmed yet": "Test result not confirmed yet",
   "Answer details unavailable": "Answer details unavailable",
   "Not answered": "Not answered",

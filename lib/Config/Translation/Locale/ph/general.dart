@@ -1,4 +1,6 @@
 const Map<String, String> phGeneral = {
+  "Answer saving status is unknown. Return to test information before trying again.":
+      "Hindi alam ang katayuan ng pag-save ng sagot. Bumalik sa impormasyon ng pagsusulit bago subukang muli.",
   "Test result not confirmed yet":
       "Hindi pa nakumpirma ang resulta ng pagsusulit",
   "Answer details unavailable": "Hindi available ang detalye ng sagot",

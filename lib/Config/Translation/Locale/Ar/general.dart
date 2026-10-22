@@ -1,4 +1,6 @@
 const Map<String, String> arGeneral = {
+  "Answer saving status is unknown. Return to test information before trying again.":
+      "حالة حفظ الإجابة غير معروفة. ارجع إلى معلومات الاختبار قبل المحاولة مجددًا.",
   "Test result not confirmed yet": "لم تتأكد نتيجة الاختبار بعد",
   "Answer details unavailable": "تفاصيل الإجابة غير متاحة",
   "Not answered": "لم تُجب",
