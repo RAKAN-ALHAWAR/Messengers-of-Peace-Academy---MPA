@@ -37,38 +37,15 @@ class NotificationsView extends GetView<NotificationsController> {
             return Obx(
               () => Stack(
                 children: [
-                  SingleChildScrollView(
+                  ListView.builder(
                     padding: StyleX.paddingApp,
-                    child: Column(
-                      children: [
-                        /// Mark all as read button
-                        GestureDetector(
-                          onTap: controller.onMarkAllAsRead,
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                TextX(
-                                  "Mark All as Read",
-                                  style: TextStyleX.labelLarge,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ).fadeAnimation150,
-
-                        /// Spacer
-                        SizedBox(height: 10),
-
-                        /// Notifications list cards
-                        for (var notification in controller.notifications)
-                          NotificationCard(
-                            notification: notification,
-                          ).fadeAnimation200,
-                      ],
-                    ),
+                    itemCount: controller.notifications.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == 0) return _markAll(context);
+                      return NotificationCard(
+                        notification: controller.notifications[index - 1],
+                      ).fadeAnimation200;
+                    },
                   ),
 
                   /// Loading indicator
@@ -90,4 +67,21 @@ class NotificationsView extends GetView<NotificationsController> {
       ),
     );
   }
+
+  Widget _markAll(BuildContext context) => GestureDetector(
+    onTap: controller.onMarkAllAsRead,
+    child: Padding(
+      padding: EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextX(
+            "Mark All as Read",
+            style: TextStyleX.labelLarge,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ],
+      ),
+    ),
+  ).fadeAnimation150.marginOnly(bottom: 10);
 }

@@ -1,4 +1,5 @@
 import 'package:messengersofpeace/Core/Service/session_lease.dart';
+import 'package:messengersofpeace/Core/Error/error.dart';
 import 'package:get/get.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:messengersofpeace/Data/data.dart';
@@ -34,6 +35,9 @@ class NotificationsController extends GetxController {
               generation == _loadGeneration &&
               TranslationX.getLanguageCode == locale,
     );
+    if (!lease.hasAuthenticatedIdentity) {
+      throw ErrorX.createErrorByCode(ErrorCodesX.unauthorized);
+    }
     if (isLoading.value && !(_readLease?.isCurrent ?? false)) {
       isLoading.value = false;
     }
@@ -61,6 +65,10 @@ class NotificationsController extends GetxController {
     final lease = SessionLeaseX.capture(isActive: () => !isClosed);
     _readLease = lease;
     try {
+      if (!lease.hasAuthenticatedIdentity) {
+        throw ErrorX.createErrorByCode(ErrorCodesX.unauthorized);
+      }
+
       /// Set loading to true
       isLoading.value = true;
 
