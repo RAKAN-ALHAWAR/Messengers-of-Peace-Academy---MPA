@@ -2,6 +2,37 @@
 
 ## Continuation checkpoint2026-10-22
 
+Final numeric-label correctionbedd7ad passes605/605 full tests and strict
+analyzer0 issues, logs/private/tmp/mopa-full-20261022-v5.log and
+/private/tmp/mopa-final-catalog-analyze-20261022.log. New24 real-font checks
+reproduced16pass/8fail before the correction (159/349px overflows at2x/3x),
+then all24 plus36 catalog/card cases passed. Both final native incremental
+builds exit0: /private/tmp/mopa-ios-catalog-final-20261022.log and
+/private/tmp/mopa-android-catalog-final-20261022.log (actual Built APK,5.4s).
+List/card reviewer closed its sole numeric-label finding:35/35 correction
+checks (24 committed,3 original numeric probes,8 ordinary geometry comparisons
+across4 locales/320+400px). Ordinary7-point1x geometry matches the prior frozen
+source within .001px; all text/image rectangles and card size retained. Log:
+/private/tmp/mopa-catalog-r1-review.log; scoped analyzer0 in
+/private/tmp/mopa-catalog-r1-review-analyze.log. Root verified actual summary
+lines and source/test hashes. Reviewed source6a4e44e92ab4a474aeae8ce8c26063934bda96e4e1a3b809973e12264ccc0e6a.
+
+Independent original view review:36 committed cases,30 real-font before/after
+comparisons at0/1/20/100/1000 per3 surfaces and2 render cases. At1000 records,
+real-font initial badges1000→5 rows/images, catalog1000→7, history1000rows/
+1007images→0rows/7images while its bounded prefix fills the viewport. Scrolled
+end rows/images7/7,8/8,9/9 respectively, final entries reached. Logs:
+/private/tmp/mopa-catalog-review-{base,mounts-fonts,renders}.log.
+Warm host-debug31-sample mapping1000 p50/p95=.774/1.084ms;
+sort/group/flatten=.439/.591ms.31 retained theme rebuilds cause0 history
+preparations and retain only the original2 requests. Logs:
+/private/tmp/mopa-catalog-review-probes.log and
+/private/tmp/mopa-catalog-review-retained.log. The initial probes log includes
+the numeric boundary red and a corrected retained MockClient fixture error;
+separate retained rerun and R1 recheck are the green evidence. These are host
+measurements, not native/device/backend budgets; data is still O(N) and initial
+sorting O(N log N). Scoped points/history en1x/ar2x renders were inspected.
+
 Latest integrated isolated sourcebf1b52d adds catalog/history ownership, lazy
 rows and shared points-card sizing. Root full581/581 cases pass, strict analyzer
 0 issues. Logs/private/tmp/mopa-full-20261022-v4.log and

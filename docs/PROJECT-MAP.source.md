@@ -77,6 +77,13 @@ this number is not a claim that every line has a runtime test.
 - Shared ButtonX/ButtonStateX use minimum heights/full wrapping labels while
   preserving ordinary state dimensions. Session/profile/quiz/list regression
   fixtures live under test/, and use synthetic intercepted HTTP only.
+- Badges/ActivityPionts catalogs use lazy builders; MyAchievements combines a
+  bounded badge preview with sliver history. Protected loaders gate publication
+  by session/app identity/locale/lifetime and publish coherent snapshots.
+  ActivityPointsCard shares full activity/points presentation; numeric labels
+  wrap within a bounded trailing column. PointsCardX grows from160px minimum
+  for scaled content in both ProfileDetails and MyAchievements. API retrieval
+  still loads whole lists; history sorts/groups O(N log N) lightweight records.
 
 These are observed implementation responsibilities, not new backend contracts.
 

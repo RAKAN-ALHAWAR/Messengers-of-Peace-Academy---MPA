@@ -9,9 +9,10 @@ Base:23827e2. Original foreign lock SHA256 remains
 Current2026-10-22: root owns integration and all committed remediation source.
 Catalog/history implementation handed back by app_audit ataa3eb93 from
 /private/tmp/mopa-catalog-activity-20261022, codex/mopa-catalog-activity-20261022.
-Root integrated asbf1b52d and owns any following corrections. Read-only
-feed_performance_review owns an isolated independent list/card review. Catalog
-data-ownership review completed32/32 and no open scoped findings. All earlier
+Root integrated asbf1b52d and corrected numeric-label wrapping atbedd7ad.
+Catalog data-ownership review completed32/32; list/card review closed its sole
+finding with35/35 correction/geometry probes. No active worker owns source;
+root owns records/integration. All earlier
 auth/profile/data/quiz, M8 controls, course/level and final M5 reviews are handed
 back. No agent may edit another active scope. The table below records initial
 coordination.
@@ -47,6 +48,23 @@ clearing/download/auth contracts remain blocked per plan. Local work continues
 on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
+
+- Final gatebedd7ad:605/605 full tests, strict analyzer0, iOS arm64 exit0 and
+  Android actual Built APK/exit0 in5.4s. Listed numeric-label finding closed by
+  independent35/35 with8 ordinary geometry comparisons unchanged within .001px.
+  Root verified primary log summaries and source/test hashes; renders inspected.
+  Original real-font review36+30+2 cases and retained1 case are recorded in
+  LOCAL-VERIFICATION with mapping/grouping timings and whole-list/device limits.
+  Prepare scoped records commit then original-main fast-forward; preserve its
+  foreign lock exact SHA, no remote/account/CI/device operations.
+
+- Final numeric-label correctionbedd7ad:60/60 focused cases (24 new real-font
+  matrix plus36 catalog/card), scoped analyzer0. Full suite605/605 and strict
+  analyzer0 then passed; iOS incremental arm64 build exit0. First list/card
+  review found only R1 inherited numeric overflow; recheck and final Android
+  rebuild pending. Logs/private/tmp/mopa-full-20261022-v5.log,
+  /private/tmp/mopa-final-catalog-analyze-20261022.log,
+  /private/tmp/mopa-ios-catalog-final-20261022.log.
 
 - List/card reviewer reproduced inherited shared activity-row overflow with a
   valid64-bit points value at320px/2x (159px). Root independent persistent

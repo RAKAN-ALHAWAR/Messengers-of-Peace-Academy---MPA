@@ -7,15 +7,19 @@ Updated: 2026-10-22 (Asia/Damascus).
 Owner repeated 'اكمل'. The approved locally actionable plan is being implemented
 in codex/mopa-remediation-20261020, /private/tmp/mopa-urgent-fixes-20261018.
 Original main was fast-forwarded locally to reviewed checkpointb89fc4a; its
-foreign lockfile is unchanged. Catalog/history sourcebf1b52d remains isolated.
+foreign lockfile is unchanged. Catalog/history sourcebedd7ad is fully checked
+locally and queued for fast-forward integration after its records commit.
 Execution/ownership/evidence: EXECUTION-2026-10-20.md.
-Root observed581/581 synthetic tests and strict analyzer with no issues through
-bf1b52d after M4/M5/M6/M7 and M8 lint/control fixes. Home level track and final
+Root observed605/605 synthetic tests and strict analyzer with no issues through
+bedd7ad after M4/M5/M6/M7 and M8 lint/control fixes. Home level track and final
 entry/route ownership corrections passed independent scoped reviews. Android
 debug build succeeds; iOS arm64 simulator rebuild succeeds with the
 command-only15.0 override. Badges/points catalog, history and shared points card
-are implemented with25 ownership and36 view/card regressions. The ownership
-review passes32/32; list/card review and updated Android build remain pending.
+are implemented with25 ownership,36 list/card and24 real-font numeric-label
+regressions. Ownership review passes32/32. List/card review closed its sole
+inherited numeric-label finding with35/35 correction/geometry probes; updated
+Android debug and iOS arm64 builds both exit0. No open local finding remains
+in these two reviewed slices; backend/device/release acceptance stays separate.
 The ordinary declared-target iOS build still fails the known Q02 local Xcode
 compatibility gate; concrete lock/OS evidence is in
 DEPENDENCY-LOCK-REVIEW-2026-10-22.md, with no owner choice presumed.
