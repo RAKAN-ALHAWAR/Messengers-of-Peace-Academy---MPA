@@ -31,7 +31,8 @@ class TestQuestionsController extends GetxController {
   bool _ready = false;
   bool _finishRequested = false;
   bool _transitioned = false;
-  bool needsRecovery = false;
+  final _needsRecovery = false.obs;
+  bool get needsRecovery => _needsRecovery.value;
   bool get ownsCurrentSession => _ownerLease.isCurrent;
 
   Future<void> getData() =>
@@ -45,7 +46,7 @@ class TestQuestionsController extends GetxController {
     // The current response has no authoritative saved selections/current slot.
     // Replaying a known resumed attempt from question zero could overwrite it.
     if (quiz.lastAttemptStatus == QuizAttemptStatusX.inProgress) {
-      needsRecovery = true;
+      _needsRecovery.value = true;
       return;
     }
     try {
@@ -61,7 +62,7 @@ class TestQuestionsController extends GetxController {
           quizStartAttempt.totalQuestions != questions.length ||
           questions.any((q) => q.answers.isEmpty) ||
           questions.map((q) => q.slot).toSet().length != questions.length) {
-        needsRecovery = true;
+        _needsRecovery.value = true;
         return;
       }
       final started = await _attemptStartTime();
@@ -73,6 +74,12 @@ class TestQuestionsController extends GetxController {
     } catch (error) {
       if (!lease.isCurrent) return;
       ErrorX.console(error);
+      if (error is ErrorX &&
+          (error.errorCode == ErrorCodesX.modelToJsonConversionFailed ||
+              error.errorCode == ErrorCodesX.missingRequiredKeysInJson)) {
+        _needsRecovery.value = true;
+        return;
+      }
       rethrow;
     }
   }
@@ -92,6 +99,7 @@ class TestQuestionsController extends GetxController {
   void onChangeAnswer(int? value) {
     if (!ownsCurrentSession ||
         !_ready ||
+        needsRecovery ||
         isLoading.value ||
         _finishRequested ||
         value == null) {
@@ -105,7 +113,11 @@ class TestQuestionsController extends GetxController {
   }
 
   Future<void> onNextQuestion() async {
-    if (!ownsCurrentSession || !_ready || _finishRequested || isLoading.value) {
+    if (!ownsCurrentSession ||
+        !_ready ||
+        needsRecovery ||
+        _finishRequested ||
+        isLoading.value) {
       return;
     }
     final index = currentQuestionIndex;
@@ -137,7 +149,22 @@ class TestQuestionsController extends GetxController {
     } catch (error) {
       if (!lease.isCurrent) return;
       ErrorX.console(error);
-      answerError.value = error.toString();
+      final explicitRejection =
+          error is ErrorX &&
+          (error.details['status'] == 'error' ||
+              error.details['status'] == false ||
+              error.details['status'] == 'false' ||
+              error.details['errorcode'] != null);
+      if (explicitRejection) {
+        answerError.value = error.toString();
+      } else {
+        // A local timeout/transport failure cannot prove that the server did
+        // not commit the answer. Reconciliation needs authoritative attempt data.
+        answerError.value =
+            'Answer saving status is unknown. Return to test information before trying again.';
+        _needsRecovery.value = true;
+        _timer?.cancel();
+      }
       buttonState.value = ButtonStateEX.failed;
     } finally {
       if (lease.isCurrent) {
@@ -148,7 +175,7 @@ class TestQuestionsController extends GetxController {
   }
 
   void _updateRemaining(Duration remaining) {
-    if (!ownsCurrentSession || _finishRequested) {
+    if (!ownsCurrentSession || needsRecovery || _finishRequested) {
       _timer?.cancel();
       return;
     }
@@ -161,7 +188,9 @@ class TestQuestionsController extends GetxController {
   }
 
   void startTimer() {
-    if (!ownsCurrentSession || !_ready || _finishRequested) return;
+    if (!ownsCurrentSession || !_ready || needsRecovery || _finishRequested) {
+      return;
+    }
     _timer?.cancel();
     _timer = Timer.periodic(
       const Duration(seconds: 1),
@@ -170,15 +199,18 @@ class TestQuestionsController extends GetxController {
   }
 
   void submitQuiz() {
-    if (!ownsCurrentSession || !_ready || _transitioned) return;
+    if (!ownsCurrentSession || !_ready || needsRecovery || _transitioned) {
+      return;
+    }
     _finishRequested = true;
     _timer?.cancel();
-    // Wait for the bounded in-flight answer before finalizing the same attempt.
+    // Finalize only after the in-flight answer is acknowledged or explicitly
+    // rejected. A local wait deadline alone does not establish its outcome.
     if (!isLoading.value) _showResults();
   }
 
   void _showResults() {
-    if (!ownsCurrentSession || _transitioned) return;
+    if (!ownsCurrentSession || needsRecovery || _transitioned) return;
     _transitioned = true;
     _timer?.cancel();
     Get.offAndToNamed(

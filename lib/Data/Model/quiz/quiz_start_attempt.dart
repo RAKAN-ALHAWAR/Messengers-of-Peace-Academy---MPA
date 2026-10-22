@@ -34,7 +34,9 @@ class QuizStartAttemptX {
         state: json[NameX.state].toStrX,
         status: json[NameX.status].toStrX,
         totalQuestions: json[NameX.totalQuestions].toIntX,
-        questions: ModelUtilX.generateItems(questionsJson, QuestionX.fromJson),
+        // Every question must retain its authoritative slot. Never silently
+        // shorten an invalid question set and continue submitting answers.
+        questions: questionsJson.map(QuestionX.fromJson).toList(),
         correctAnswers: json[NameX.correctAnswers].toIntDefaultX(0),
         wrongAnswers: json[NameX.wrongAnswers].toIntDefaultX(0),
       ),

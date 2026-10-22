@@ -313,6 +313,13 @@ void main() {
         expect(c.selectedAnswer.value, 1);
         expect(c.selectedAnswers, [null, null]);
         expect(h.finalizeCalls, 0);
+        expect(c.needsRecovery, isFalse);
+        h.onAnswer = null;
+        await c.onNextQuestion();
+        await tester.pumpAndSettle();
+        expect(h.answerCalls, 2);
+        expect(c.currentQuestionIndex, 1);
+        expect(c.selectedAnswers, [1, null]);
         await h.finish(tester);
       }, h.client);
     },
@@ -776,29 +783,90 @@ void main() {
       }, h.client);
     },
   );
-  testWidgets(
-    'answer timeout after finish requested leaves slot unacknowledged and finalizes once',
-    (tester) async {
-      final pending = Completer<http.Response>();
-      h.onAnswer = () => pending.future;
-      await http.runWithClient(() async {
-        await h.mount(tester, RouteNameX.testQuestions);
-        await tester.pumpAndSettle();
-        final c = Get.find<TestQuestionsController>();
-        c.onChangeAnswer(1);
-        final saving = c.onNextQuestion();
-        await tester.pump();
-        c.submitQuiz();
-        pending.completeError(TimeoutException('Synthetic timeout'));
-        await saving;
-        expect(tester.takeException(), isNotNull);
-        await tester.pumpAndSettle();
-        expect(h.finalizeCalls, 1);
-        expect(Get.find<TestResultsController>().selectedAnswers, [null, null]);
-        await h.finish(tester);
-      }, h.client);
-    },
-  );
+  for (final finishRequested in [false, true]) {
+    testWidgets(
+      'real answer deadline locks uncertain delivery, finish=$finishRequested',
+      (tester) async {
+        final pending = Completer<http.Response>();
+        h.onAnswer = () => pending.future;
+        await http.runWithClient(() async {
+          await h.mount(tester, RouteNameX.testQuestions);
+          await tester.pumpAndSettle();
+          final c = Get.find<TestQuestionsController>();
+          c.onChangeAnswer(1);
+          final saving = c.onNextQuestion();
+          await tester.pump();
+          if (finishRequested) c.submitQuiz();
+          // Exercise HttpX's actual15s wrapper, not an exception from the mock.
+          await tester.pump(const Duration(seconds: 16));
+          await saving;
+          expect(tester.takeException(), isNotNull);
+          await tester.pumpAndSettle();
+          final transportStillPending = !pending.isCompleted;
+          final visibleRecovery =
+              find
+                  .text(
+                    'Answer saving status is unknown. Return to test information before trying again.',
+                  )
+                  .evaluate()
+                  .length;
+          final visibleAction =
+              find.text('Return to test information').evaluate().length;
+          final recovery = c.needsRecovery;
+          c.onChangeAnswer(0);
+          final retry = c.onNextQuestion();
+          c.submitQuiz();
+          c.startTimer();
+          await tester.pump();
+          pending.complete(
+            h.jsonResponse({
+              'status': 'success',
+              'message': 'Late acknowledgement',
+            }),
+          );
+          await retry;
+          await tester.pumpAndSettle();
+          final calls = (h.answerCalls, h.finalizeCalls, h.resultCalls);
+          final saved = List<int?>.of(c.selectedAnswers);
+          await h.finish(tester);
+          expect(transportStillPending, isTrue);
+          expect(recovery, isTrue);
+          expect(visibleRecovery, 1);
+          expect(visibleAction, 1);
+          expect(calls, (1, 0, 0));
+          expect(saved, [null, null]);
+        }, h.client);
+      },
+    );
+  }
+  for (final slot in [2.4, -1, true, 'invalid']) {
+    testWidgets(
+      'invalid inbound slot $slot exposes recovery without sending an altered slot',
+      (tester) async {
+        final json = h.attempt.toJson();
+        (json[NameX.questions] as List).first[NameX.slot] = slot;
+        h.onStart = () async => h.jsonResponse(json);
+        await http.runWithClient(() async {
+          await h.mount(tester, RouteNameX.testQuestions);
+          tester.takeException();
+          await tester.pumpAndSettle();
+          final c = Get.find<TestQuestionsController>();
+          final recovery = c.needsRecovery;
+          final action =
+              find.text('Return to test information').evaluate().length;
+          c.onChangeAnswer(1);
+          await c.onNextQuestion();
+          c.submitQuiz();
+          await tester.pumpAndSettle();
+          final calls = (h.answerCalls, h.finalizeCalls, h.resultCalls);
+          await h.finish(tester);
+          expect(recovery, isTrue);
+          expect(action, 1);
+          expect(calls, (0, 0, 0));
+        }, h.client);
+      },
+    );
+  }
   testWidgets(
     'locale changes retain the live attempt without repeating a start mutation',
     (tester) async {
@@ -819,4 +887,31 @@ void main() {
       }, h.client);
     },
   );
+  testWidgets('explicit answer errorcode rejection remains safely retryable', (
+    tester,
+  ) async {
+    h.onAnswer =
+        () async => h.jsonResponse({
+          'errorcode': 'synthetic_rejection',
+          'message': 'Synthetic answer rejection',
+        });
+    await http.runWithClient(() async {
+      await h.mount(tester, RouteNameX.testQuestions);
+      await tester.pumpAndSettle();
+      final c = Get.find<TestQuestionsController>();
+      c.onChangeAnswer(1);
+      await c.onNextQuestion();
+      expect(tester.takeException(), isNotNull);
+      await tester.pumpAndSettle();
+      expect(c.needsRecovery, isFalse);
+      expect(c.currentQuestionIndex, 0);
+      h.onAnswer = null;
+      await c.onNextQuestion();
+      await tester.pumpAndSettle();
+      expect(h.answerCalls, 2);
+      expect(h.finalizeCalls, 0);
+      expect(c.selectedAnswers, [1, null]);
+      await h.finish(tester);
+    }, h.client);
+  });
 }

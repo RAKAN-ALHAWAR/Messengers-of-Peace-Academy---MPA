@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:messengersofpeace/Core/Error/error.dart';
+import 'package:messengersofpeace/Data/Model/quiz/question.dart';
 import 'package:messengersofpeace/Data/data.dart';
 import 'package:messengersofpeace/Data/Model/quiz/answer.dart';
 import 'package:messengersofpeace/Data/Model/quiz/quiz_result.dart';
@@ -108,4 +110,27 @@ void main() {
     expect(result.answers.first, isNull);
     expect(result.answers.last?.slot, 7);
   });
+  Map<String, dynamic> questionJson(Object? slot) => {
+    NameX.slot: slot,
+    NameX.questionId: 12,
+    NameX.questionNumber: 1,
+    NameX.questionText: 'Synthetic question',
+    NameX.answers: ['First', 'Second'],
+  };
+  for (final slot in [2.4, -1, true, 'invalid', '2.4', null]) {
+    test('question parser rejects invalid slot $slot', () {
+      expect(
+        () => QuestionX.fromJson(questionJson(slot)),
+        throwsA(isA<ErrorX>()),
+      );
+    });
+  }
+  for (final slot in [0, 2, '0', '2']) {
+    test('question parser preserves integer slot $slot', () {
+      expect(
+        QuestionX.fromJson(questionJson(slot)).slot,
+        int.parse(slot.toString()),
+      );
+    });
+  }
 }

@@ -22,7 +22,7 @@ class QuestionX {
     return ModelUtilX.checkFromJson(
       json,
       (json) => QuestionX(
-        slot: json[NameX.slot].toIntX,
+        slot: _slot(json[NameX.slot]),
         id: json[NameX.questionId].toIntX,
         number: json[NameX.questionNumber].toIntX,
         text: json[NameX.questionText].toStrX,
@@ -37,6 +37,26 @@ class QuestionX {
       ],
     );
   }
+
+  static int _slot(Object? value) {
+    final int? parsed;
+    if (value is int) {
+      parsed = value;
+    } else if (value is num &&
+        value.isFinite &&
+        value == value.truncateToDouble()) {
+      parsed = value.toInt();
+    } else if (value is String) {
+      parsed = int.tryParse(value.trim());
+    } else {
+      parsed = null;
+    }
+    if (parsed == null || parsed < 0) {
+      throw const FormatException('Invalid question slot');
+    }
+    return parsed;
+  }
+
   toJson() {
     return {
       NameX.slot: slot,
