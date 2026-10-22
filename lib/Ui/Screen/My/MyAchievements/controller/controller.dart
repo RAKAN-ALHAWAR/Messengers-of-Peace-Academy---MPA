@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:get/get.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
@@ -26,38 +27,79 @@ class MyAchievementsController extends GetxController {
 
   /// My activity points
   List<MyActivityPointX> myActivityPoints = [];
+  int _loadGeneration = 0;
+  (int, String)? _ownerKey;
 
   //============================================================================
   // Functions
 
   /// Get data from the database
   Future<void> getData() async {
-    /// Get all badges from the database
-    badges = await DatabaseX.getBadges();
-
-    /// Get my activity points from the database
-    myActivityPoints = await DatabaseX.getMyActivityPoints();
-
-    /// Get the current badge
-    if (badges.isNotEmpty) {
-      currentBadge = badges.firstWhere(
-        (badge) =>
-            badge.requiredPoints > app.user.value.points &&
-            badge.earned == false,
-        orElse: () => badges.last,
-      );
+    if (isClosed) return;
+    final locale = TranslationX.getLanguageCode;
+    final ownerId = LocalDataX.userid;
+    final key = (LocalDataX.sessionRevision, locale);
+    final generation = ++_loadGeneration;
+    final lease = SessionLeaseX.capture(
+      isActive:
+          () =>
+              !isClosed &&
+              generation == _loadGeneration &&
+              TranslationX.getLanguageCode == locale &&
+              Get.isRegistered<AppControllerX>() &&
+              identical(Get.find<AppControllerX>(), app) &&
+              app.user.value.id == ownerId,
+    );
+    if (_ownerKey != key || !lease.hasAuthenticatedIdentity) {
+      _clearSnapshot();
+      _ownerKey = key;
     }
+    if (!lease.hasAuthenticatedIdentity || !lease.isCurrent) {
+      _clearSnapshot();
+      return;
+    }
+    try {
+      final loadedBadges = await DatabaseX.getBadges();
+      if (!lease.isCurrent) return;
+      final loadedPoints = await DatabaseX.getMyActivityPoints();
+      if (!lease.isCurrent) return;
+      // Preserve the existing selector and publish one coherent owned snapshot.
+      final selectedBadge =
+          loadedBadges.isEmpty
+              ? null
+              : loadedBadges.firstWhere(
+                (badge) =>
+                    badge.requiredPoints > app.user.value.points &&
+                    !badge.earned,
+                orElse: () => loadedBadges.last,
+              );
+      badges = loadedBadges;
+      myActivityPoints = loadedPoints;
+      currentBadge = selectedBadge;
+    } catch (_) {
+      // The retained FutureBuilder surfaces current failures. Retired loads
+      // cannot write state or start another protected request.
+      if (!lease.isCurrent) return;
+      rethrow;
+    }
+  }
+
+  void _clearSnapshot() {
+    badges = [];
+    myActivityPoints = [];
+    currentBadge = null;
   }
 
   /// Group activity points by month
   Map<String, List<MyActivityPointX>> groupActivityPointsByMonth() {
     /// Sort activity points by date
-    myActivityPoints.sort((a, b) => b.dateTime.compareTo(a.dateTime));
+    final sortedPoints = [...myActivityPoints]
+      ..sort((a, b) => b.dateTime.compareTo(a.dateTime));
 
     /// Group activity points by month
     Map<String, List<MyActivityPointX>> grouped = {};
 
-    for (var point in myActivityPoints) {
+    for (var point in sortedPoints) {
       final month = DateFormat.MMMM(
         TranslationX.getLanguageCode,
       ).format(point.dateTime);
