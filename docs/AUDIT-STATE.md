@@ -1,6 +1,23 @@
 # Mopa audit state
 
-Updated: 2026-10-20 (Asia/Damascus).
+Updated: 2026-10-22 (Asia/Damascus).
+
+## Current continuation
+
+Owner repeated 'اكمل'. The approved locally actionable plan is being implemented
+in codex/mopa-remediation-20261020, /private/tmp/mopa-urgent-fixes-20261018.
+Original main remains1e7f073 while combined review/integration continues; its
+foreign lockfile is unchanged. Execution/ownership/evidence: EXECUTION-2026-10-20.md.
+Root observed520/520 synthetic tests and strict analyzer with no issues through
+7868801 after M4/M5/M6/M7 and M8 lint/control fixes. Home level track and final
+entry/route ownership corrections passed independent scoped reviews. Android
+debug build succeeds; iOS arm64 simulator rebuild is being checked with the
+command-only15.0 override. Badges/points catalog and personal-history
+counterparts are active work. This is not full project,
+backend, device, CI or release acceptance. No live/remote operations authorized.
+
+## Historical authorization and planning
+
 
 Latest direction (2026-10-20): Saker said 'اكمل' after the full remediation plan.
 Proceed with its locally actionable slices. Backend/owner decisions explicitly
@@ -9,7 +26,7 @@ Main owns session/request ownership, transport/logging, integration and records;
 profile and shared-data workers use separate branches/worktrees. Current board:
 EXECUTION-2026-10-20.md. Preserve original foreign pubspec.lock unchanged.
 
-Latest request: Saker asked for a plan to address all errors. Main owns docs-only
+Planning request (2026-10-18): Saker asked for a plan to address all errors. Main owns docs-only
 comprehensive planning and coverage/review; no new application implementation.
 Proposed plan: REMEDIATION-PLAN-2026-10-18.md, covering every finding, excluded
 suspicions, all GitLab16-22 acceptance scenarios, backend/owner dependencies and

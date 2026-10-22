@@ -1,7 +1,7 @@
 # Backend contract request
 
 Status: proposed information request, not an adopted server specification.
-Audit baseline: f338fa9; current frontend context updated through dce8750.
+Audit baseline: f338fa9; local frontend continuation updated2026-10-22.
 Backend source is unavailable to Saker;
 an API description may be supplied later. No backend changes are requested by
 this document and no message has been sent to a service owner.
@@ -76,7 +76,7 @@ These are observations of app parsing, not a guarantee of backend responses.
 | start_or_get_quiz_attempt | userid/quizid | attemptid/state/status/total_questions/questions |
 | mod_quiz_get_user_attempts | userid/quizid/status=all | attempts, state=inprogress, timestart Unix seconds |
 | submit_quiz_question_answer | userid/quizid/attemptid/slot | answer[0][key]=answer; answer[0][value]=array-index string |
-| submit_quiz_attempt | userid/attemptid | no typed acknowledgement currently parsed |
+| submit_quiz_attempt | userid/attemptid | Remote status/acknowledgement validation, optional message; authoritative success/error/idempotence contract still required |
 | get_quiz_result | userid/quizid | status/message/grade/maxgrade/gradepass/passed/feedback/answers |
 
 Activity parsing uses literal keys topicid, 'Activity name', 'Topic name',
@@ -115,3 +115,15 @@ Frontend-only repairs (Toast/Back lifecycle, visible form validation, separating
 reset stages, HTTP status handling, parsing and stale UI) can be reviewed without
 guessing these policies. Server-side grading, minute accounting and unlock
 requirements remain open until the actual contract is supplied.
+
+## Local recovery boundaries2026-10-22
+
+The client now prevents concurrent answer save/finalization and enters locked
+recovery when delivery is uncertain; a timeout or late acknowledgement is not
+proof the server rejected the mutation. Supply a read-only reconciliation
+operation keyed by attempt/slot and an idempotency rule before automatic retry.
+Results preserve missing answer positions and reject ambiguous pass labels;
+resumed attempts without saved answers/current position remain recovery-only.
+The existing five-second route-dwell completion trigger and120-second fallback
+for zero quiz time limit are retained pending confirmed policy, not endorsed as
+actual watched minutes or an authoritative server deadline.

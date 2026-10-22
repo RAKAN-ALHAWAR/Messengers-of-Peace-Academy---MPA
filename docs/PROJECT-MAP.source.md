@@ -51,12 +51,34 @@ were not located in this app checkout. Endpoint names do not prove server rules.
 - `Blog/`, `My/MyCertificates/`, `My/MyAchievements/`, `Badges/`,
   `ActivityPionts/`, `Leaderboard/`: remaining data surfaces.
 - `lib/Ui/Widget/`: shared components and asynchronous loading.
-- `lib/Config/Translation/`: GetX translation maps, locales `ar/en/es/ph` in
-  current code. The `ph` UI locale failure is recorded in the audit.
+- `lib/Config/Translation/`: GetX maps in existing `ar/en/es/ph` source folders;
+  remediated UI locales are `ar/en/es/fil`. Explicit backend language fields
+  preserve `ph` through backendLanguageCode. Native localization remains open.
 - `ios/` and `android/`: native permissions, transport, plugins and build setup.
 
 Inventory found 303 Dart files under lib. Review coverage is reported by area;
 this number is not a claim that every line has a runtime test.
+
+## Local remediation seams2026-10-22
+
+- `Core/Service/session_lease.dart` captures identity/revision/owner lifetime;
+  LocalData credential writes invalidate leases synchronously. Session changes
+  notify mounted FutureBuilderX widgets without requiring parent rebuilds.
+- SessionExpiryX in the same lease service coordinates current-token expiry;
+  AppController owns local authenticated-route recovery. General transport and
+  Remote enforce status/ownership before fallback/publication.
+- `Ui/Widget/Basic/Utils/future_builder.dart` retains request identity, supports
+  explicit refresh/retry and retires obsolete data/callbacks by generation.
+- BlogPage and the one-page database/archive controller replace the recursive
+  archive loader; subsequent pages are on demand, deduplicated and retryable.
+- `Ui/Widget/Custom/Other/course_carousel.dart` owns shared lazy course layout,
+  exact per-pass text metrics and font/layout invalidation for Home/AllCourses.
+  It retains O(N) value records; first sizing remains O(N), not constant cost.
+- Shared ButtonX/ButtonStateX use minimum heights/full wrapping labels while
+  preserving ordinary state dimensions. Session/profile/quiz/list regression
+  fixtures live under test/, and use synthetic intercepted HTTP only.
+
+These are observed implementation responsibilities, not new backend contracts.
 
 ## Records for continuation
 

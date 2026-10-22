@@ -1,5 +1,14 @@
 # Urgent repair ledger
 
+## Continuation checkpoint2026-10-22
+
+The urgent batch below is historical. Approved comprehensive remediation now
+continues in codex/mopa-remediation-20261020, isolated from original main.
+Current ownership, exact local evidence and remaining work are in
+EXECUTION-2026-10-20.md; contract/platform gaps remain in REMEDIATION-PLAN and
+PARITY-LEDGER. The original foreign pubspec.lock is excluded and unchanged.
+Do not infer live/server/device/CI acceptance from host tests or native builds.
+
 Updated: 2026-10-18. Authorization: Saker's 'طيب ابداء بالاصلاح', following
 the three diagnosed symptom groups. Backend source remains unavailable.
 
