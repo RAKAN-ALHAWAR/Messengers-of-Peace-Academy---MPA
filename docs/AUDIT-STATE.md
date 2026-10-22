@@ -7,14 +7,19 @@ Updated: 2026-10-22 (Asia/Damascus).
 Owner repeated 'اكمل'. The approved locally actionable plan is being implemented
 in codex/mopa-remediation-20261020, /private/tmp/mopa-urgent-fixes-20261018.
 Original main was fast-forwarded locally to reviewed checkpointb89fc4a; its
-foreign lockfile is unchanged. Next catalog/history work remains isolated.
+foreign lockfile is unchanged. Catalog/history sourcebf1b52d remains isolated.
 Execution/ownership/evidence: EXECUTION-2026-10-20.md.
-Root observed520/520 synthetic tests and strict analyzer with no issues through
-7868801 after M4/M5/M6/M7 and M8 lint/control fixes. Home level track and final
+Root observed581/581 synthetic tests and strict analyzer with no issues through
+bf1b52d after M4/M5/M6/M7 and M8 lint/control fixes. Home level track and final
 entry/route ownership corrections passed independent scoped reviews. Android
 debug build succeeds; iOS arm64 simulator rebuild succeeds with the
-command-only15.0 override. Badges/points catalog and personal-history
-counterparts are active work. This is not full project,
+command-only15.0 override. Badges/points catalog, history and shared points card
+are implemented with25 ownership and36 view/card regressions. The ownership
+review passes32/32; list/card review and updated Android build remain pending.
+The ordinary declared-target iOS build still fails the known Q02 local Xcode
+compatibility gate; concrete lock/OS evidence is in
+DEPENDENCY-LOCK-REVIEW-2026-10-22.md, with no owner choice presumed.
+This is not full project,
 backend, device, CI or release acceptance. No live/remote operations authorized.
 
 ## Historical authorization and planning

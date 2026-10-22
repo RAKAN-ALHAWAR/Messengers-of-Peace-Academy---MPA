@@ -7,11 +7,14 @@ Base:23827e2. Original foreign lock SHA256 remains
 ## Active coordination
 
 Current2026-10-22: root owns integration and all committed remediation source.
-Active implementation: app_audit, /private/tmp/mopa-catalog-activity-20261022,
-codex/mopa-catalog-activity-20261022, limited to registered catalog/history
-files/tests below. All earlier auth/profile/data/quiz, M8 controls, course/level
-performance and final M5 ownership reviews are handed back. No agent may edit
-another active scope. The table below records the initial coordination.
+Catalog/history implementation handed back by app_audit ataa3eb93 from
+/private/tmp/mopa-catalog-activity-20261022, codex/mopa-catalog-activity-20261022.
+Root integrated asbf1b52d and owns any following corrections. Read-only
+feed_performance_review owns an isolated independent list/card review. Catalog
+data-ownership review completed32/32 and no open scoped findings. All earlier
+auth/profile/data/quiz, M8 controls, course/level and final M5 reviews are handed
+back. No agent may edit another active scope. The table below records initial
+coordination.
 
 Earlier takeover: level-track worker also hit the usage limit after33 green
 cases. Root owns its remaining formatting/metric-key/render check and all
@@ -44,6 +47,20 @@ clearing/download/auth contracts remain blocked per plan. Local work continues
 on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
+
+- Combined sourcebf1b52d: full581/581 tests and strict analyzer0 issues, logs
+  /private/tmp/mopa-full-20261022-v4.log and
+  /private/tmp/mopa-catalog-full-analyze-20261022.log. iOS arm64 simulator build
+  exit0 with existing command-only15.0 override, log
+  /private/tmp/mopa-ios-catalog-20261022.log. Android build and list/card review
+  remain pending; no original-main integration of this slice yet.
+
+- Catalog controller correction independently rechecked32/32 with exact bytes
+  matching4f192bb; scoped security/correctness verdict has no open findings.
+  Frozen lazy view/cardaa3eb93 integrated into isolated root asbf1b52d after
+  actual diff inspection. Full suite/strict analyzer and both native incremental
+  builds running; fresh list/card performance/correctness review is independent
+  and pending. No original-main integration of this new source yet.
 
 - Badges correctioncf1780d integrated as4f192bb. Root replays25 persistent plus
   7 independent cases green32/32; all3 original Badges reproductions now pass.
