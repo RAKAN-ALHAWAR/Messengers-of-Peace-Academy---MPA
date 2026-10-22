@@ -45,6 +45,21 @@ on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
 
+- Badges correctioncf1780d integrated as4f192bb. Root replays25 persistent plus
+  7 independent cases green32/32; all3 original Badges reproductions now pass.
+  The first route-disposal probe failed its fixture's early isClosed assertion:
+  corrected to production lazy binding and settled route/base assertion, then
+  re-ran the complete32. No product lifecycle finding was hidden or bypassed.
+  Logs/private/tmp/mopa-achievement-root-corrected{,-v2}-20261022.log. Temporary
+  independent probes retained outside the repo; fresh reviewer recheck pending.
+
+- Fresh catalog review found BadgesController's missing AppController identity
+  gate: mismatched app-user identity still starts a personal read; identity or
+  AppController replacement while pending returns the retired payload. Three
+  independent red probes are assigned back to the worker in one correction
+  pass. MyAchievements guards already include these identities. No server ACL
+  exploit or broader release claim follows from this local ownership finding.
+
 - Catalog ownership slice364e66e integrated into isolated root asb6bcd4a after
   actual diff review. Root independently replayed19/19 HTTP/Hive cases; source
   publication guards and same-owner atomic failure retention are under fresh
