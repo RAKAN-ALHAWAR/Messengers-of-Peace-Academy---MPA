@@ -14,6 +14,7 @@ import 'package:messengersofpeace/Core/Helper/http/http.dart';
 import 'package:messengersofpeace/Data/data.dart';
 import 'package:messengersofpeace/Data/Database/config/database_end_point.dart';
 import 'package:messengersofpeace/Data/Model/user/user.dart';
+import 'package:messengersofpeace/Data/Model/course/mini_course.dart';
 import 'package:messengersofpeace/Ui/Screen/Home/controller/controller.dart';
 import 'package:messengersofpeace/Ui/Screen/Home/view/view.dart';
 import 'package:messengersofpeace/Ui/Screen/Home/view/sectinos/current_level.dart';
@@ -390,6 +391,250 @@ void main() {
           final response = Completer<http.Response>();
           responses.add((request.url.queryParameters['wsfunction']!, response));
           if (responses.length == 5) started.complete();
+          return response.future;
+        }),
+      );
+    },
+  );
+  testWidgets('a Home snapshot cannot overwrite a newer notification return', (
+    tester,
+  ) async {
+    final responses = <(String, Completer<http.Response>)>[];
+    await http.runWithClient(
+      () async {
+        await tester.pumpWidget(
+          GetMaterialApp(
+            initialRoute: '/home-test',
+            getPages: [
+              GetPage(
+                name: '/home-test',
+                page: () => const Scaffold(body: SizedBox()),
+              ),
+              GetPage(
+                name: RouteNameX.notifications,
+                page: () => const Scaffold(body: SizedBox()),
+              ),
+            ],
+          ),
+        );
+        await tester.pumpAndSettle();
+        final load = controller.getData();
+        await tester.pump();
+        expect(responses.length, 5);
+        final navigation = controller.onNotifications();
+        await tester.pumpAndSettle();
+        Get.back(result: 9);
+        await tester.pumpAndSettle();
+        await navigation;
+        expect(controller.unreadNotificationsCount.value, 9);
+        for (final response in responses) {
+          response.$2.complete(fixtureResponse(homeResponse(response.$1)));
+        }
+        await load;
+        expect(controller.unreadNotificationsCount.value, 9);
+      },
+      () => MockClient((request) {
+        final response = Completer<http.Response>();
+        responses.add((request.url.queryParameters['wsfunction']!, response));
+        return response.future;
+      }),
+    );
+  });
+  testWidgets(
+    'course return forces an owned server refresh while ordinary Home reads remain cached',
+    (tester) async {
+      var count = 0;
+      await http.runWithClient(
+        () async {
+          await tester.pumpWidget(
+            GetMaterialApp(
+              initialRoute: '/home-test',
+              getPages: [
+                GetPage(
+                  name: '/home-test',
+                  page: () => const Scaffold(body: SizedBox()),
+                ),
+                GetPage(
+                  name: RouteNameX.courseDetails,
+                  page: () => const Scaffold(body: SizedBox()),
+                ),
+              ],
+            ),
+          );
+          await tester.pumpAndSettle();
+          await controller.getData();
+          await controller.getData();
+          expect(count, 5);
+          final course = MiniCourseX(
+            id: 'synthetic-course',
+            name: 'Course',
+            image: '',
+            numSections: 0,
+            completionPercent: 0,
+            isOpen: true,
+            isCompleted: false,
+            numCompletionSections: 0,
+          );
+          final navigation = controller.onCourseTap(course);
+          await tester.pumpAndSettle();
+          Get.back();
+          await tester.pumpAndSettle();
+          await navigation;
+          expect(count, 10);
+          expect(controller.statistics.value.minutes, '17');
+          await controller.getData();
+          expect(count, 10);
+        },
+        () => MockClient((request) async {
+          count++;
+          final function = request.url.queryParameters['wsfunction']!;
+          if (function == functionOf(DBEndPointX.postGetUserStatistics) &&
+              count > 5) {
+            return fixtureResponse({...statsFixture(), NameX.minutes: '17'});
+          }
+          return fixtureResponse(homeResponse(function));
+        }),
+      );
+    },
+  );
+  testWidgets(
+    'MyCourses off-navigation refreshes Home while the result route covers it',
+    (tester) async {
+      var count = 0;
+      await http.runWithClient(
+        () async {
+          await tester.pumpWidget(
+            GetMaterialApp(
+              initialRoute: '/home-test',
+              getPages: [
+                GetPage(
+                  name: '/home-test',
+                  page: () => const Scaffold(body: SizedBox()),
+                ),
+                GetPage(
+                  name: RouteNameX.myCourses,
+                  page: () => const Scaffold(body: SizedBox()),
+                ),
+                GetPage(
+                  name: '/result-test',
+                  page: () => const Scaffold(body: SizedBox()),
+                ),
+              ],
+            ),
+          );
+          await tester.pumpAndSettle();
+          await controller.getData();
+          await controller.getData();
+          expect(count, 5);
+          final navigation = controller.onMyCourses();
+          await tester.pumpAndSettle();
+          Get.offNamed('/result-test');
+          await tester.pumpAndSettle();
+          await navigation;
+          expect(Get.currentRoute, '/result-test');
+          expect(count, 10);
+          await controller.getData();
+          expect(count, 10);
+        },
+        () => MockClient((request) async {
+          count++;
+          return fixtureResponse(
+            homeResponse(request.url.queryParameters['wsfunction']!),
+          );
+        }),
+      );
+    },
+  );
+
+  for (final abandon in ['account', 'locale', 'closed', 'route']) {
+    testWidgets(
+      'MyCourses return after $abandon cannot issue a stale Home refresh',
+      (tester) async {
+        var count = 0;
+        await http.runWithClient(
+          () async {
+            await tester.pumpWidget(
+              GetMaterialApp(
+                initialRoute: '/home-test',
+                getPages: [
+                  GetPage(
+                    name: '/home-test',
+                    page: () => const Scaffold(body: SizedBox()),
+                  ),
+                  GetPage(
+                    name: RouteNameX.myCourses,
+                    page: () => const Scaffold(body: SizedBox()),
+                  ),
+                  GetPage(
+                    name: '/replacement-test',
+                    page: () => const Scaffold(body: SizedBox()),
+                  ),
+                ],
+              ),
+            );
+            await tester.pumpAndSettle();
+            await controller.getData();
+            final navigation = controller.onMyCourses();
+            await tester.pumpAndSettle();
+            if (abandon == 'account') {
+              await tester.runAsync(
+                () => LocalDataX.put(LocalKeyX.userid, 'synthetic-B'),
+              );
+            }
+            if (abandon == 'locale') Get.locale = const Locale('es');
+            if (abandon == 'closed') Get.delete<HomeController>(force: true);
+            if (abandon == 'route') {
+              Get.offAllNamed('/replacement-test');
+            } else {
+              Get.back();
+            }
+            await tester.pumpAndSettle();
+            await navigation;
+            expect(count, 5);
+          },
+          () => MockClient((request) async {
+            count++;
+            return fixtureResponse(
+              homeResponse(request.url.queryParameters['wsfunction']!),
+            );
+          }),
+        );
+      },
+    );
+  }
+
+  test(
+    'forced Home read supersedes an older pending batch in the same cache scope',
+    () async {
+      final old = <(String, Completer<http.Response>)>[];
+      final started = Completer<void>();
+      var count = 0;
+      await http.runWithClient(
+        () async {
+          final pending = controller.getData();
+          await started.future;
+          await controller.getData(force: true);
+          expect(count, 10);
+          expect(app.user.value.firstname, 'Newest');
+          for (final response in old) {
+            response.$2.complete(
+              fixtureResponse(homeResponse(response.$1, first: 'Old')),
+            );
+          }
+          await pending;
+          expect(app.user.value.firstname, 'Newest');
+        },
+        () => MockClient((request) {
+          count++;
+          final function = request.url.queryParameters['wsfunction']!;
+          if (count > 5) {
+            return Future.value(
+              fixtureResponse(homeResponse(function, first: 'Newest')),
+            );
+          }
+          final response = Completer<http.Response>();
+          old.add((function, response));
+          if (old.length == 5) started.complete();
           return response.future;
         }),
       );

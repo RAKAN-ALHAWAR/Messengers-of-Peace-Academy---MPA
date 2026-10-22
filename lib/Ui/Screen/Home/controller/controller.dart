@@ -63,6 +63,8 @@ class HomeController extends GetxController {
   Future<void>? _pendingLoad;
   int _loadGeneration = 0;
   int _notificationGeneration = 0;
+  int _unreadRevision = 0;
+  int _progressNavigationGeneration = 0;
 
   bool get _ownsHome =>
       !isClosed &&
@@ -73,16 +75,17 @@ class HomeController extends GetxController {
 
   /// Keep one owned snapshot. Independent responses must never partly replace
   /// another account's state or be published with the wrong locale.
-  Future<void> getData() {
+  Future<void> getData({bool force = false}) {
     if (!_ownsHome) return Future.value();
     final language = TranslationX.getLanguageCode;
     final ownedCache =
         isInit && _cacheLease?.isCurrent == true && currentLanguage == language;
-    if (ownedCache &&
+    if (!force &&
+        ownedCache &&
         lastUpdate.isAfter(DateTime.now().subtract(_cacheLifetime))) {
       return Future.value();
     }
-    if (_pendingLease?.isCurrent == true && _pendingLoad != null) {
+    if (!force && _pendingLease?.isCurrent == true && _pendingLoad != null) {
       return _pendingLoad!;
     }
     final request = ++_loadGeneration;
@@ -104,14 +107,18 @@ class HomeController extends GetxController {
       unreadNotificationsCount.value = 0;
       user.value = app.user.value;
     }
-    final pending = _loadSnapshot(lease, id, language, ownedCache).whenComplete(
-      () {
-        if (request == _loadGeneration) {
-          _pendingLoad = null;
-          _pendingLease = null;
-        }
-      },
-    );
+    final pending = _loadSnapshot(
+      lease,
+      id,
+      language,
+      ownedCache,
+      _unreadRevision,
+    ).whenComplete(() {
+      if (request == _loadGeneration) {
+        _pendingLoad = null;
+        _pendingLease = null;
+      }
+    });
     _pendingLoad = pending;
     return pending;
   }
@@ -121,6 +128,7 @@ class HomeController extends GetxController {
     String id,
     String language,
     bool ownedCache,
+    int unreadRevision,
   ) async {
     try {
       if (!lease.hasAuthenticatedIdentity) {
@@ -156,8 +164,13 @@ class HomeController extends GetxController {
       levels.assignAll(nextLevels);
       currentLevel.value = selected;
       meetings.assignAll(values[3] as List<MeetingX>);
-      unreadNotificationsCount.value =
-          (values[4] as List<NotificationX>).where((item) => !item.read).length;
+      // A later notification return is newer than this batch's unread count.
+      if (unreadRevision == _unreadRevision) {
+        unreadNotificationsCount.value =
+            (values[4] as List<NotificationX>)
+                .where((item) => !item.read)
+                .length;
+      }
       currentLanguage = language;
       lastUpdate = DateTime.now();
       isInit = true;
@@ -189,10 +202,12 @@ class HomeController extends GetxController {
       final result = await Get.toNamed(RouteNameX.notifications);
       if (!lease.isCurrent) return;
       if (result is int && result >= 0) {
+        _unreadRevision++;
         unreadNotificationsCount.value = result;
       } else {
         final notifications = await DatabaseX.getNotifications();
         if (!lease.isCurrent) return;
+        _unreadRevision++;
         unreadNotificationsCount.value =
             notifications.where((item) => !item.read).length;
       }
@@ -204,8 +219,37 @@ class HomeController extends GetxController {
   }
 
   /// Handle tap on course
-  onCourseTap(MiniCourseX course) =>
-      Get.toNamed(RouteNameX.courseDetails, arguments: course.id);
+  Future<void> onCourseTap(MiniCourseX course) =>
+      _openAndRefreshProgress(RouteNameX.courseDetails, arguments: course.id);
+
+  /// A course may be removed by quiz-result navigation while Home is covered.
+  /// Route lifetime, rather than top-route equality, owns this read-only refresh.
+  Future<void> _openAndRefreshProgress(
+    String destination, {
+    Object? arguments,
+  }) async {
+    final route = Get.rawRoute;
+    final language = TranslationX.getLanguageCode;
+    final request = ++_progressNavigationGeneration;
+    final lease = SessionLeaseX.capture(
+      isActive:
+          () =>
+              _ownsHome &&
+              route?.isActive == true &&
+              request == _progressNavigationGeneration &&
+              TranslationX.getLanguageCode == language,
+    );
+    if (!lease.isCurrent || !lease.hasAuthenticatedIdentity) return;
+    try {
+      await Get.toNamed(destination, arguments: arguments);
+      if (!lease.isCurrent) return;
+      await getData(force: true);
+    } catch (e) {
+      if (!lease.isCurrent) return;
+      ErrorX.console(e);
+      ToastX.error(message: e);
+    }
+  }
 
   /// Handle tap on blog
   onBlog() => Get.toNamed(RouteNameX.blog);
@@ -214,7 +258,7 @@ class HomeController extends GetxController {
   onAchievements() => Get.toNamed(RouteNameX.myAchievements);
 
   /// Handle tap on my courses
-  onMyCourses() => Get.toNamed(RouteNameX.myCourses);
+  Future<void> onMyCourses() => _openAndRefreshProgress(RouteNameX.myCourses);
 
   /// Handle tap on my certificates
   onMyCertificates() => Get.toNamed(RouteNameX.myCertificates);
@@ -232,6 +276,7 @@ class HomeController extends GetxController {
   void onClose() {
     _loadGeneration++;
     _notificationGeneration++;
+    _progressNavigationGeneration++;
     complaintController.dispose();
     super.onClose();
   }
