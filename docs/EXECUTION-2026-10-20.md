@@ -48,6 +48,15 @@ on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
 
+- List/card reviewer reproduced inherited shared activity-row overflow with a
+  valid64-bit points value at320px/2x (159px). Root independent persistent
+  real-font matrix reproduced16pass/8fail across4 locales/scales2+3, with
+  159/349px overflow and no asset-load failure. Root owns the correction:
+  bound numeric content to at most half the row, retain intrinsic short-value
+  width and wrap full digits without shrinking/truncation. Focused replay and
+  first-round reviewer completion pending. This is not a backend numeric-bound
+  or reward-policy change; evidence/private/tmp/mopa-activity-card-root-red-20261022.log.
+
 - Android catalog attempt using the level-track SDK copy stalled while fetching
   android-x64-profile tools, before Gradle. Clock/process recheck showed53min
   elapsed. Root terminated only its owned Dart download process42531 and retried
