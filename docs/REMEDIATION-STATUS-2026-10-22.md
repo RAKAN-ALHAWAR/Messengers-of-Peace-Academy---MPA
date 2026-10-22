@@ -13,8 +13,8 @@ profile, quiz, learning/session, list/performance and shared-control reviews
 passed after their reported findings were repaired and rechecked. Android debug
 build succeeds. iOS arm64 simulator rebuild also succeeds throughbedd7ad.
 Native warnings and device gaps remain. Reviewed checkpointb89fc4a was integrated
-into original main locally; catalog/history sourcebedd7ad is ready for the next
-local integration. Catalog ownership review passes32/32; list/card review
+into original main locally; catalog/history sourcebedd7ad followed in reviewed
+checkpointedfa429. Catalog ownership review passes32/32; list/card review
 closed its only finding with35/35 correction/ordinary-geometry probes.
 Original foreign pubspec.lock stays excluded and byte-identical.
 

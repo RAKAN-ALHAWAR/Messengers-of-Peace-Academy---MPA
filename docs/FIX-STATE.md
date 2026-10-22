@@ -3,7 +3,10 @@
 ## Continuation checkpoint2026-10-22
 
 The urgent batch below is historical. Approved comprehensive remediation now
-continues in codex/mopa-remediation-20261020, isolated from original main.
+continues in codex/mopa-remediation-20261020. Reviewed source throughbedd7ad is
+integrated locally into original main throughcheckpointedfa429. Root605/605
+tests, strict analyzer0 and both native builds pass; backend/device/CI and the
+named conditional owner decisions remain open. Original foreign lock unchanged.
 Current ownership, exact local evidence and remaining work are in
 EXECUTION-2026-10-20.md; contract/platform gaps remain in REMEDIATION-PLAN and
 PARITY-LEDGER. The original foreign pubspec.lock is excluded and unchanged.

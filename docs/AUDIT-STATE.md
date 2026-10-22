@@ -6,9 +6,9 @@ Updated: 2026-10-22 (Asia/Damascus).
 
 Owner repeated 'اكمل'. The approved locally actionable plan is being implemented
 in codex/mopa-remediation-20261020, /private/tmp/mopa-urgent-fixes-20261018.
-Original main was fast-forwarded locally to reviewed checkpointb89fc4a; its
-foreign lockfile is unchanged. Catalog/history sourcebedd7ad is fully checked
-locally and queued for fast-forward integration after its records commit.
+Original main was fast-forwarded locally through reviewed checkpointedfa429,
+including catalog/history sourcebedd7ad; its foreign lockfile is unchanged.
+Only this final integration-record update follows the tested source checkpoint.
 Execution/ownership/evidence: EXECUTION-2026-10-20.md.
 Root observed605/605 synthetic tests and strict analyzer with no issues through
 bedd7ad after M4/M5/M6/M7 and M8 lint/control fixes. Home level track and final

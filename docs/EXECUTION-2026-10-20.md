@@ -49,6 +49,16 @@ on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
 
+- Integrated reviewed checkpointedfa429 into original main locally. Before/after
+  status only foreign pubspec.lock; exact SHA unchanged. Integrated10-file
+  performance-review manifest matches all bytes; review evidence preserved in
+  /private/tmp/mopa-catalog-review-evidence-20261022/manifest.json. Catalog
+  ownership32/32 and list/card35/35 correction verdicts have no open scoped
+  findings. This605-case/native-build batch is complete locally. Remaining work
+  is the named backend/owner contracts, protected lock/SDK/OS decisions, actual
+  remote runner and device/native/account matrix, not claimed complete here.
+  No remote writes, deploy, dependency adoption or minimum-OS change.
+
 - Final gatebedd7ad:605/605 full tests, strict analyzer0, iOS arm64 exit0 and
   Android actual Built APK/exit0 in5.4s. Listed numeric-label finding closed by
   independent35/35 with8 ordinary geometry comparisons unchanged within .001px.

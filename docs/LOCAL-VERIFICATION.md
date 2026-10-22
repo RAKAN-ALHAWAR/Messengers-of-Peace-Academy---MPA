@@ -2,6 +2,14 @@
 
 ## Continuation checkpoint2026-10-22
 
+Reviewed catalog checkpointedfa429 was fast-forwarded into original main
+locally. Before/after status is only the original foreign pubspec.lock and its
+SHA256 remains9ad24bce6ed2b390ee55772a69c51798d36c313c016841a36c44fa24941ad9c7.
+Root compared the integrated10-file performance-review hash manifest (original
+unchanged files plus correction source/test); all match. The ownership review's
+three-file stamp remains4f192bb. No original package metadata regeneration,
+device/account interaction, remote push/CI or deployment followed integration.
+
 Final numeric-label correctionbedd7ad passes605/605 full tests and strict
 analyzer0 issues, logs/private/tmp/mopa-full-20261022-v5.log and
 /private/tmp/mopa-final-catalog-analyze-20261022.log. New24 real-font checks
