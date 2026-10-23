@@ -57,6 +57,10 @@ this API; profile integrates after the seam commit. Never log tokens or URLs.
 
 ## Boundaries
 
+2026-10-23 exception explicitly approved by owner: matching tested Dart/native
+lock adoption with original-file backup, and iOS15 minimum. All other live,
+remote, account, migration and dependency-upgrade boundaries below remain.
+
 All checks use synthetic records/intercepted requests. No live-account or server
 operations, external messages, remote push, secret rotation, storage migration,
 dependency upgrades or minimum-OS changes. Unknown grading/completion/minutes/
@@ -64,6 +68,16 @@ clearing/download/auth contracts remain blocked per plan. Local work continues
 on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
+
+- M0 source17140ac completes local gate:605/605, strict0, iOS exit0 without
+  deployment override, Android actual BuiltAPK/exit0 in32.5s. Reviewer exact
+ 5-file manifest and actual native artifacts verified; no source blocker.
+  Reviewer24 floor cases/72configs preserve higher16/16.4;3 non-iOS unchanged.
+  Both stale native-lock/build-pending status sentences corrected. Durable
+  evidence directory/manifest in LOCAL-VERIFICATION. Prepare reviewed local
+  original-main adoption: verify original still matches backed-up SHA; replace
+  only its approved lock during fast-forward and regenerate ignored metadata.
+  No device/account/remote runner/deploy acceptance is implied.
 
 - No-override iOS retry completed exit0 at frozen17140ac. Produced Runner.app
   Info.plist has MinimumOSVersion15.0; same declared project/Pod settings,

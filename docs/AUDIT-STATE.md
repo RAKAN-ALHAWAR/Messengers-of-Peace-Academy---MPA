@@ -1,11 +1,20 @@
 # Mopa audit state
 
-Updated: 2026-10-22 (Asia/Damascus).
+Updated: 2026-10-23 (Asia/Damascus).
 
 ## Current continuation
 
-Owner repeated 'اكمل'. The approved locally actionable plan is being implemented
-in codex/mopa-remediation-20261020, /private/tmp/mopa-urgent-fixes-20261018.
+Owner repeated 'اكمل'. Current durable worktree is
+/Users/saker/.codex/worktrees/mopa-closeout-20261023/Messengers of Peace,
+branchcodex/mopa-closeout-20261023. Earlier temporary worktree lost some files;
+all commits were retained and final catalog records092f1dc integrated locally.
+Owner approved lock adoption after backup/review and iOS15 minimum. Frozen M0
+source17140ac now has605 tests/strict analyzer0, offline matching lock and
+successful Android/iOS builds. The iOS build uses declared targets, no override;
+independent reviewer confirms plist/Mach-O min15 and no source blocker. Original
+foreign lock is backed up intact; approved replacement/metadata integration next.
+
+Previous2026-10-22 checkpoint:
 Original main was fast-forwarded locally through reviewed checkpointedfa429,
 including catalog/history sourcebedd7ad; its foreign lockfile is unchanged.
 Only this final integration-record update follows the tested source checkpoint.
@@ -20,9 +29,9 @@ regressions. Ownership review passes32/32. List/card review closed its sole
 inherited numeric-label finding with35/35 correction/geometry probes; updated
 Android debug and iOS arm64 builds both exit0. No open local finding remains
 in these two reviewed slices; backend/device/release acceptance stays separate.
-The ordinary declared-target iOS build still fails the known Q02 local Xcode
-compatibility gate; concrete lock/OS evidence is in
-DEPENDENCY-LOCK-REVIEW-2026-10-22.md, with no owner choice presumed.
+The old declared-target failure is superseded by the approved iOS15 build in
+17140ac. Concrete lock/OS decision/evidence is in
+DEPENDENCY-LOCK-REVIEW-2026-10-22.md.
 This is not full project,
 backend, device, CI or release acceptance. No live/remote operations authorized.
 

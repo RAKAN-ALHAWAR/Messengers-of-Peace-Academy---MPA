@@ -76,8 +76,11 @@ selected here; actual older-device support remains unverified.
 Owner approved iOS15 on2026-10-23. Runner Debug/Profile/Release and the Podfile
 now declare15; post-install raises lower iOS pod/resource targets while
 preserving higher declared dependency minimums. Actual generated project has
-42 targets/19 resource bundles/126 configurations at15.0. Fresh build without
-a deployment-target override and independent review remain pending. Earlier
+42 targets/19 resource bundles/126 configurations at15.0. Fresh simulator build
+without a deployment-target override completed exit0; produced plist and Mach-O
+both report15.0. Independent frozen-source/configuration review has no blocker;
+Android debug also produces its APK. Detailed commands/logs are in
+LOCAL-VERIFICATION.md and EXECUTION-2026-10-20.md. Earlier
 iOS13 users are outside the newly approved supported range; no release shipped.
 
 Reproduced2026-10-22 with the same arm64 command in a fresh derived-data folder

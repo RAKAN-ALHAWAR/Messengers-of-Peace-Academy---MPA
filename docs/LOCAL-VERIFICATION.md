@@ -1,5 +1,52 @@
 # Local audit reproduction
 
+## M0 closeout2026-10-23
+
+Owner approved tested lock adoption after backup and iOS15 supported minimum.
+Frozen source17140ac, durable managed worktree:
+/Users/saker/.codex/worktrees/mopa-closeout-20261023/Messengers of Peace.
+SDK/engine revisions remain db50e20168/425cfb54, Flutter3.41.6/Dart3.11.4; SDK
+path/Users/saker/.codex/workspace-runtimes/flutter-3.41.6-mopa.
+
+Original Dart/native locks and SHA manifest backed up before mutation at
+/Users/saker/.codex/backups/mopa-20261023-locks. Offline resolution retains all
+existing Dart versions, adds exactly the reviewed8 open_file packages and has
+SHA2566d4f614da44fdd097bc6929b6fbed9581a7d4d17e7fd34fe080b8ab4c7ab1190,
+identical to the prior605-case graph. Native delta is the reviewed open_file_ios
+pod0.0.1→1.0.3,7 spec checksums and deliberate Podfile checksum. No upgrade.
+
+Same durable source/graph passes605/605 tests and strict analyzer0. Evidence
+directory above contains full-tests.log, analyze.log and analyze-final.log.
+Actual pod install succeeds,13 dependencies/21 pods. All42 generated native
+targets, including19 resources/126 configurations, have floor15.0. Command:
+
+```sh
+xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath '/Users/saker/.codex/backups/mopa-20261023-locks/ios-derived' ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO -jobs 4 -quiet build
+```
+
+Completed exit0, no deployment-target override. Produced plist MinimumOSVersion
+and Mach-O minos both15.0, SDK27.1; logios-build-no-override-retry.log is quiet
+and does not alone prove exit status. Android debug build completed exit0 with
+actual APK summary32.5s, android-build.log; Kotlin daemon fallback remains.
+No app was installed/launched or live account/API called in this closeout.
+
+Initial pod install failed because the SDK copy lacked ios-release artifacts;
+those were restored from the exact existing engine. First build then stalled
+on two missing engine LICENSE files; cache.dart:960 requires them, triggering
+redownload. Root interrupted its own build exit75, compared346 engine files
+with0 differences, copied the2 missing licenses, then reran successfully.
+No SDK source patch or global/foreign process/lock manipulation occurred.
+
+Independent M0 review: exact5-file source/lock hashes, both backups, direct Dart
+offline --enforce-lockfile exit0, actual native targets,24 synthetic floor cases/
+72 configurations (higher16/16.4 preserved),3 non-iOS configs unchanged; no
+source blocker. Stale proposal-status wording corrected in final records.
+Durable reviewer manifest:
+/Users/saker/.codex/backups/mopa-m0-independent-review-20261023/manifest.json.
+SHA2567776c3057929b9ed7e73323eaddf28db3911736b6116bd7078365dbc37c2ec72.
+Original-main replacement/ignored metadata regeneration remain the next step.
+Remote runner and device/native/server acceptance remain separate/open.
+
 ## Continuation checkpoint2026-10-22
 
 Reviewed catalog checkpointedfa429 was fast-forwarded into original main
