@@ -1,7 +1,12 @@
 # Protected lock review
 
-Status: proposed, unapproved adoption. This is evidence for the explicit Q01
-owner decision, not permission to replace the foreign lock or upgrade packages.
+Status update2026-10-23: owner explicitly approved regenerating the matching
+tested Dart/native lock resolution after backup/review/verification, and iOS15
+as the supported minimum. Implementation is in the durable managed closeout
+worktree; original main adoption remains gated on verification/review. The
+comparison/options below record the prior proposal; no package-upgrade approval
+is implied. Backup originals and SHA manifest:
+/Users/saker/.codex/backups/mopa-20261023-locks.
 
 Original checkout's foreign pubspec.lock SHA256 is
 9ad24bce6ed2b390ee55772a69c51798d36c313c016841a36c44fa24941ad9c7.
@@ -38,7 +43,12 @@ the isolated520-case/native-build checkpoint and does not upgrade existing
 package versions. Original ignored package metadata can then be regenerated
 consistently. Candidate B: keep the foreign lock untouched and continue running
 verification from the isolated worktree; release/CI reproducibility remains Q01.
-No option has been selected by this document.
+Owner selected Candidate A on2026-10-23 after a plain-language clarification;
+Candidate B was not selected. Generated Dart lock matches the prior605-case
+resolution exactly (SHA2566d4f614da44fdd097bc6929b6fbed9581a7d4d17e7fd34fe080b8ab4c7ab1190).
+The manifest now declares matching Dart>=3.11/Flutter>=3.41 minimums instead of
+allowing an older SDK that cannot consume the tested graph. CI remains pinned
+to the already-tested Flutter3.41.6; no existing Dart package version changed.
 
 The isolated ios/Podfile.lock also remains excluded. Compared with the tracked
 original Pod lock, it records open_file_ios pod0.0.1 to1.0.3 and seven changed
@@ -54,10 +64,17 @@ constraints. That is an inventory signal, not an upgrade plan or approval to
 change them. Dependency upgrades require their own staged changelog/security/
 behavior checks and owner decision. Do not combine upgrades with this lock fix.
 
-Q02 remains a separate minimum-OS decision: Runner declares13.0; Podfile's13.0
+Q02 historical proposal: Runner declared13.0; Podfile's13.0
 platform line is commented. Local successful simulator builds use a command-only
 15.0 override. No permanent supported-OS change or dependency downgrade is
 selected here; actual older-device support remains unverified.
+
+Owner approved iOS15 on2026-10-23. Runner Debug/Profile/Release and the Podfile
+now declare15; post-install raises lower iOS pod/resource targets while
+preserving higher declared dependency minimums. Actual generated project has
+42 targets/19 resource bundles/126 configurations at15.0. Fresh build without
+a deployment-target override and independent review remain pending. Earlier
+iOS13 users are outside the newly approved supported range; no release shipped.
 
 Reproduced2026-10-22 with the same arm64 command in a fresh derived-data folder
 and no deployment-target override: xcodebuild exits65 before compilation.

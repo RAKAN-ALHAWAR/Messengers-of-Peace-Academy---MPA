@@ -1,5 +1,5 @@
-# Uncomment this line to define a global platform for your project
-# platform :ios, '13.0'
+# Minimum supported iOS approved by the owner on 2026-10-23.
+platform :ios, '15.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -39,5 +39,16 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    next unless target.platform_name == :ios
+
+    # Flutter's helper only removes older targets for Flutter-dependent pods.
+    # Apply the app's supported floor to all iOS pods, including resource
+    # bundles, while retaining any dependency's higher declared requirement.
+    target.build_configurations.each do |config|
+      declared = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+      if declared.nil? || Gem::Version.new(declared) < Gem::Version.new('15.0')
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      end
+    end
   end
 end

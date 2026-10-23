@@ -6,6 +6,22 @@ Base:23827e2. Original foreign lock SHA256 remains
 
 ## Active coordination
 
+Continuation2026-10-23: root works in managed durable checkout
+/Users/saker/.codex/worktrees/mopa-closeout-20261023/Messengers of Peace,
+branchcodex/mopa-closeout-20261023, base092f1dc. The prior temporary tree lost
+its .git/parts of its tracked files between turns; all commits were retained in
+the original repository, and the final record092f1dc was fast-forwarded into
+original main without changing the foreign lock. Do not repair/reset/erase the
+partial temporary tree. Root owns iOS Podfile/project target configuration,
+corresponding verification and closeout records. No other active source owner.
+Owner explicitly approved iOS15 minimum on2026-10-23. Protected Dart/Pod lock
+adoption was initially not understood; after a plain-language clarification,
+owner explicitly approved updating the tested resolution with backup/review and
+verification. Backup completed before mutation at
+/Users/saker/.codex/backups/mopa-20261023-locks, covering original foreign Dart
+and tracked native locks plus SHA256 manifest. Root owns this local M0 slice;
+no package upgrades beyond the reviewed resolution or remote/device actions.
+
 Current2026-10-22: root owns integration and all committed remediation source.
 Catalog/history implementation handed back by app_audit ataa3eb93 from
 /private/tmp/mopa-catalog-activity-20261022, codex/mopa-catalog-activity-20261022.
@@ -49,8 +65,23 @@ on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
 
+- M0 owner decisions2026-10-23 implemented in durable closeout worktree:
+  manifest minimumDart3.11/Flutter3.41, Runner3 configurations and Podfile15.0,
+  lower pod/resource targets raised while higher requirements retained. Backup
+  originals existed before mutation. Offline regenerated Dart lock exactly
+  matches prior tested SHA6d4f614d, adds8 open_file resolutions with0 existing
+  version changes. Native resolution has only prior reviewed pod/spec delta
+  plus the intentional Podfile checksum. Actual generated42 pod targets,
+  19 resources/126 configurations all15.0. Root605/605 tests and strict analyzer
+  0 pass in the durable tree. Initial pod install failed because the copied
+  SDK lacked ios-release artifacts; copied matching engine425cfb54 from the
+  already-verified primary SDK, then pod install succeeded (13 deps/21 pods).
+  Fresh no-deployment-override native build is pending; initial Swift tool
+  messages are not declared a green build. Independent review pending.
+  Evidence/logs under/Users/saker/.codex/backups/mopa-20261023-locks.
+
 - Integrated reviewed checkpointedfa429 into original main locally. Before/after
-  status only foreign pubspec.lock; exact SHA unchanged. Integrated10-file
+  status only foreign pubspec.lock; exact SHA unchanged. Integrated9-file
   performance-review manifest matches all bytes; review evidence preserved in
   /private/tmp/mopa-catalog-review-evidence-20261022/manifest.json. Catalog
   ownership32/32 and list/card35/35 correction verdicts have no open scoped
