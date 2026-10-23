@@ -84,6 +84,14 @@ on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
 
+- Canonical integration: reviewed handoff5907ba7 fast-forwarded into original
+  main after clean-status check; canonical Git remains clean. Final doc checks:
+  5 docs-only changed files,46 resolved source paths,18 resolved/identified links,
+  4 shell syntax blocks and0 product-source delta from verifiedb1409f4. Durable
+  evidence archive42 hashes verified. No further app tests/builds were needed
+  for the documentation-only batch. Handoff is ready for the next agent; all
+  seven GitLab acceptance statuses and unrun scenarios stay explicitly open.
+
 - Handoff completed: e1c3d60 draft and30d79a2 correction independently reviewed,
   both listed P2 findings closed. Added a start-here document with all7 GitLab
   subtask checklists, full local repair inventory, precise remaining source and
