@@ -65,6 +65,27 @@ on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
 
+- No-override iOS retry completed exit0 at frozen17140ac. Produced Runner.app
+  Info.plist has MinimumOSVersion15.0; same declared project/Pod settings,
+  no IPHONEOS_DEPLOYMENT_TARGET command argument. Logios-build-no-override-retry.log
+  in durable evidence directory is quiet, explicit process exit0 retained.
+  SDK missing-license correction is local cache restoration, not app source
+  change. Android fresh durable-tree debug build is running. Reviewer source
+  verdict has no defect; its stale-record finding is corrected pending recheck.
+
+- Frozen M0 artifact17140ac independently checked: backup/Dart/native deltas,
+  actual generated min targets and higher-minimum preservation probes pass;
+  direct bundled Dart offline --enforce-lockfile succeeds with unchanged lock.
+  Reviewer identified only stale tense in historical native-lock proposal,
+  corrected here. Native build was interrupted exit75 after owned SDK assembly
+  stalled: copied SDK lacked ios/ios-profile LICENSE files, which actual pinned
+  cache.dart:960 treats as incomplete and redownloads. Compared all346 existing
+  engine files against same-engine primary,0 differences, then copied only the
+  two missing licenses. Queued offline pub get then completed; lock SHA unchanged.
+  Retry uses same declared targets/no deployment override, -jobs4 to bound
+  native compiler concurrency. No SDK source patch/lock deletion/foreign process
+  termination or dependency upgrade. Evidence in durable backup/log directory.
+
 - M0 owner decisions2026-10-23 implemented in durable closeout worktree:
   manifest minimumDart3.11/Flutter3.41, Runner3 configurations and Podfile15.0,
   lower pod/resource targets raised while higher requirements retained. Backup

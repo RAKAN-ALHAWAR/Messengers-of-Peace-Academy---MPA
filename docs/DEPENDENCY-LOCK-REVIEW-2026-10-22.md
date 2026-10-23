@@ -50,14 +50,18 @@ The manifest now declares matching Dart>=3.11/Flutter>=3.41 minimums instead of
 allowing an older SDK that cannot consume the tested graph. CI remains pinned
 to the already-tested Flutter3.41.6; no existing Dart package version changed.
 
-The isolated ios/Podfile.lock also remains excluded. Compared with the tracked
+Historical pre-approval comparison: the isolated ios/Podfile.lock was excluded.
+Compared with the tracked
 original Pod lock, it records open_file_ios pod0.0.1 to1.0.3 and seven changed
 local plugin spec checksums (image_picker_ios, open_file_ios,
 path_provider_foundation, pointer_interceptor_ios, url_launcher_ios,
 video_player_avfoundation, webview_flutter_wkwebview). These are actual observed
-lock differences, not approval to update CocoaPods dependencies. A later Q01
-adoption must review and regenerate both locks consistently rather than commit
-only the Dart lock or hand-edit generated checksums.
+lock differences, not approval to update CocoaPods dependencies. Q01 adoption
+was approved on2026-10-23 and both locks regenerated consistently, without
+hand-edited checksums. The native delta retains the same observed pod/spec
+changes plus the new Podfile SHA1 checksum68751f5719bba4ba89411ca6466fd12051e76cd8
+for the approved iOS15 configuration. Both locks are included in17140ac and
+remain under independent/native verification before original-main adoption.
 
 Separately, pub reports72 packages with newer versions outside current
 constraints. That is an inventory signal, not an upgrade plan or approval to
