@@ -61,6 +61,14 @@ this number is not a claim that every line has a runtime test.
 
 ## Local remediation seams2026-10-22
 
+Build continuation2026-10-23: owner-approved lock resolution and iOS15 minimum
+are in17140ac. pubspec.yaml declares Dart^3.11/Flutter>=3.41; CI is pinned to
+Flutter3.41.6. ios/Podfile sets platform15 and raises only lower iOS pod/resource
+targets after the pinned Flutter helper, preserving higher dependency minima.
+Runner's3 build configurations declare15. Matching native/Dart locks are
+tracked, original versions backed up outside the repo. No-override iOS simulator
+and Android debug builds pass; device/remote runner remain separate acceptance.
+
 - `Core/Service/session_lease.dart` captures identity/revision/owner lifetime;
   LocalData credential writes invalidate leases synchronously. Session changes
   notify mounted FutureBuilderX widgets without requiring parent rebuilds.

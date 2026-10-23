@@ -1,5 +1,15 @@
 # Complete defect remediation plan
 
+Execution update2026-10-23: owner explicitly approved the matching tested
+Dart/native lock resolution after original-file backup, and iOS15 minimum.
+M0 Q01/Q02 are locally closed: source17140ac, reviewed393341f integrated into
+original main, metadata regenerated,605/605 tests/strict0/both native builds
+pass; iOS uses no deployment-target override. Both original backups remain
+verified. This supersedes only those two pending owner choices below. Other
+section7 contracts/choices and Q03 remote-Linux/device acceptance remain open.
+Current dispositions/evidence: REMEDIATION-STATUS-2026-10-22.md and
+EXECUTION-2026-10-20.md. Historical baseline/acceptance language below is retained.
+
 Date: 2026-10-18. Source checkpoint: dce8750.
 Status: locally actionable implementation approved on2026-10-20 by 'اكمل'.
 Original request: 'اعمل خطة لمعالجة الاخطاء كلها'. Conditional owner/backend
@@ -529,6 +539,11 @@ migration or forced sign-in, supported minimum iOS/toolchain, protected foreign
 lock delta, any dependency addition/upgrade, grade relabel if no grade endpoint,
 and authorized resettable account/fixture for irreversible QA. Other local
 mechanical/correctness slices can proceed after plan approval while these wait.
+
+Resolved2026-10-23: minimum iOS15 and matching tested lock adoption after backup
+were explicitly approved and locally verified. Secure-session migration,
+unrelated package upgrades, grade policy and irreversible QA are not approved
+by those two decisions.
 
 ## 8. Completion evidence and rollback
 
