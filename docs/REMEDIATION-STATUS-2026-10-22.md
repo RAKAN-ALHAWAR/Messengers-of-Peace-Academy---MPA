@@ -58,6 +58,21 @@ I03 is characterized as inactive rather than asserted as an observed account bug
 
 ## GitLab16-22
 
+Detailed handoff and acceptance steps:
+[AGENT-HANDOFF-2026-10-23.md](AGENT-HANDOFF-2026-10-23.md), section3. Source was
+rechecked during documentation; these are client observations, not a fresh
+remote issue/API inspection or an additional runtime verification.
+
+| Issue | Implemented/present | Still unfinished |
+| --- | --- | --- |
+|16|DOB picker/validator, visible blocked save and exact age-bucket serialization|Actual account/native DOB acceptance, focused future/exact18 boundary coverage and authoritative age-code policy|
+|17|Finalization/result safety and origin/entry refresh|Identify affected screen; quiz-only denominator still0 in CourseDetails; unify confirmed completed/total units and prove1/1|
+|18|Result slot/uncertainty safety and optional duration rendering|Counts still video-only despite file-count comments; summary checkmark not wired; no file-completion mutation/refetch; actual lesson2 answer/grading fixture and duration contract|
+|19|Mounted Home/Profile statistics refresh|Authoritative minute collection/accounting rule and endpoint; actual accrual scenario|
+|20|Owned completion acknowledgement/refetch and failure preservation|Five-second route dwell retained; actual unlock rules and next-activity selection; results Next still routes to course details|
+|21|Existing storage-permission fallback and open/share flow|No dedicated downloader suite; standalone Dio auth/origin/redirect/content/lifetime policy, Arabic filenames and actual supported-device save/open|
+|22|Localized complaint/mark-all messages and relaxed old-password validator; notification acknowledgement races repaired|Actual flows/server policy; old password still min6; complaint/legacy-password acceptance tests absent; sheet pending-dismissal/session navigation is a source-only follow-up candidate|
+
 None is closed from synthetic tests/builds alone.16 still needs account/native
 birthday acceptance;17/18/20 need authoritative quiz/unit/file/progression
 fixtures;19 needs the minute-accounting backend contract;21 needs actual native

@@ -6,6 +6,14 @@ Base:23827e2. Original foreign lock SHA256 remains
 
 ## Active coordination
 
+Handoff2026-10-23: owner requested a detailed written record for another agent,
+including completed work, remaining work and every GitLab requirement. Root
+owns only docs/AGENT-HANDOFF-2026-10-23.md and navigation/status/coordination
+updates. No further product-source changes are authorized by this documentation
+task. handoff_learning_facts is a read-only narrow source check for GitLab17-21;
+an independent handoff review will own no source/doc edits. Current code baseline
+is b1409f4 (implementation17140ac), clean in both canonical and durable trees.
+
 Continuation2026-10-23: root works in managed durable checkout
 /Users/saker/.codex/worktrees/mopa-closeout-20261023/Messengers of Peace,
 branchcodex/mopa-closeout-20261023, base092f1dc. The prior temporary tree lost
@@ -68,6 +76,18 @@ clearing/download/auth contracts remain blocked per plan. Local work continues
 on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
+
+- Handoff preparation2026-10-23: re-read canonical/durable Git state and current
+  records; actual code baselineb1409f4 unchanged. Added detailed takeover draft
+  and current GitLab subtask table/navigation. Read-only learning fact check
+  confirms unresolved video-only denominators, unwired file summary completion,
+  Next→course-details and standalone downloader limits; actual backend causes
+  are not inferred. Inspected old-password min6 and complaint pending-navigation
+  source; the latter remains an untested candidate. Preserved42 selected earlier
+  logs/manifests/renders/probes (415316bytes) in durable
+  /Users/saker/.codex/backups/mopa-handoff-evidence-20261023 with source/SHA
+  manifest,0 credential-pattern skips. No product-source or remote/UI operation.
+  Draft fact/link checks and independent handoff review are the next gate.
 
 - Completed M0 integration2026-10-23: verified original only had the backed-up
   foreign Dart lock, replaced that approved file during fast-forward393341f,

@@ -4,6 +4,13 @@ Updated: 2026-10-23 (Asia/Damascus).
 
 ## Current continuation
 
+Handoff request2026-10-23: owner asked for a detailed record so another agent can
+continue. Start with [AGENT-HANDOFF-2026-10-23.md](AGENT-HANDOFF-2026-10-23.md).
+It separates the seven GitLab requirements from the general605-case client
+repairs, and records concrete remaining client gaps, backend unknowns, native
+acceptance, approved decisions, exact commands and durable evidence. This task
+changes documentation only; it does not add product implementation/remote work.
+
 Owner repeated 'اكمل'. Current durable worktree is
 /Users/saker/.codex/worktrees/mopa-closeout-20261023/Messengers of Peace,
 branchcodex/mopa-closeout-20261023. Earlier temporary worktree lost some files;

@@ -97,6 +97,7 @@ These are observed implementation responsibilities, not new backend contracts.
 
 ## Records for continuation
 
+- Detailed takeover/start-here: `docs/AGENT-HANDOFF-2026-10-23.md`.
 - Current work/coordination: `docs/AUDIT-STATE.md`.
 - Findings, requirement mapping, proposals: `docs/AUDIT-2026-10-17.md`.
 - Completed local commands/evidence: `docs/LOCAL-VERIFICATION.md`.
