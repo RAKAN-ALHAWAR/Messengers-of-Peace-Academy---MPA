@@ -12,7 +12,11 @@ Owner approved lock adoption after backup/review and iOS15 minimum. Frozen M0
 source17140ac now has605 tests/strict analyzer0, offline matching lock and
 successful Android/iOS builds. The iOS build uses declared targets, no override;
 independent reviewer confirms plist/Mach-O min15 and no source blocker. Original
-foreign lock is backed up intact; approved replacement/metadata integration next.
+foreign lock is backed up intact. Reviewed393341f is integrated locally into
+original main; approved locks adopted and ignored Dart/native metadata
+regenerated successfully with offline/enforced-lock and deployment-mode Pod
+install. Main's605/605 tests and strict analyzer0 pass; Git is clean. No remote
+push/CI, device install or account/API operation occurred during this closeout.
 
 Previous2026-10-22 checkpoint:
 Original main was fast-forwarded locally through reviewed checkpointedfa429,

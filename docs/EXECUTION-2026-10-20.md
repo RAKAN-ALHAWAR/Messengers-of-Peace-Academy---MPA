@@ -69,6 +69,16 @@ on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
 
+- Completed M0 integration2026-10-23: verified original only had the backed-up
+  foreign Dart lock, replaced that approved file during fast-forward393341f,
+  then offline --enforce-lockfile and Pod --deployment/--no-repo-update both
+  succeed. Generated metadata uses durable SDK; all5 reviewed file hashes
+  match. Original full605/605 and strict analyzer0 pass, Git clean,2 backup
+  hashes reverified. Local Docker default/common runtime sockets unavailable;
+  no daemon started/remote context queried and no Linux-CI claim. Remaining
+  contracts/device/remote-runner scenarios are explicit in REMEDIATION-STATUS.
+  No active workers or unreviewed source edits remain in this batch.
+
 - M0 source17140ac completes local gate:605/605, strict0, iOS exit0 without
   deployment override, Android actual BuiltAPK/exit0 in32.5s. Reviewer exact
  5-file manifest and actual native artifacts verified; no source blocker.

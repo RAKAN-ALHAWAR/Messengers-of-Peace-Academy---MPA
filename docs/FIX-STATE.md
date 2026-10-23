@@ -2,6 +2,13 @@
 
 ## Continuation checkpoint2026-10-22
 
+2026-10-23 M0 update: owner approved matching lock adoption after backup and
+iOS15 minimum. Source17140ac/reviewed393341f integrated into original main,
+ignored Dart/native metadata regenerated. Original605/605 tests and strict0,
+both native builds pass; iOS needs no deployment override. Both original-lock
+backups remain intact and Git is clean. Earlier foreign-lock exclusion below
+is historical. Backend/device/remote-CI acceptance remains open.
+
 The urgent batch below is historical. Approved comprehensive remediation now
 continues in codex/mopa-remediation-20261020. Reviewed source throughbedd7ad is
 integrated locally into original main throughcheckpointedfa429. Root605/605

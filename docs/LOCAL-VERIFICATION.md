@@ -13,7 +13,8 @@ Original Dart/native locks and SHA manifest backed up before mutation at
 existing Dart versions, adds exactly the reviewed8 open_file packages and has
 SHA2566d4f614da44fdd097bc6929b6fbed9581a7d4d17e7fd34fe080b8ab4c7ab1190,
 identical to the prior605-case graph. Native delta is the reviewed open_file_ios
-pod0.0.1→1.0.3,7 spec checksums and deliberate Podfile checksum. No upgrade.
+pod0.0.1→1.0.3,7 spec checksums and deliberate Podfile checksum. No existing
+Dart package version upgrade; the approved native resolution delta is above.
 
 Same durable source/graph passes605/605 tests and strict analyzer0. Evidence
 directory above contains full-tests.log, analyze.log and analyze-final.log.
@@ -44,7 +45,25 @@ source blocker. Stale proposal-status wording corrected in final records.
 Durable reviewer manifest:
 /Users/saker/.codex/backups/mopa-m0-independent-review-20261023/manifest.json.
 SHA2567776c3057929b9ed7e73323eaddf28db3911736b6116bd7078365dbc37c2ec72.
-Original-main replacement/ignored metadata regeneration remain the next step.
+Reviewed393341f integrated into original main. The owner-approved foreign-lock
+replacement used the verified backup before a scoped local fast-forward; source
+still matches all5 reviewed build-file hashes. Original metadata regeneration:
+
+```sh
+/Users/saker/.codex/workspace-runtimes/flutter-3.41.6-mopa/bin/flutter pub get --offline --enforce-lockfile
+cd ios
+pod install --deployment --no-repo-update
+```
+
+Both exit0; source locks unchanged, original Generated.xcconfig points at the
+durable pinned SDK, and Git is clean. Original full605/605 and strict analyzer0
+then passed. Logs in the same durable directory: original-pub-get.log,
+original-pod-install.log, original-full-tests.log, original-analyze.log. Both
+pre-adoption backup hashes were rechecked after integration. Existing CocoaPods
+custom-Profile configuration warning remains; no release/profile/device result
+is inferred from Debug builds. Local Docker CLI exists but its standard socket
+and3 common local runtime sockets are unavailable; no daemon started or remote
+context contacted. A real Linux/remote runner result therefore stays open.
 Remote runner and device/native/server acceptance remain separate/open.
 
 ## Continuation checkpoint2026-10-22

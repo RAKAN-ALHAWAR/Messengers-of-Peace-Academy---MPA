@@ -21,7 +21,9 @@ closed its only finding with35/35 correction/ordinary-geometry probes.
 Original foreign lock is backed up with a hash manifest before the approved
 replacement. New lock matches the previously tested graph exactly and changes
 0 existing Dart package versions. Independent M0 review finds no source blocker;
-original-main adoption and ignored metadata regeneration are the next step.
+reviewed393341f is integrated into original main and ignored metadata has been
+regenerated. Original main independently passes605/605 and strict analyzer0;
+Git is clean. Both pre-adoption lock backups still match their manifest.
 
 | Findings | Locally observed disposition | Remaining acceptance |
 | --- | --- | --- |
@@ -36,7 +38,7 @@ original-main adoption and ignored metadata regeneration are the next step.
 | P01 | One initial blog page, on-demand retry/dedup/overlap handling verified | Live pagination/payload/query contract and device profile |
 | P02 | Listed Flutter lists, course+level tracks, badge/points catalogs and personal history have observed bounded viewport mounts; list/card review closed, including full numeric-label wrapping and unchanged ordinary geometry | API still retrieves whole lists; models/flattened references remain O(N), history sorting O(N log N); actual backend pagination/query/storage and native profile budgets remain open |
 | Q04 | Existing model diagnostic and5 remaining analyzer infos removed; strict CI configuration | Actual remote runner result, not inferred from local checks |
-| Q01,Q02 | Approved matching Dart/native locks, declared SDK floors and iOS15 minimum; clean durable-tree offline resolution,605 cases, both native builds and independent configuration/floor review pass | Original-main metadata regeneration/integration next; native runtime matrix and remote runner are Q03 |
+| Q01,Q02 | Approved matching locks, SDK floors and iOS15 minimum integrated; original metadata regenerated,605 cases/strict0/both native builds and independent configuration/floor review pass | Locally closed. Actual native/runtime matrix and remote runner remain Q03 |
 | B01 | Case-sensitive import corrected and retained | Clean Linux runner result |
 
 ## Contracts and owner decisions still open
