@@ -16,8 +16,10 @@ including completed work, remaining work and every GitLab requirement. Root
 owns only docs/AGENT-HANDOFF-2026-10-23.md and navigation/status/coordination
 updates. No further product-source changes are authorized by this documentation
 task. handoff_learning_facts is a read-only narrow source check for GitLab17-21;
-an independent handoff review will own no source/doc edits. Current code baseline
-is b1409f4 (implementation17140ac), clean in both canonical and durable trees.
+independent handoff review owned no edits and completed on30d79a2 with both
+listed findings closed. Current code baseline is b1409f4
+(implementation17140ac). All helper scopes are handed back; no active source
+worker. Root owns only final documentation integration/status checks.
 
 Continuation2026-10-23: root works in managed durable checkout
 /Users/saker/.codex/worktrees/mopa-closeout-20261023/Messengers of Peace,
@@ -81,6 +83,14 @@ clearing/download/auth contracts remain blocked per plan. Local work continues
 on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
+
+- Handoff completed: e1c3d60 draft and30d79a2 correction independently reviewed,
+  both listed P2 findings closed. Added a start-here document with all7 GitLab
+  subtask checklists, full local repair inventory, precise remaining source and
+  contract/native gaps, approvals, versioned commands/backups/evidence and an
+  English next-agent prompt. All product changes remain the prior implementation;
+  docs-only path/link/shell/hash checks pass. Integrate documentation into main
+  after confirming its checkout is still clean; no push/runtime/CI operation.
 
 - Independent handoff review at e1c3d60 checked all7 requirement checklists,
   links/commit anchors, source/artifact hashes and local evidence. Two P2

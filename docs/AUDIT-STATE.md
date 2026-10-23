@@ -10,6 +10,9 @@ It separates the seven GitLab requirements from the general605-case client
 repairs, and records concrete remaining client gaps, backend unknowns, native
 acceptance, approved decisions, exact commands and durable evidence. This task
 changes documentation only; it does not add product implementation/remote work.
+Handoff drafte1c3d60/correction30d79a2 passed an independent listed recheck with
+no open findings. Documentation links/paths/shell examples and durable evidence
+hashes were checked. Start there before interpreting historical records below.
 
 Owner repeated 'اكمل'. Current durable worktree is
 /Users/saker/.codex/worktrees/mopa-closeout-20261023/Messengers of Peace,

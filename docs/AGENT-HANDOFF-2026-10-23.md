@@ -5,6 +5,10 @@ Owner's latest instruction: document all completed work, remaining work and the
 GitLab requirements in detail so another agent can continue. This handoff is
 documentation, not a new implementation, deployment or account-testing approval.
 
+Documentation review: draft e1c3d60, corrections30d79a2, independent listed
+recheck closed both findings. Path/link/shell checks passed; product source and
+the previously verified605-case baseline were unchanged by this handoff.
+
 ## 1. Read this first
 
 The broad local remediation batch is integrated. **The seven GitLab requirements
@@ -435,7 +439,8 @@ See evidence manifests/LOCAL-VERIFICATION for carousel/level metrics and methods
 
 ## 8. Safe local commands and source entry points
 
-Use the verified SDK, not the global Flutter candidate that drifted to3.47.
+Use the verified SDK. An earlier run observed the global Flutter drifting to
+3.47candidate; its current state was not rechecked for this documentation task.
 Pinned Flutter3.41.6 commit `db50e20168db8fee486b9abf32fc912de3bc5b6a`,
 Dart3.11.4, engine `425cfb54d01a9472b3e81d9e76fd63a4a44cfbcb`.
 Manifest declares Dart^3.11 and Flutter>=3.41; CI pins exact3.41.6.
