@@ -1,8 +1,13 @@
 # Remediation execution
 
-Owner instruction: 'اكمل', 2026-10-20. Plan: REMEDIATION-PLAN-2026-10-18.md.
-Base:23827e2. Original foreign lock SHA256 remains
-9ad24bce6ed2b390ee55772a69c51798d36c313c016841a36c44fa24941ad9c7.
+Original implementation instruction: 'اكمل',2026-10-20.
+Plan: REMEDIATION-PLAN-2026-10-18.md. Historical starting baseline:23827e2;
+pre-adoption foreign lock SHA256 was
+9ad24bce6ed2b390ee55772a69c51798d36c313c016841a36c44fa24941ad9c7,
+preserved in the approved2026-10-23 backup. Current adopted Dart lock is
+6d4f614da44fdd097bc6929b6fbed9581a7d4d17e7fd34fe080b8ab4c7ab1190,
+implementation17140ac, integrated into original main. Latest task is the
+documentation handoff described below; later entries supersede historical ones.
 
 ## Active coordination
 
@@ -76,6 +81,16 @@ clearing/download/auth contracts remain blocked per plan. Local work continues
 on independent slices. Existing45 tests are the starting regression gate.
 
 ## Progress
+
+- Independent handoff review at e1c3d60 checked all7 requirement checklists,
+  links/commit anchors, source/artifact hashes and local evidence. Two P2
+  documentation findings accepted: next-run build example reused frozen native
+  evidence path, and the execution header presented the historical foreign-lock
+  hash as current. Both corrected in one pass: fresh mktemp-owned build folder,
+  preserve hashed old derived data, label pre-adoption/current lock separately.
+  All4 shell blocks pass zsh syntax checks;5 product build files still match
+  the frozen review manifest. No app tests/builds rerun for docs-only edits.
+  Listed-finding recheck pending before canonical documentation integration.
 
 - Handoff preparation2026-10-23: re-read canonical/durable Git state and current
   records; actual code baselineb1409f4 unchanged. Added detailed takeover draft

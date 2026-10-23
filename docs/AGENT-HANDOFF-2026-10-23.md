@@ -459,11 +459,16 @@ cd "/Users/saker/Desktop/Flutter/Messengers of Peace/ios"
 pod install --deployment --no-repo-update
 ```
 
-Verified native build form, use an owned derived-data path in your new run:
+Verified native build form, allocate a new owned derived-data path for each run.
+The old `backups/mopa-20261023-locks/ios-derived` directory contains hashed
+evidence; preserve it. Historical commands in LOCAL-VERIFICATION record that
+old path for provenance and must not be copied to overwrite the snapshot.
 
 ```sh
 cd "/Users/saker/Desktop/Flutter/Messengers of Peace"
-xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath '/Users/saker/.codex/backups/mopa-20261023-locks/ios-derived' ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO -jobs 4 -quiet build
+mkdir -p "/Users/saker/.codex/build-runs"
+mopa_derived="$(mktemp -d "/Users/saker/.codex/build-runs/mopa-ios.XXXXXX")"
+xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath "$mopa_derived" ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO -jobs 4 -quiet build
 /Users/saker/.codex/workspace-runtimes/flutter-3.41.6-mopa/bin/flutter build apk --debug --no-pub
 ```
 
