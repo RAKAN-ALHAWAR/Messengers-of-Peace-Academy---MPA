@@ -70,11 +70,15 @@ class ForgotPasswordResetController extends GetxController {
       // Reset acceptance is final even if signing in or presenting the next
       // screen fails: the OTP may be consumed, so it is never submitted again.
       _resetAccepted = true;
-      buttonState.value = ButtonStateEX.success;
 
       // Sign in with the new password. If that fails the password is already
       // changed, so go to login with the success message, never an error.
-      if (await _signIn()) {
+      // The button keeps loading until sign-in ends, so the wait never looks
+      // like a frozen success state.
+      final signedIn = await _signIn();
+      if (isClosed) return;
+      buttonState.value = ButtonStateEX.success;
+      if (signedIn) {
         // The time delay here is aesthetically beneficial
         await Future.delayed(
           const Duration(seconds: StyleX.successButtonSecond),

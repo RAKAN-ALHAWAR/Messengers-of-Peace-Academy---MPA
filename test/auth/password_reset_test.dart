@@ -244,6 +244,32 @@ void main() {
     },
   );
 
+  controllerTest(
+    'the button keeps loading while signing in after an accepted reset',
+    (tester) async {
+      final controller = await openReset(tester);
+      // The button state at the moment each sign-in request goes out.
+      final statesDuringSignIn = <ButtonStateEX>[];
+      final client = MockClient((request) async {
+        final function = request.url.queryParameters['wsfunction']!;
+        if (function.contains('reset_password')) return accepted();
+        statesDuringSignIn.add(controller.buttonState.value);
+        if (function.contains('login_user')) return loginOk();
+        return profileOk();
+      });
+      await http.runWithClient(() async {
+        await tester.runAsync(controller.onResetPassword);
+        await tester.pumpAndSettle();
+      }, () => client);
+      expect(statesDuringSignIn, [
+        ButtonStateEX.loading,
+        ButtonStateEX.loading,
+      ]);
+      expect(Get.currentRoute, RouteNameX.root);
+      expect(controller.buttonState.value, ButtonStateEX.success);
+    },
+  );
+
   for (final failure in ['login', 'profile']) {
     controllerTest(
       'accepted reset falls back to login with the success message when $failure fails',
