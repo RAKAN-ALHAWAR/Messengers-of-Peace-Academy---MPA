@@ -449,19 +449,15 @@ void main() {
         await other;
       });
 
-      test('${entry.key} retires an incomplete-profile clear', () async {
+      test('${entry.key} retires an incomplete-profile startup', () async {
         final response = Completer<http.Response>();
         await http.runWithClient(() async {
           await Future<void>.delayed(Duration.zero);
           final app = newApp();
           final pending = app.init();
-          Future<Object?>? other;
-          final interfered = LocalDataX.sessionChanges.first.then(
-            (_) => other = entry.value(app),
-          );
           response.complete(http.Response(incomplete, 200));
+          final other = entry.value(app);
           expect(await pending, isNull);
-          await interfered;
           await other;
         }, () => MockClient((_) => response.future));
       });

@@ -92,18 +92,7 @@ class LoginController extends GetxController {
         if (!incomplete || username == null) rethrow;
         if (!committed.isCurrent) return null;
         _profileMissing = true;
-        user = UserX(
-          id: data.$1,
-          username: username,
-          firstname: '',
-          lastname: '',
-          email: username,
-          lang: 'en',
-          customfields: [],
-          city: '',
-          image: '',
-          points: 0,
-        );
+        user = AppControllerX.unfinishedUser(data.$1, username: username);
       }
       if (!committed.isCurrent) return null;
       if (user.id != data.$1) {

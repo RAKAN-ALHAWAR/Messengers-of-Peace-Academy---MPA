@@ -13,6 +13,9 @@ import 'package:messengersofpeace/Core/core.dart';
 import 'package:messengersofpeace/Core/Helper/http/http.dart';
 import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:messengersofpeace/Data/data.dart';
+import 'package:messengersofpeace/Ui/Screen/Home/controller/controller.dart';
+import 'package:messengersofpeace/Ui/Screen/Home/view/view.dart';
+import 'package:messengersofpeace/Ui/Widget/widget.dart';
 
 Map<String, dynamic> syntheticUser(String id) => {
   'id': id,
@@ -79,9 +82,9 @@ void main() {
     );
   });
 
-  test('startup of an account with an incomplete profile signs out', () async {
-    // A kept session for such an account (see the login flow) must not leave
-    // the app retrying a profile the server refuses until the data is complete.
+  test('startup of an account with an incomplete profile stays signed in', () async {
+    // The server refuses the profile until the data is complete (a backend
+    // gap), but the account still opens the app: root, with what is known.
     await LocalDataX.put(LocalKeyX.userid, 'synthetic-A');
     await LocalDataX.put(LocalKeyX.token, 'synthetic-token-A');
     await LocalDataX.put(LocalKeyX.route, RouteNameX.completeAccountInfo);
@@ -89,10 +92,47 @@ void main() {
       () async {
         final app = Get.put(AppControllerX());
         expect(await app.init(), isNotNull);
-        expect(app.isLogin.value, isFalse);
-        expect(LocalDataX.userid, isEmpty);
-        expect(LocalDataX.token, isEmpty);
-        expect(LocalDataX.route, RouteNameX.login);
+        expect(app.isLogin.value, isTrue);
+        expect(app.user.value.id, 'synthetic-A');
+        expect(app.user.value.firstname, isEmpty);
+        expect(LocalDataX.userid, 'synthetic-A');
+        expect(LocalDataX.token, 'synthetic-token-A');
+        expect(LocalDataX.route, RouteNameX.root);
+      },
+      () => MockClient(
+        (_) async => http.Response(
+          '{"errorcode":"usernotfullysetup","message":"Profile not complete"}',
+          200,
+        ),
+      ),
+    );
+  });
+
+  testWidgets('Home renders for an account whose profile the server refuses', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 1800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.runAsync(() async {
+      await LocalDataX.put(LocalKeyX.userid, 'synthetic-A');
+      await LocalDataX.put(LocalKeyX.token, 'synthetic-token-A');
+    });
+    await http.runWithClient(
+      () async {
+        final app = Get.put(AppControllerX(), permanent: true);
+        await tester.runAsync(app.init);
+        Get.put(HomeController());
+        await tester.pumpWidget(const GetMaterialApp(home: HomeView()));
+        await tester.pumpAndSettle();
+        // The user slot is set from what is known, so nothing reads it unset
+        // (that would be a LateInitializationError). Home's own refused load
+        // may still report its ErrorX.
+        expect(tester.takeException(), isNot(isA<Error>()));
+        expect(find.byType(HomeView), findsOneWidget);
+        ToastX.dismiss();
+        await tester.pumpWidget(const SizedBox());
       },
       () => MockClient(
         (_) async => http.Response(

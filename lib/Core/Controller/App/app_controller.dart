@@ -37,12 +37,15 @@ class AppControllerX extends GetxController {
       profile = await DatabaseX.getUser(userId: id);
     } catch (e) {
       if (!lease.isCurrent) return null;
-      // The server refuses an incomplete account's profile; retrying cannot help.
+      // The server refuses an incomplete account's profile (a backend gap), but
+      // the account still opens the app: keep the session, show what is known.
       if (e.toErrorX.details[NameX.errorcode] == 'usernotfullysetup') {
-        final clearing = clearLocalSession(lease, navigate: false);
-        final cleared = _startupLease(request);
-        await clearing;
-        return cleared.isCurrent ? cleared : null;
+        await LocalDataX.put(LocalKeyX.route, RouteNameX.root);
+        if (!lease.isCurrent) return null;
+        user = unfinishedUser(id).obs;
+        isLogin.value = true;
+        update();
+        return lease;
       }
       rethrow;
     }
@@ -58,6 +61,20 @@ class AppControllerX extends GetxController {
     update();
     return lease;
   }
+
+  /// What is known of an account whose profile the server refuses: its id and login name.
+  static UserX unfinishedUser(String id, {String username = ''}) => UserX(
+    id: id,
+    username: username,
+    firstname: '',
+    lastname: '',
+    email: username,
+    lang: 'en',
+    customfields: [],
+    city: '',
+    image: '',
+    points: 0,
+  );
 
   /// Credentials go before the first await, so a second expiry cannot reuse them.
   Future<void> clearLocalSession(
