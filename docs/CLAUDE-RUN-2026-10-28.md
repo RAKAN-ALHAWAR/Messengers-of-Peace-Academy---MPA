@@ -162,3 +162,4 @@ Parallel: complete-account save failure on account 2 under diagnosis (Sonnet, wo
 - Owner: «موافق عليها» on the whole folded plan (docs/SIMPLIFY-PLAN.md at d767e46). S7 stays one slice (plan default, owner did not ask to split).
 - Running: probe of account 2 save with all optional fields (Sonnet, worktree mopa-wt-probe, owner asked «جرب تبعت كل البيانات حتى الاختيارية»).
 - Next: Haiku pack for S1, then S1 (Sonnet xhigh) alone in worktree mopa-wt-s1.
+- Owner on the test accounts (2026-10-29): «لك قلتلك عادي يطلع التوكن ويطلع كلمة السر والايميل، هو تجريبي ما بأثر». Agents may handle the test-account token, password and email directly; still never committed to the public repo. Account 2 probe switched to direct API calls («ليش ليستخدم التطبيق؟؟ يبعت مباشر عبر ال api»).
