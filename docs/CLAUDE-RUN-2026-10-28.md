@@ -139,3 +139,15 @@ Estimate: 7 to 13 agent-work hours (est., basis: sonnet-high median 17-32 min pe
 - Emoji 🥳: «لا اتركه مثل ما هو» (keep it; owner exception to C7).
 - «افتح من حسابي الثاني وجرب»: account 2 was last refused by the server with usernotfullysetup on every call; the password lives only in chat, so the owner signs in on the simulator himself, then a Sonnet agent drives.
 - «تمام ابداء»: start the Codex simplification. Step 1: Opus plan (inventory by Haiku), presented to the owner before any code edit.
+
+## Simplification plan: owner answers (2026-10-29)
+
+Blind plan review (Opus): rework; Blocker 1 tests cannot see a dropped guard atom at most sites (only 3 test files switch locale; verified), Blocker 2 the fixed helper bundle does not match call-time app capture at some sites (Badges:20 verified). Owner answers:
+1. «١أ»: add the small shared helper in the owner's `...X` style, atoms chosen per site.
+2. «٢ أ»: write the missing tests first (remove each atom per site, record the red test; add a test where none goes red).
+3. «٣ توصيتك»: trim Codex comments to one-line `///` in the same slices.
+4. «٤ تمام»: UI and model rewrites get a separate style pass later.
+5. «٥ مافي داعي، صلح بس المشاكل الموجودة»: no GetX tags; fix only existing problems.
+6. «٦ واحد»: one Arabic explanation file docs/MECHANISMS-EXPLAINED.md.
+Next: Sonnet fold of the plan per these answers and the review, then the whole plan back to the owner for approval.
+Parallel: complete-account save failure on account 2 under diagnosis (Sonnet, worktree mopa-wt-caf).
