@@ -179,3 +179,11 @@ Parallel: complete-account save failure on account 2 under diagnosis (Sonnet, wo
 - Decision «اكيد خيار ب»: on app start, an account whose profile returns usernotfullysetup stays signed in and opens Home (no sign-out). Both added to the S5 lane as separate behaviour commits, test-first, with the `late user` trap to handle.
 - Probe build replaced on the simulator by the normal main build (owner: «شيله اذا تجريبي»). Note: `flutter build ios --simulator` fails on this macOS at the lipo arch check; xcodebuild arm64-only works.
 - Owner (2026-10-29): «خلص بلا اختبارات». S2 and S5 stop the Step 0 test-writing pass and finish; one final run of existing tests only, to keep main green before merge.
+
+## Simplification S1..S8 merged (2026-10-29)
+
+- All 8 slices merged on main. Full suite "+937: All tests passed!" (731 before the plan), analyze "No issues found!". Worktrees removed.
+- S5 behaviour commits: 7ddda5b Skip goes to root; 5208512 incomplete account stays signed in at startup, opens root, minimal user from the stored id (AppControllerX.unfinishedUser).
+- Step 0 coverage gaps after the owner stopped it («خلص بلا اختبارات»): S5 ForgotPassword, ForgotPasswordReset, Loading, most CompleteAccountInfo atoms; S2 four tap-handler entry guards. Equivalent mutants kept (S3 11, S4 2, S2 some). VideoPlayer controller untouched.
+- Remaining: batch blind review (Opus), simulator drive (incl. language switch while loading, incomplete account Skip and restart), Arabic docs/MECHANISMS-EXPLAINED.md, GitLab evidence, retro.
+- Three orphan flutter_tester processes from the old fix1 lane (PIDs 30517 30676 31002): kill denied by the permission classifier; owner told.
