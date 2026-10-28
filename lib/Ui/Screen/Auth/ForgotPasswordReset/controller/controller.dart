@@ -83,7 +83,17 @@ class ForgotPasswordResetController extends GetxController {
         Get.offAllNamed(RouteNameX.root);
       } else {
         if (isClosed) return;
-        Get.offAllNamed(RouteNameX.login);
+
+        // Login is still open under this flow, so go back to it. A second Login
+        // page would share the first one's controller (GetX keys controllers by
+        // type) and removing the old page would dispose the new page's text
+        // fields. Only when no Login page exists is a new one opened.
+        Get.until(
+          (route) => route.settings.name == RouteNameX.login || route.isFirst,
+        );
+        if (Get.currentRoute != RouteNameX.login) {
+          Get.offAllNamed(RouteNameX.login);
+        }
         ToastX.success(
           message:
               'Password changed successfully. Please sign in with your new password.',
