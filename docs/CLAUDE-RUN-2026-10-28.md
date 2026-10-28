@@ -22,10 +22,11 @@ Living state file (J1). Owner: Saker. Orchestrator: Claude Opus 5.5.
 | Wave | Lane | Scope | Status |
 | --- | --- | --- | --- |
 | 0 | orchestrator | debug API capture (541e067), email ASCII-only (bbf3565), issues and images in docs/gitlab-issues | done |
-| 1 | A | Codex regressions: offline cache, reset auto-login, toast look, pubspec.lock, downloader success result (#21) | started |
-| 1 | B1 | #17 entry quiz 1/1, #18 lesson count, #20 checkmark and Next | started |
-| 1 | audit | read-only review of Codex UI changes | started |
-| 1 | orchestrator | diagnose #18 lesson 2 grading on the owner's account | started |
+| 1 | A1 | worktree /Users/saker/Desktop/Flutter/mopa-wt-a, branch claude/a-regressions: offline cache per user, reset auto-login, pubspec.lock no downgrades vs origin | running (flutter-developer, Sonnet high) |
+| 1 | A2 | worktree mopa-wt-a2, branch claude/a2-toast-download: toast original look, #21 downloader returns bool + Arabic names + real extension, restore empty-state and certificate card UI | running (flutter-developer) |
+| 1 | B1 | worktree mopa-wt-b1, branch claude/b1-progression: #17 card 1/1 (TEMP when numsections 0), #18 count all activities, #20 refetch + Next rule, restore TestResults answer colours | running (flutter-developer) |
+| 1 | audit | Codex UI side effects: report in scratchpad codex-ui-audit.md; restores assigned to A2 and B1; device checks pending (home level track, blog load-more, carousel, buttons) | done |
+| 1 | orchestrator | diagnose #18 lesson 2 grading on the owner's account | BLOCKED: entry quiz (course 19, quiz 2) has attempts_allowed 1, last_attempt_status finished, can_start false, course still 0% and not completed, so courses after it stay locked. Needs an account past the entry exam or a backend attempt reset |
 | 2 | B2 | #18 file checkmark (local), #18 duration, #19 minutes (local) | pending |
 | 3 | simplify | simplify Codex abstractions to the owner's style | pending |
 | 4 | docs | BACKEND-REQUESTS, per-ticket evidence, review | pending |
@@ -40,3 +41,6 @@ Estimate: 7 to 13 agent-work hours (est., basis: sonnet-high median 17-32 min pe
 ## Notes
 
 - The GitHub remote (RAKAN-ALHAWAR/Messengers-of-Peace-Academy---MPA) is PUBLIC. The GitLab issue archive (text and screenshots, which hold testers' emails and phones) is therefore kept outside the repo at /Users/saker/Desktop/Flutter/mopa-gitlab-issues/.
+- Next activity rule (approved 2026-10-28): Next opens the next activity in course order (video, quiz, file); locked or none returns to course details.
+- Course 19 details payload: one quiz activity (cmid 99, quizid 2, video_duration "0:00"); details page showed 0/0 and (no lessons) because the client counted videos only.
+- Owner account is also enrolled in course 5 "Admission Exam" (English).
