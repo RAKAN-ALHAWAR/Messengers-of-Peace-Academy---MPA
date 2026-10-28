@@ -54,6 +54,9 @@ Widget host(List<GetPage<dynamic>> pages) => GetMaterialApp(
   ],
 );
 
+bool isReset(http.BaseRequest request) =>
+    request.url.queryParameters['wsfunction']!.contains('reset_password');
+
 Future<ForgotPasswordResetController> openReset(WidgetTester tester) async {
   late ForgotPasswordResetController controller;
   await tester.pumpWidget(
@@ -63,28 +66,24 @@ Future<ForgotPasswordResetController> openReset(WidgetTester tester) async {
         binding: BindingsBuilder(() {
           controller = Get.put(ForgotPasswordResetController());
         }),
-        page:
-            () => Scaffold(
-              body: Form(
-                key: controller.formKey,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: controller.password,
-                      validator: ValidatorX.password,
-                    ),
-                    TextFormField(
-                      controller: controller.rePassword,
-                      validator:
-                          (value) => ValidatorX.rePassword(
-                            value,
-                            controller.password.text,
-                          ),
-                    ),
-                  ],
+        page: () => Scaffold(
+          body: Form(
+            key: controller.formKey,
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: controller.password,
+                  validator: ValidatorX.password,
                 ),
-              ),
+                TextFormField(
+                  controller: controller.rePassword,
+                  validator: (value) =>
+                      ValidatorX.rePassword(value, controller.password.text),
+                ),
+              ],
             ),
+          ),
+        ),
       ),
     ]),
   );
@@ -108,16 +107,15 @@ Future<ForgotPasswordController> openRequest(WidgetTester tester) async {
         binding: BindingsBuilder(() {
           controller = Get.put(ForgotPasswordController());
         }),
-        page:
-            () => Scaffold(
-              body: Form(
-                key: controller.formKey,
-                child: TextFormField(
-                  controller: controller.email,
-                  validator: ValidatorX.email,
-                ),
-              ),
+        page: () => Scaffold(
+          body: Form(
+            key: controller.formKey,
+            child: TextFormField(
+              controller: controller.email,
+              validator: ValidatorX.email,
             ),
+          ),
+        ),
       ),
     ]),
   );
@@ -177,49 +175,116 @@ void main() {
     await Hive.close();
   });
 
+  // One fake server: the reset call, the sign-in call and the profile call.
+  // [login] and [profile] decide how the steps after the reset answer.
+  MockClient server(
+    List<http.Request> requests, {
+    required http.Response Function() login,
+    required http.Response Function() profile,
+  }) => MockClient((request) async {
+    requests.add(request);
+    final function = request.url.queryParameters['wsfunction']!;
+    if (function.contains('reset_password')) return accepted();
+    if (function.contains('login_user')) return login();
+    return profile();
+  });
+
+  http.Response loginOk() => http.Response(
+    jsonEncode({'userid': 'synthetic-A', 'token': 'synthetic-token-A'}),
+    200,
+  );
+  http.Response profileOk() => http.Response(
+    jsonEncode({
+      NameX.id: 'synthetic-A',
+      NameX.username: 'synthetic-A',
+      NameX.email: requestEmail,
+    }),
+    200,
+  );
+
   controllerTest(
-    'accepted reset sends one request, returns to login and never changes session',
+    'accepted reset sends one reset request, then signs in with the new password',
     (tester) async {
       final controller = await openReset(tester);
       final requests = <http.Request>[];
-      final client = MockClient((request) async {
-        requests.add(request);
-        if (request.url.queryParameters['wsfunction']!.contains(
-          'reset_password',
-        )) {
-          return accepted();
-        }
-        return rejected();
-      });
+      final client = server(requests, login: loginOk, profile: profileOk);
+      // Credentials are written to Hive, which needs real async time.
       await http.runWithClient(() async {
-        controller.onResetPassword();
-        await flushResponse(tester);
-        controller
-            .onResetPassword(); // An acknowledgement must never replay OTP.
-        await tester.pump(const Duration(seconds: 2));
-        await tester.pump(const Duration(seconds: 1));
+        await tester.runAsync(() async {
+          final first = controller.onResetPassword();
+          // An acknowledgement must never replay OTP.
+          await controller.onResetPassword();
+          await first;
+        });
+        await tester.pumpAndSettle();
       }, () => client);
-      expect(requests.length, 1);
-      expect(requests.single.bodyFields, {
+      final functions = [
+        for (final r in requests) r.url.queryParameters['wsfunction']!,
+      ];
+      expect(
+        functions.where((f) => f.contains('reset_password')),
+        hasLength(1),
+      );
+      expect(requests.first.bodyFields, {
         NameX.username: requestEmail,
         NameX.otp: '123456',
         NameX.newpassword: requestPassword,
       });
-      expect(Get.currentRoute, RouteNameX.login);
-      expect(find.text(successMessage), findsOneWidget);
-      expect(LocalDataX.userid, 'existing-synthetic-user');
-      expect(LocalDataX.token, 'existing-synthetic-token');
-      expect(LocalDataX.route, '/existing-synthetic-route');
-      expect(Get.find<AppControllerX>().isLogin.value, false);
+      expect(requests[1].bodyFields, {
+        NameX.username: requestEmail,
+        NameX.password: requestPassword,
+      });
+      expect(Get.currentRoute, RouteNameX.root);
+      expect(LocalDataX.userid, 'synthetic-A');
+      expect(LocalDataX.token, 'synthetic-token-A');
+      expect(LocalDataX.route, RouteNameX.root);
+      final app = Get.find<AppControllerX>();
+      expect(app.isLogin.value, true);
+      expect(app.user.value.id, 'synthetic-A');
     },
   );
+
+  for (final failure in ['login', 'profile']) {
+    controllerTest(
+      'accepted reset falls back to login with the success message when $failure fails',
+      (tester) async {
+        final controller = await openReset(tester);
+        final requests = <http.Request>[];
+        final client = server(
+          requests,
+          login: failure == 'login' ? rejected : loginOk,
+          profile: rejected,
+        );
+        await http.runWithClient(() async {
+          await tester.runAsync(controller.onResetPassword);
+          await tester.pumpAndSettle();
+        }, () => client);
+        expect(Get.currentRoute, RouteNameX.login);
+        expect(find.text(successMessage), findsOneWidget);
+        expect(find.text('Synthetic rejected'), findsNothing);
+        expect(controller.buttonState.value, ButtonStateEX.success);
+        expect(Get.find<AppControllerX>().isLogin.value, false);
+        if (failure == 'login') {
+          // Nothing was written: the earlier session is untouched.
+          expect(LocalDataX.userid, 'existing-synthetic-user');
+          expect(LocalDataX.token, 'existing-synthetic-token');
+        } else {
+          // The provisional credentials are removed again.
+          expect(LocalDataX.userid, isEmpty);
+          expect(LocalDataX.token, isEmpty);
+        }
+      },
+    );
+  }
 
   controllerTest(
     'rejected reset stays editable and retries once after failure',
     (tester) async {
       final controller = await openReset(tester);
       var calls = 0;
-      final client = MockClient((_) async {
+      final client = MockClient((request) async {
+        // Count the reset calls only; the sign-in after a reset is separate.
+        if (!isReset(request)) return rejected();
         calls++;
         return calls == 1 ? rejected() : accepted();
       });
@@ -257,8 +322,8 @@ void main() {
         await tester.pump(const Duration(seconds: 3));
         await tester.pump();
       },
-      () => MockClient((_) {
-        calls++;
+      () => MockClient((request) {
+        if (isReset(request)) calls++;
         return pending.future;
       }),
     );

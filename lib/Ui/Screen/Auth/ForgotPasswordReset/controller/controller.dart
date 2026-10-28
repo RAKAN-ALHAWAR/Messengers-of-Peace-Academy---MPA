@@ -3,10 +3,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../../Config/config.dart';
+import '../../../../../Core/core.dart';
 import '../../../../../Data/data.dart';
+import '../../../../../Core/Service/session_lease.dart';
 import '../../../../Widget/widget.dart';
 
 class ForgotPasswordResetController extends GetxController {
+  //============================================================================
+  // Injection of required controls
+
+  AppControllerX app = Get.find();
+
   //============================================================================
   // Variables
 
@@ -60,15 +67,28 @@ class ForgotPasswordResetController extends GetxController {
       );
       if (isClosed) return;
 
-      // Reset acceptance is final even if presenting the next screen fails.
-      // Sign-in remains an explicit, separate action by the account owner.
+      // Reset acceptance is final even if signing in or presenting the next
+      // screen fails: the OTP may be consumed, so it is never submitted again.
       _resetAccepted = true;
       buttonState.value = ButtonStateEX.success;
-      Get.offAllNamed(RouteNameX.login);
-      ToastX.success(
-        message:
-            'Password changed successfully. Please sign in with your new password.',
-      );
+
+      // Sign in with the new password. If that fails the password is already
+      // changed, so go to login with the success message, never an error.
+      if (await _signIn()) {
+        // The time delay here is aesthetically beneficial
+        await Future.delayed(
+          const Duration(seconds: StyleX.successButtonSecond),
+        );
+        if (isClosed) return;
+        Get.offAllNamed(RouteNameX.root);
+      } else {
+        if (isClosed) return;
+        Get.offAllNamed(RouteNameX.login);
+        ToastX.success(
+          message:
+              'Password changed successfully. Please sign in with your new password.',
+        );
+      }
     } catch (error) {
       if (isClosed || _resetAccepted) return;
       buttonState.value = ButtonStateEX.failed;
@@ -87,6 +107,43 @@ class ForgotPasswordResetController extends GetxController {
           },
         );
       }
+    }
+  }
+
+  /// Sign in with the new password. The credentials are provisional until the
+  /// profile is verified, and are removed again on any failure (or when the
+  /// screen was left meanwhile), so a half-finished sign-in never stays saved.
+  Future<bool> _signIn() async {
+    SessionLeaseX? owner;
+    try {
+      final data = await DatabaseX.login(email: email, password: password.text);
+      if (isClosed || data.$1.trim().isEmpty || data.$2.trim().isEmpty) {
+        return false;
+      }
+
+      /// The token must be stored **before** any authenticated request,
+      /// because it is the `wstoken` used by [DBEndPointX.mainAPI]
+      app.isLogin.value = false;
+      final writes = [
+        LocalDataX.put(LocalKeyX.userid, data.$1),
+        LocalDataX.put(LocalKeyX.token, data.$2),
+        LocalDataX.put(LocalKeyX.route, RouteNameX.login),
+      ];
+      owner = SessionLeaseX.capture();
+      await Future.wait(writes);
+
+      final user = await DatabaseX.getUser(userId: data.$1);
+      if (isClosed || !owner.isCurrent || user.id != data.$1) {
+        throw StateError('The sign-in after the reset was not completed.');
+      }
+      await LocalDataX.put(LocalKeyX.route, RouteNameX.root);
+      app.user = user.obs;
+      app.isLogin.value = true;
+      return true;
+    } catch (_) {
+      // Does nothing when another sign-in has taken over the credentials.
+      if (owner != null) await app.clearLocalSession(owner, navigate: false);
+      return false;
     }
   }
 
