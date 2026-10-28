@@ -15,6 +15,7 @@ import '../Ui/Widget/widget.dart';
 import 'Error/error.dart';
 import 'Helper/http/http.dart';
 import 'Util/info.dart';
+import 'Service/controller_lease.dart';
 import 'Service/session_lease.dart';
 part 'Controller/App/app_controller.dart';
 part 'Util/function.dart';
