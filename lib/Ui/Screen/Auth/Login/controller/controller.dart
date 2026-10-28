@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Core/core.dart';
+import 'package:messengersofpeace/Core/Service/controller_lease.dart';
 import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:messengersofpeace/Data/Model/auth/otp.dart';
 import 'package:messengersofpeace/Data/Model/user/user.dart';
@@ -14,7 +15,14 @@ import '../../../../../Core/Error/error.dart';
 import '../../../../../Data/data.dart';
 
 class LoginController extends GetxController {
+  //============================================================================
+  // Injection of required controls
+
   AppControllerX app = Get.find();
+
+  //============================================================================
+  // Variables
+
   final isLoading = false.obs;
   final buttonStateGoogle = ButtonStateEX.normal.obs;
   final buttonStateLogin = ButtonStateEX.normal.obs;
@@ -35,16 +43,17 @@ class LoginController extends GetxController {
   // True when the account signed in but its profile is not fully set up yet.
   bool _profileMissing = false;
 
-  SessionLeaseX _capture(String route) => SessionLeaseX.capture(
-    isActive: () =>
-        !isClosed &&
-        Get.currentRoute == route &&
-        Get.isRegistered<AppControllerX>() &&
-        identical(Get.find<AppControllerX>(), app),
+  //============================================================================
+  // Functions
+
+  /// Work started on [route]: open, on that route, and under this app controller.
+  SessionLeaseX _capture(String route) => ControllerLeaseX.capture(
+    this,
+    app: app,
+    also: () => Get.currentRoute == route,
   );
 
-  /// Profile loading needs the newly issued token. Until the profile is verified,
-  /// credentials are provisional and never select an authenticated destination.
+  /// Credentials stay provisional until the profile is verified.
   Future<SessionLeaseX?> _authenticate(
     (String, String) data,
     SessionLeaseX owner,
@@ -83,18 +92,7 @@ class LoginController extends GetxController {
         if (!incomplete || username == null) rethrow;
         if (!committed.isCurrent) return null;
         _profileMissing = true;
-        user = UserX(
-          id: data.$1,
-          username: username,
-          firstname: '',
-          lastname: '',
-          email: username,
-          lang: 'en',
-          customfields: [],
-          city: '',
-          image: '',
-          points: 0,
-        );
+        user = AppControllerX.unfinishedUser(data.$1, username: username);
       }
       if (!committed.isCurrent) return null;
       if (user.id != data.$1) {
@@ -170,7 +168,6 @@ class LoginController extends GetxController {
       Get.offAndToNamed(RouteNameX.root);
     } catch (e) {
       if (!lease.isCurrent) return;
-      if (isClosed || Get.currentRoute != route) return;
       buttonStateGoogle.value = ButtonStateEX.failed;
       ToastX.error(
         message: e.toString().contains('PlatformException(')
@@ -227,7 +224,6 @@ class LoginController extends GetxController {
       }
     } catch (e) {
       if (!lease.isCurrent) return;
-      if (isClosed || Get.currentRoute != route) return;
       var error = e.toErrorX;
       if (error.details[NameX.errorcode] == 'invalidlogin') {
         error = ErrorX(message: 'Please check your email or password');
@@ -265,15 +261,11 @@ class LoginController extends GetxController {
     }
   }
 
-  // Local interaction ownership is independent of permission to publish a
-  // profile. Confirmed expiry retires that permission but must leave this same
-  // login screen usable. A newer submission/controller owns its own busy state.
+  /// Unlocks the screen if this is still its live controller, even after the session expired.
   void _releaseSubmission(int submission, String route) {
     if (submission != _submission ||
-        isClosed ||
         Get.currentRoute != route ||
-        !Get.isRegistered<LoginController>() ||
-        !identical(Get.find<LoginController>(), this)) {
+        !ControllerLeaseX.owns(this)) {
       return;
     }
     isLoading.value = false;
@@ -298,6 +290,10 @@ class LoginController extends GetxController {
 
   void onForgotPassword() => Get.toNamed(RouteNameX.forgotPassword);
   void onCreateAccount() => Get.offAndToNamed(RouteNameX.signUp);
+
+  //============================================================================
+  // Lifecycle
+
   @override
   void onInit() {
     super.onInit();

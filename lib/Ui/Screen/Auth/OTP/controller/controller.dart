@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../../Config/config.dart';
 import '../../../../../Core/core.dart';
 import '../../../../../Core/Error/error.dart';
+import '../../../../../Core/Service/controller_lease.dart';
 import '../../../../../Core/Service/session_lease.dart';
 import '../../../../../Data/Model/auth/otp.dart';
 import '../../../../../Data/data.dart';
@@ -11,7 +12,14 @@ import '../../../../Widget/Package/otp_pin_field_widget/src/otp_pin_field_state.
 import '../../../../Widget/widget.dart';
 
 class OTPController extends GetxController with WidgetsBindingObserver {
+  //============================================================================
+  // Injection of required controls
+
   AppControllerX app = Get.find();
+
+  //============================================================================
+  // Variables
+
   final isLoading = false.obs;
   final isLoadingResendAgain = false.obs;
   final isResendAgain = false.obs;
@@ -27,13 +35,14 @@ class OTPController extends GetxController with WidgetsBindingObserver {
   DateTime? _timerStartTime;
   int _initialDuration = 120;
 
-  SessionLeaseX _capture(String route) => SessionLeaseX.capture(
-    isActive:
-        () =>
-            !isClosed &&
-            Get.currentRoute == route &&
-            Get.isRegistered<AppControllerX>() &&
-            identical(Get.find<AppControllerX>(), app),
+  //============================================================================
+  // Functions
+
+  /// Work started on [route]: open, on that route, and under this app controller.
+  SessionLeaseX _capture(String route) => ControllerLeaseX.capture(
+    this,
+    app: app,
+    also: () => Get.currentRoute == route,
   );
 
   String getSubTitle() =>
@@ -203,6 +212,9 @@ class OTPController extends GetxController with WidgetsBindingObserver {
       (_) => _updateTimerFromElapsedTime(),
     );
   }
+
+  //============================================================================
+  // Lifecycle
 
   @override
   void onInit() {

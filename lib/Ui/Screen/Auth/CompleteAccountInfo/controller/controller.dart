@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:messengersofpeace/Core/core.dart';
 import 'package:messengersofpeace/Core/Error/error.dart';
+import 'package:messengersofpeace/Core/Service/controller_lease.dart';
 import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:messengersofpeace/Data/data.dart';
 import 'package:messengersofpeace/Data/Model/info/country.dart';
@@ -229,7 +230,7 @@ class CompleteAccountInfoController extends GetxController {
 
   /// Save and update user data
   Future<void> onEdit() async {
-    if (isLoading.value || isClosed) return;
+    if (isLoading.value) return;
     final ownsSession = _sessionGuard();
     if (!ownsSession()) return;
     final form = formKey.currentState;
@@ -307,9 +308,9 @@ class CompleteAccountInfoController extends GetxController {
   static const _accountNotSetUpMessage =
       'Your account setup is not complete on the server, so the data could not be saved. Please contact support.';
 
-  /// Async results belong only to this controller and the initiating session.
+  /// Async results belong only to this controller and the session that started them.
   bool Function() _sessionGuard() {
-    final lease = SessionLeaseX.capture(isActive: () => _ownerLease.isCurrent);
+    final lease = ControllerLeaseX.capture(this, owner: _ownerLease);
     return () => lease.isCurrent;
   }
 
@@ -321,15 +322,8 @@ class CompleteAccountInfoController extends GetxController {
     return () => ownsSession() && TranslationX.getLanguageCode == locale;
   }
 
-  /// Complete later
-  ///
-  /// An account without a loadable profile cannot use the app yet, so it signs
-  /// out instead; its data can be completed on the next sign in.
+  /// Skip for now: every account enters the app and can complete its data later.
   Future<void> completeLater() async {
-    if (profileMissing) {
-      await app.logOut();
-      return;
-    }
     Get.offAllNamed(RouteNameX.root);
   }
 
@@ -365,14 +359,11 @@ class CompleteAccountInfoController extends GetxController {
   void onInit() {
     super.onInit();
     final accountId = app.user.value.id;
-    _ownerLease = SessionLeaseX.capture(
-      isActive: () =>
-          !isClosed &&
-          Get.isRegistered<CompleteAccountInfoController>() &&
-          identical(Get.find<CompleteAccountInfoController>(), this) &&
-          Get.isRegistered<AppControllerX>() &&
-          identical(Get.find<AppControllerX>(), app) &&
-          app.user.value.id == accountId,
+    _ownerLease = ControllerLeaseX.capture(
+      this,
+      registered: true,
+      app: app,
+      also: () => app.user.value.id == accountId,
     );
 
     /// Initialize form key

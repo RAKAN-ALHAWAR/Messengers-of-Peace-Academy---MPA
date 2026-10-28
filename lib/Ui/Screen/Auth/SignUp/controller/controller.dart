@@ -8,7 +8,7 @@ import '../../../../../Config/Translation/translation.dart';
 import '../../../../../Config/config.dart';
 import '../../../../../Core/Error/error.dart';
 import '../../../../../Core/core.dart';
-import '../../../../../Core/Service/session_lease.dart';
+import '../../../../../Core/Service/controller_lease.dart';
 import '../../../../../Data/Model/auth/otp.dart';
 import '../../../../../Data/data.dart';
 import '../../../../Widget/widget.dart';
@@ -59,7 +59,7 @@ class SignUpController extends GetxController {
 
   Timer? _resetTimer;
 
-  /// Inputs and route lifetime belong to one submission, including its delay.
+  /// The inputs and the route belong to one submission, delay included.
   Future<void> onSignUp() async {
     if (isLoading.value || isClosed) return;
     if (formKey.currentState?.validate() != true) {
@@ -67,13 +67,10 @@ class SignUpController extends GetxController {
       return;
     }
     final route = Get.currentRoute;
-    final lease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              Get.currentRoute == route &&
-              Get.isRegistered<AppControllerX>() &&
-              identical(Get.find<AppControllerX>(), app),
+    final lease = ControllerLeaseX.capture(
+      this,
+      app: app,
+      also: () => Get.currentRoute == route,
     );
     final submittedFirst = firstName.text;
     final submittedLast = lastName.text;

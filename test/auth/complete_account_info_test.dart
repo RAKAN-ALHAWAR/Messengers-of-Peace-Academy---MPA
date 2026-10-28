@@ -475,17 +475,18 @@ void main() {
   );
 
   testWidgets(
-    'complete later signs a missing-profile account out instead of entering',
+    'complete later enters the app and keeps a missing-profile account signed in',
     (tester) async {
       controller.profileMissing = true;
       await http.runWithClient(() async {
         await mount(tester);
         await tester.runAsync(controller.completeLater);
         await tester.pumpAndSettle();
-        expect(find.text('Login destination'), findsOneWidget);
-        expect(find.text('Root destination'), findsNothing);
-        expect(LocalDataX.token, isEmpty);
-        expect(Get.find<AppControllerX>().isLogin.value, isFalse);
+        expect(find.text('Root destination'), findsOneWidget);
+        expect(find.text('Login destination'), findsNothing);
+        expect(LocalDataX.token, 'synthetic-token');
+        expect(LocalDataX.userid, 'synthetic-user');
+        expect(Get.find<AppControllerX>().isLogin.value, isTrue);
       }, () => MockClient(referenceResponse));
     },
   );
