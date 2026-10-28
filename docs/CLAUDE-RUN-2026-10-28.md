@@ -156,3 +156,9 @@ Parallel: complete-account save failure on account 2 under diagnosis (Sonnet, wo
 
 - Diagnosis (Sonnet): save call update_user_profile -> HTTP 200 usernotfullysetup (capture 0016); the form sends all 8 required custom fields plus city; Moodle WS core never calls user_not_fully_set_up, only require_login inside the plugin does. Likely backend lock, not fully proven (an empty server-side field outside the app's 8 not excluded; no field-list function exists). Fix merged: clear 4-locale message when the save itself is refused (d46f8c8). Full suite "+732: All tests passed!", analyze clean.
 - Simplification plan folded (Sonnet), re-checked by orchestrator against the review list: Step 0 atom pass, capture point section 3, VideoPlayer in S2, Acceptance per slice, estimate 5.9 to 12.5 agent-hours. Awaiting owner approval; new question: split S7.
+
+## Simplification plan approved (2026-10-29)
+
+- Owner: «موافق عليها» on the whole folded plan (docs/SIMPLIFY-PLAN.md at d767e46). S7 stays one slice (plan default, owner did not ask to split).
+- Running: probe of account 2 save with all optional fields (Sonnet, worktree mopa-wt-probe, owner asked «جرب تبعت كل البيانات حتى الاختيارية»).
+- Next: Haiku pack for S1, then S1 (Sonnet xhigh) alone in worktree mopa-wt-s1.
