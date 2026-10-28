@@ -95,3 +95,10 @@ Estimate: 7 to 13 agent-work hours (est., basis: sonnet-high median 17-32 min pe
 - Review notes for the batch review: `_markFileDownloaded` doc names a missing `_applyLocalFileFlags`; `Zone.root.run` in CourseDetails exists only for fake-async tests; learned seconds count page dwell including pause.
 - BACKEND-REQUESTS items 6-9 added (file completion, video duration, minutes, first course open).
 - Tap lane still running.
+
+## Tap lane merged, batch 2 pushed (2026-10-28)
+- claude/fix-course-tap (4044929 tap via RouteOriginX, e1cdb2d shared first-course unlock) merged no-ff. Agent RED "+1 -4", GREEN tap +5, unlock +6. Defect was in AllCourses, Home, ProfileDetails; MyCourses moved to the helper.
+- Batch full run on main: analyze "No issues found!", `flutter test` "+723: All tests passed!". Simulator evidence: evidence/course-card-opens-details.png (details page of course 19 opened).
+- Pushed main f338fa9..a688a4b. CI status still to read with ci-status.
+- Blind review of batch 2 (8da747b..HEAD) launched on code-reviewer Opus medium.
+- NEXT: review findings, fold fixes on Sonnet, ci-status, device checks list, simplify Codex abstractions, worktree cleanup (a, a2, b1, fix1, c, b2, tap).
