@@ -14,6 +14,7 @@ import 'package:messengersofpeace/Core/Helper/http/http.dart';
 import 'package:messengersofpeace/Data/data.dart';
 import 'package:messengersofpeace/Data/Model/event.dart';
 import 'package:messengersofpeace/Data/Model/user/user.dart';
+import 'package:messengersofpeace/Ui/Screen/Badges/controller/controller.dart';
 import 'package:messengersofpeace/Ui/Screen/Blog/Blog/controller/controller.dart';
 import 'package:messengersofpeace/Ui/Screen/Events/CalendarEvents/controller/controller.dart';
 import 'package:messengersofpeace/Ui/Screen/Events/EventDetails/controller/controller.dart';
@@ -179,6 +180,24 @@ void main() {
       // Same user id on the new app is not enough: the old app is retired.
       expect(log, hasLength(1));
     }, () => heldClient(log));
+  });
+
+  //============================================================================
+  // Badges: no app controller registered yet
+
+  test('badges with no registered app controller load nothing', () async {
+    final badges = Get.put(BadgesController());
+    var requests = 0;
+    await http.runWithClient(
+      () async {
+        expect(await badges.getData(), isEmpty);
+        expect(requests, 0);
+      },
+      () => MockClient((request) async {
+        requests++;
+        return json([]);
+      }),
+    );
   });
 
   //============================================================================
