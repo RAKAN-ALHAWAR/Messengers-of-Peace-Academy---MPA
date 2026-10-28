@@ -6,6 +6,7 @@ import '../../../../Config/Translation/translation.dart';
 import '../../../../Config/config.dart';
 import '../../../../Core/core.dart';
 import '../../../../Core/Error/error.dart';
+import '../../../../Core/Service/route_origin.dart';
 import '../../../../Core/Service/session_lease.dart';
 import '../../../Widget/widget.dart';
 import '../../../../Data/Enum/meeting_option.dart';
@@ -247,14 +248,14 @@ class HomeController extends GetxController {
     Object? arguments,
   }) async {
     if (_openingProgressRoute || !_ownsHome) return;
-    final route = Get.rawRoute;
+    final route = RouteOriginX.capture();
     final language = TranslationX.getLanguageCode;
     final request = ++_progressNavigationGeneration;
     final lease = SessionLeaseX.capture(
       isActive:
           () =>
               _ownsHome &&
-              route?.isActive == true &&
+              route.isActive &&
               request == _progressNavigationGeneration &&
               TranslationX.getLanguageCode == language,
     );

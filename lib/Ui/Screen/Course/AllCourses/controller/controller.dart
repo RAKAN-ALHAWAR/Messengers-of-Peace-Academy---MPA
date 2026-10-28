@@ -1,4 +1,5 @@
 import 'package:messengersofpeace/Core/Service/session_lease.dart';
+import 'package:messengersofpeace/Core/Service/route_origin.dart';
 import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
 import 'package:get/get.dart';
@@ -88,7 +89,7 @@ class AllCoursesController extends GetxController {
   /// Navigate to course details
   Future<void> onCourseTap(MiniCourseX course) async {
     if (isClosed || _openingCourse) return;
-    final origin = Get.rawRoute;
+    final origin = RouteOriginX.capture();
     final locale = TranslationX.getLanguageCode;
     final generation = ++_navigationGeneration;
     final lease = SessionLeaseX.capture(
@@ -96,7 +97,7 @@ class AllCoursesController extends GetxController {
           () =>
               !isClosed &&
               generation == _navigationGeneration &&
-              (origin?.isActive ?? false) &&
+              origin.isActive &&
               TranslationX.getLanguageCode == locale,
     );
     if (!lease.hasAuthenticatedIdentity || !lease.isCurrent) return;

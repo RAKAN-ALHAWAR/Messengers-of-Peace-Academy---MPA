@@ -4,6 +4,7 @@ import 'package:messengersofpeace/Ui/Widget/widget.dart';
 import '../../../../../Config/config.dart';
 import '../../../../../Config/Translation/translation.dart';
 import '../../../../../Core/Error/error.dart';
+import '../../../../../Core/Service/route_origin.dart';
 import '../../../../../Core/Service/session_lease.dart';
 import '../../../../../Data/Model/course/my_course.dart';
 import '../../../../../Data/data.dart';
@@ -48,13 +49,13 @@ class MyCoursesController extends GetxController {
   /// On tap course
   Future<void> onTapCourse(MyCourse course) async {
     if (_openingCourse || isClosed) return;
-    final origin = Get.rawRoute;
+    final origin = RouteOriginX.capture();
     final locale = TranslationX.getLanguageCode;
     final lease = SessionLeaseX.capture(
       isActive:
           () =>
               !isClosed &&
-              origin?.isActive == true &&
+              origin.isActive &&
               Get.isRegistered<MyCoursesController>() &&
               identical(Get.find<MyCoursesController>(), this) &&
               TranslationX.getLanguageCode == locale,

@@ -5,6 +5,7 @@ import 'package:messengersofpeace/Core/core.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../Config/config.dart';
+import '../../../../../Core/Service/route_origin.dart';
 import '../../../../../Core/Service/session_lease.dart';
 import '../../../../../Core/Error/error.dart';
 import '../../../../../Data/Model/badge.dart';
@@ -145,7 +146,7 @@ class ProfileDetailsController extends GetxController {
 
   Future<void> _openAndRefresh(String destination) async {
     if (isClosed || _openingProgressRoute) return;
-    final origin = Get.rawRoute;
+    final origin = RouteOriginX.capture();
     final locale = TranslationX.getLanguageCode;
     final generation = ++_navigationGeneration;
     final lease = SessionLeaseX.capture(
@@ -155,7 +156,7 @@ class ProfileDetailsController extends GetxController {
               generation == _navigationGeneration &&
               Get.isRegistered<ProfileDetailsController>() &&
               identical(Get.find<ProfileDetailsController>(), this) &&
-              origin?.isActive == true &&
+              origin.isActive &&
               TranslationX.getLanguageCode == locale,
     );
     if (!lease.hasAuthenticatedIdentity || !lease.isCurrent) return;
