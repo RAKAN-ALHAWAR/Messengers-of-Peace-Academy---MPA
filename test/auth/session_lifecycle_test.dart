@@ -79,6 +79,30 @@ void main() {
     );
   });
 
+  test('startup of an account with an incomplete profile signs out', () async {
+    // A kept session for such an account (see the login flow) must not leave
+    // the app retrying a profile the server refuses until the data is complete.
+    await LocalDataX.put(LocalKeyX.userid, 'synthetic-A');
+    await LocalDataX.put(LocalKeyX.token, 'synthetic-token-A');
+    await LocalDataX.put(LocalKeyX.route, RouteNameX.completeAccountInfo);
+    await http.runWithClient(
+      () async {
+        final app = Get.put(AppControllerX());
+        expect(await app.init(), isNotNull);
+        expect(app.isLogin.value, isFalse);
+        expect(LocalDataX.userid, isEmpty);
+        expect(LocalDataX.token, isEmpty);
+        expect(LocalDataX.route, RouteNameX.login);
+      },
+      () => MockClient(
+        (_) async => http.Response(
+          '{"errorcode":"usernotfullysetup","message":"Profile not complete"}',
+          200,
+        ),
+      ),
+    );
+  });
+
   test('late startup A profile cannot replace B state', () async {
     await LocalDataX.put(LocalKeyX.userid, 'synthetic-A');
     await LocalDataX.put(LocalKeyX.token, 'synthetic-token-A');
@@ -130,10 +154,9 @@ void main() {
     var count = 0;
     await http.runWithClient(
       () async {
-        final app =
-            (await tester.runAsync(
-              () async => Get.put(AppControllerX(), permanent: true),
-            ))!;
+        final app = (await tester.runAsync(
+          () async => Get.put(AppControllerX(), permanent: true),
+        ))!;
         final lease = SessionLeaseX.capture();
         final revision = LocalDataX.sessionRevision;
         await tester.runAsync(() async {
@@ -182,13 +205,13 @@ void main() {
         return count == 1
             ? first.future
             : Future.value(
-              http.Response(
-                jsonEncode(
-                  syntheticUser('synthetic-A')..['firstname'] = 'Newest',
+                http.Response(
+                  jsonEncode(
+                    syntheticUser('synthetic-A')..['firstname'] = 'Newest',
+                  ),
+                  200,
                 ),
-                200,
-              ),
-            );
+              );
       }),
     );
   });

@@ -39,19 +39,18 @@ void main() {
     requests = [];
     Get.put(
       AppControllerX()
-        ..user =
-            UserX(
-              id: 'synthetic-user',
-              username: 'synthetic',
-              firstname: 'Test',
-              lastname: 'User',
-              email: 'test@example.invalid',
-              lang: 'en',
-              customfields: [],
-              city: '',
-              image: '',
-              points: 0,
-            ).obs,
+        ..user = UserX(
+          id: 'synthetic-user',
+          username: 'synthetic',
+          firstname: 'Test',
+          lastname: 'User',
+          email: 'test@example.invalid',
+          lang: 'en',
+          customfields: [],
+          city: '',
+          image: '',
+          points: 0,
+        ).obs,
     );
     controller = Get.put(CompleteAccountInfoController());
   });
@@ -101,6 +100,10 @@ void main() {
           GetPage(
             name: RouteNameX.root,
             page: () => const Scaffold(body: Text('Root destination')),
+          ),
+          GetPage(
+            name: RouteNameX.login,
+            page: () => const Scaffold(body: Text('Login destination')),
           ),
         ],
       ),
@@ -176,8 +179,9 @@ void main() {
           final loaded = requests.length;
           await controller.onEdit();
           await tester.pumpAndSettle();
-          final message =
-              underage ? 'You must be at least 18 years old' : 'Date Required';
+          final message = underage
+              ? 'You must be at least 18 years old'
+              : 'Date Required';
           expect(find.text(message), findsOneWidget);
           expect(requests.length, loaded);
           final error = tester.getRect(find.text(message));
@@ -351,6 +355,100 @@ void main() {
       },
     );
   }
+
+  // An account whose profile the server refuses until its data is complete.
+  // The reference lists and the save work; only get_user_full_profile fails.
+  const incompleteBody =
+      '{"exception":"core\\\\exception\\\\moodle_exception",'
+      '"errorcode":"usernotfullysetup","message":"Profile not complete"}';
+  Future<http.Response> missingProfileServer(
+    http.Request request, {
+    required bool completeAfterSave,
+  }) async {
+    final function = request.url.queryParameters['wsfunction'] ?? '';
+    if (function.contains('get_user_full_profile')) {
+      requests.add(request);
+      return completeAfterSave
+          ? http.Response(
+              jsonEncode({
+                'id': 'synthetic-user',
+                'username': 'synthetic',
+                'firstname': 'Real',
+                'lastname': 'Name',
+                'email': 'test@example.invalid',
+              }),
+              200,
+            )
+          : http.Response(incompleteBody, 200);
+    }
+    return referenceResponse(request);
+  }
+
+  testWidgets(
+    'missing-profile account loads its profile after saving and enters',
+    (tester) async {
+      controller.profileMissing = true;
+      await http.runWithClient(
+        () async {
+          await mount(tester);
+          validValues();
+          await tester.pumpAndSettle();
+          final pending = controller.onEdit();
+          await tester.pump();
+          await tester.pump(const Duration(seconds: 1));
+          await pending;
+          await tester.pumpAndSettle();
+          expect(Get.find<AppControllerX>().user.value.firstname, 'Real');
+          expect(find.text('Root destination'), findsOneWidget);
+          await tester.pump(const Duration(seconds: 5));
+        },
+        () =>
+            MockClient((r) => missingProfileServer(r, completeAfterSave: true)),
+      );
+    },
+  );
+
+  testWidgets(
+    'missing-profile account still refused after saving stays on the form',
+    (tester) async {
+      controller.profileMissing = true;
+      await http.runWithClient(
+        () async {
+          await mount(tester);
+          validValues();
+          await tester.pumpAndSettle();
+          final pending = controller.onEdit();
+          await tester.pump();
+          await tester.pump(const Duration(seconds: 1));
+          await pending;
+          await tester.pumpAndSettle();
+          expect(find.text('Root destination'), findsNothing);
+          expect(find.text('Profile not complete'), findsOneWidget);
+          expect(controller.buttonState.value, ButtonStateEX.failed);
+          await tester.pump(const Duration(seconds: 5));
+        },
+        () => MockClient(
+          (r) => missingProfileServer(r, completeAfterSave: false),
+        ),
+      );
+    },
+  );
+
+  testWidgets(
+    'complete later signs a missing-profile account out instead of entering',
+    (tester) async {
+      controller.profileMissing = true;
+      await http.runWithClient(() async {
+        await mount(tester);
+        await tester.runAsync(controller.completeLater);
+        await tester.pumpAndSettle();
+        expect(find.text('Login destination'), findsOneWidget);
+        expect(find.text('Root destination'), findsNothing);
+        expect(LocalDataX.token, isEmpty);
+        expect(Get.find<AppControllerX>().isLogin.value, isFalse);
+      }, () => MockClient(referenceResponse));
+    },
+  );
 
   testWidgets('success navigates once after acknowledgement', (tester) async {
     await http.runWithClient(() async {
