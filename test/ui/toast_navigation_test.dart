@@ -88,6 +88,8 @@ void main() {
     expect(find.text('old'), findsNothing);
     expect(find.text('replacement'), findsOneWidget);
     expect(find.byType(Dismissible), findsOneWidget);
+    // Let the slide-down entrance finish, the toast is off screen before that.
+    await tester.pump(const Duration(seconds: 1));
     await tester.tap(find.byIcon(Icons.close_rounded));
     await tester.pump();
     expect(find.text('replacement'), findsNothing);
