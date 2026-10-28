@@ -108,48 +108,31 @@ class CourseDetailsController extends GetxController {
     }
   }
 
-  /// Get total lessons count across all topics
-  /// Rules:
-  /// - If there are videos in a topic, count the number of videos
-  /// - If no videos but there are files (downloadUrl) in a topic, count as 1 lesson
-  /// - Quizzes are never counted
-  int get getUniqueTopicsCount {
-    if (course.value == null) return 0;
-
-    // Group activities by topicId
-    final Map<int, List<ActivityX>> groupedByTopic = {};
-    for (var activity in course.value!.activities) {
-      if (!groupedByTopic.containsKey(activity.topicId)) {
-        groupedByTopic[activity.topicId] = [];
-      }
-      groupedByTopic[activity.topicId]!.add(activity);
-    }
-
-    int totalLessons = 0;
-
-    // Count lessons for each topic
-    for (var topicActivities in groupedByTopic.values) {
-      // Count videos (excluding quizzes)
-      final videoCount =
-          topicActivities
-              .where(
-                (activity) =>
-                    activity.videoUrl.isNotEmpty && activity.quizId == null,
-              )
-              .length;
-
-      if (videoCount > 0) {
-        // If there are videos, count them
-        totalLessons += videoCount;
+  /// Lessons are the topics of the course (the "Lesson 1", "Lesson 2" rows).
+  /// A topic counts as one lesson when it has at least one activity with
+  /// content: a video, a quiz or a file. Activities without content are skipped.
+  Map<int, List<ActivityX>> get _lessonTopics {
+    final topics = <int, List<ActivityX>>{};
+    for (final activity in course.value?.activities ?? <ActivityX>[]) {
+      if (activity.hasContent) {
+        topics.putIfAbsent(activity.topicId, () => []).add(activity);
       }
     }
-
-    return totalLessons;
+    return topics;
   }
+
+  /// Total lessons of the course
+  int get lessonsTotal => _lessonTopics.length;
+
+  /// Lessons whose content activities are all done on the server
+  /// (is_completed or completion_percent 100)
+  int get lessonsDone => _lessonTopics.values
+      .where((topic) => topic.every((a) => a.isDone))
+      .length;
 
   /// Get activity count name
   String get getActivityCountName {
-    int totalActivities = getUniqueTopicsCount;
+    int totalActivities = lessonsTotal;
     switch (totalActivities) {
       case 0:
         return "No Lesson";

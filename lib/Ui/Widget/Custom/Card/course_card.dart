@@ -22,6 +22,17 @@ class CourseCard extends StatelessWidget {
   final MiniCourseX course;
   final Function(MiniCourseX) onTap;
 
+  /// Lessons the user finished and the lessons the course has
+  ///
+  /// TEMP(backend): a quiz-only course (like the entry exam) comes with
+  /// numsections 0, so the card would read 0/0. Until the server counts the
+  /// quiz in numsections we show 1 lesson and done only when the course is
+  /// completed. Remove this once get_user_categories_summary counts quizzes.
+  (int done, int total) get _lessons {
+    if (course.numSections == 0) return (course.isCompleted ? 1 : 0, 1);
+    return (course.numCompletionSections, course.numSections);
+  }
+
   @override
   Widget build(BuildContext context) {
     /// Build course card
@@ -102,7 +113,8 @@ class CourseCard extends StatelessWidget {
                     children: [
                       /// Course sections
                       TextX(
-                        "${course.numSections}/${course.numCompletionSections}",
+                        "${_lessons.$1}/${_lessons.$2}",
+                        textDirection: TextDirection.ltr,
                         style: TextStyleX.labelSmall,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),

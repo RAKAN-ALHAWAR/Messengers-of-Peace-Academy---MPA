@@ -115,7 +115,7 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
                       if (_getLessonsCountInGroup(topicEntry.value) > 0)
                         SizedBox(height: 4),
 
-                      /// Activity count (only count lessons with videos, not quizzes)
+                      /// Video count (only videos, not quizzes)
                       if (_getLessonsCountInGroup(topicEntry.value) > 0)
                         TextX(
                           "${_getLessonsCountInGroup(topicEntry.value)} ${"Lessons".tr}",
@@ -150,11 +150,7 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
     );
   }
 
-  /// Get count of lessons in a group
-  /// Rules:
-  /// - If there are videos, count the number of videos
-  /// - If no videos but there are files (downloadUrl), count as 1 lesson
-  /// - Quizzes are never counted
+  /// Get count of videos in a group (shown under the lesson title)
   int _getLessonsCountInGroup(List<ActivityX> activities) {
     // Count videos (excluding quizzes)
     final videoCount =
@@ -170,7 +166,7 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
       return videoCount;
     }
 
-    // Otherwise, no lessons (only quizzes or empty)
+    // Otherwise, no videos (only quizzes, files or empty)
     return 0;
   }
 
@@ -187,7 +183,7 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
           icon: IconX.play_arrow_filled,
           name: activity.name,
           videoDuration: activity.videoDuration,
-          isCompleted: activity.isCompleted,
+          isCompleted: activity.isDone,
           onTap: () async {
             await controller.onTapLessonVideo(originalIndex);
           },
@@ -201,7 +197,7 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
               TranslationX.getLanguageCode == "ar"
                   ? "${"Test".tr} ${activity.topicName}"
                   : "${activity.topicName} ${"Test".tr}",
-          isCompleted: activity.completionPercent >= 100,
+          isCompleted: activity.isDone,
           onTap: () {
             controller.onTapLessonQuiz(activity);
           },
