@@ -75,5 +75,7 @@ Estimate: 7 to 13 agent-work hours (est., basis: sonnet-high median 17-32 min pe
 - Seen on device: the date picker header shows Arabic-Indic digits (M3 asks Latin). Queued for lane B2.
 - Fix lane merged (8e72ff0): premise real (red: details.isClosed true); passed quiz now returns to the live course page; refetch runs even when completion fails. test/quiz + test/learning `+150: All tests passed!`.
 - Lane C merged: delete-account row (TEMP backend, opens the site data request page), attempts explanation with no counts, email keyboard hint, OTP premise false (two guard tests only). Lane tests `+18: All tests passed!`. Device: email hint shows under the field in Arabic (evidence email-field-keyboard-hint.png). Delete row and TestInfo message not yet seen on device: the first account's chat password now returns invalidlogin (owner reset it earlier).
-- Lane B2 pack: haiku-locator building (section B1-progression).
+- Lane B2 launched (flutter-developer): worktree /Users/saker/Desktop/Flutter/mopa-wt-b2, branch claude/b2-local-progress: file checkmark, duration, minutes, date picker digits.
+- docs/BACKEND-REQUESTS.md drafted (0305b45); B2 items to be added when it lands.
+- Account 1: owner says the password is unchanged. Maestro login returned invalidlogin twice (the password has a dollar sign; env interpolation, then a literal flow). Not resolved by automation; owner asked to sign in on the simulator himself.
 - Owner killed the hung flutter_tester 16685 himself (A1 had asked the orchestrator to kill it; refused as permission laundering).
