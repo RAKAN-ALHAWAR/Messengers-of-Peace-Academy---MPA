@@ -5,11 +5,11 @@ import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
 
+import '../../../../../Core/Service/controller_lease.dart';
 import '../../../../../Core/Service/download_file_form_url.dart';
 import '../../../../../Core/core.dart';
 import '../../../../../Core/Error/error.dart';
 import '../../../../../Core/Service/session_lease.dart';
-import '../../../../../Config/Translation/translation.dart';
 import '../../../../../Data/Model/course/activity.dart';
 import '../../../../../Data/Model/course/course.dart';
 import '../../../../../Data/Model/user/user_statistics.dart';
@@ -37,39 +37,39 @@ class CourseDetailsController extends GetxController {
   String courseId = Get.arguments;
   Rx<CourseX?> course = Rx<CourseX?>(null);
 
+  /// A newer load retires older loads; a newer video tap retires older taps
+  int _loadGeneration = 0;
+  int _visitGeneration = 0;
+
+  /// A lesson video is open, so further video taps are ignored
+  bool _videoBusy = false;
+
+  /// The lease the shown course was published under
+  SessionLeaseX? _contentLease;
+
+  /// Route parameter carrying the passed quiz id, so the activity after it opens
+  static const nextAfterQuizParam = 'nextAfterQuiz';
+  String? _nextAfterQuizId;
+
   //============================================================================
   // Functions
 
-  int _loadGeneration = 0;
-  int _visitGeneration = 0;
-  bool _videoBusy = false;
-  SessionLeaseX? _contentLease;
+  /// Open, still the registered course page, with the live app controller
+  bool get _ownsCourse => ControllerLeaseX.owns(this, app: app);
 
-  bool get _ownsCourse =>
-      !isClosed &&
-      Get.isRegistered<CourseDetailsController>() &&
-      identical(Get.find<CourseDetailsController>(), this) &&
-      Get.isRegistered<AppControllerX>() &&
-      identical(Get.find<AppControllerX>(), app);
+  /// A lease for course [id] in the current language, plus [operation]
+  SessionLeaseX _captureScope(String id, {bool Function()? operation}) =>
+      ControllerLeaseX.capture(
+        this,
+        registered: true,
+        app: app,
+        locale: true,
+        also: () => courseId == id && (operation?.call() ?? true),
+      );
 
-  SessionLeaseX _captureScope(
-    String id,
-    String language, {
-    bool Function()? operation,
-  }) => SessionLeaseX.capture(
-    isActive:
-        () =>
-            _ownsCourse &&
-            courseId == id &&
-            TranslationX.getLanguageCode == language &&
-            (operation?.call() ?? true),
-  );
-
-  void _publishCourse(CourseX value, String id, String language) {
-    if (value.id != id) {
-      throw ErrorX(message: 'Session changed. Please try again.');
-    }
-    _contentLease = _captureScope(id, language);
+  void _publishCourse(CourseX value, String id) {
+    if (value.id != id) throw ErrorX.sessionChanged();
+    _contentLease = _captureScope(id);
     _applyLocalProgress(value);
     course.value = value;
   }
@@ -98,8 +98,7 @@ class CourseDetailsController extends GetxController {
     }
   }
 
-  /// The request owns its account, course and locale. A same-course reload also
-  /// retires an older navigation callback; its old index cannot target new data.
+  /// Loads the course; a newer load also retires the video taps still in flight
   Future<void> getData() async {
     if (!_ownsCourse) return;
     final request = ++_loadGeneration;
@@ -107,20 +106,16 @@ class CourseDetailsController extends GetxController {
     _videoBusy = false;
     isLoading = false;
     final id = courseId;
-    final language = TranslationX.getLanguageCode;
     final lease = _captureScope(
       id,
-      language,
       operation: () => request == _loadGeneration,
     );
     if (_contentLease?.isCurrent != true) course.value = null;
-    if (!lease.hasAuthenticatedIdentity) {
-      throw ErrorX(message: 'Session changed. Please try again.');
-    }
+    if (!lease.hasAuthenticatedIdentity) throw ErrorX.sessionChanged();
     try {
       final value = await DatabaseX.getCourse(courseId: id);
       if (!lease.isCurrent) return;
-      _publishCourse(value, id, language);
+      _publishCourse(value, id);
     } catch (_) {
       if (!lease.isCurrent) return;
       rethrow;
@@ -128,18 +123,12 @@ class CourseDetailsController extends GetxController {
     _openNextAfterPassedQuiz();
   }
 
-  /// Checkmarks and unlocking come only from the current backend snapshot. A
-  /// failed refresh retains prior content and leaves retry available.
-  /// Returns true only when the fresh course was published.
-  Future<bool> _refreshCourse(
-    SessionLeaseX lease,
-    String id,
-    String language,
-  ) async {
+  /// Refetches the course, a failed refresh keeps the shown one; true if published
+  Future<bool> _refreshCourse(SessionLeaseX lease, String id) async {
     try {
       final value = await DatabaseX.getCourse(courseId: id);
       if (!lease.isCurrent) return false;
-      _publishCourse(value, id, language);
+      _publishCourse(value, id);
       return true;
     } catch (e) {
       if (!lease.isCurrent) return false;
@@ -152,14 +141,7 @@ class CourseDetailsController extends GetxController {
   //============================================================================
   // Next activity
 
-  /// Route parameter the passed-quiz screen sends (the quiz id) so this page
-  /// opens the activity after that quiz once the fresh course is loaded.
-  static const nextAfterQuizParam = 'nextAfterQuiz';
-  String? _nextAfterQuizId;
-
-  /// The activity that follows [cmId] in course order, or null when [cmId] is
-  /// the last one, is unknown, or the next activity is still locked.
-  /// Activities without any content (no video, quiz or file) are skipped.
+  /// The open activity after [cmId] in course order (empty ones skipped), else null
   static ActivityX? nextActivityAfter(List<ActivityX> activities, String cmId) {
     final index = activities.indexWhere((a) => a.cmId == cmId);
     if (index < 0) return null;
@@ -170,9 +152,7 @@ class CourseDetailsController extends GetxController {
     return null;
   }
 
-  /// Open the activity after [cmId]: a video opens the player, a quiz opens its
-  /// test info and a file starts its download. When there is none, or it is
-  /// locked, nothing happens and the user stays on this page.
+  /// Opens the activity after [cmId]: a video, a quiz's test info or a file download
   Future<void> openNextActivity(String cmId) async {
     final current = course.value;
     if (current == null) return;
@@ -185,8 +165,7 @@ class CourseDetailsController extends GetxController {
     return onTapLessonSummary(next);
   }
 
-  /// Arriving from a passed quiz: continue with the activity after that quiz.
-  /// Not awaited by getData, so the page finishes loading underneath.
+  /// Arriving from a passed quiz: open the activity after it (not awaited by getData)
   void _openNextAfterPassedQuiz() {
     final quizId = _nextAfterQuizId;
     _nextAfterQuizId = null;
@@ -197,29 +176,24 @@ class CourseDetailsController extends GetxController {
     if (quiz != null) openNextActivity(quiz.cmId);
   }
 
-  /// The passed-quiz screen sits right above this page. After it goes back
-  /// here: refetch, then continue with the activity after [quizId].
+  /// Back from the passed quiz: refetch, then open the activity after [quizId]
   Future<void> continueAfterPassedQuiz(String quizId) async {
     if (!_ownsCourse || _contentLease?.isCurrent != true) return;
     final id = courseId;
-    final language = TranslationX.getLanguageCode;
     final route = Get.currentRoute;
     final request = _loadGeneration;
     final lease = _captureScope(
       id,
-      language,
       operation: () => request == _loadGeneration && Get.currentRoute == route,
     );
-    if (!await _refreshCourse(lease, id, language)) return;
+    if (!await _refreshCourse(lease, id)) return;
     final quiz = course.value?.activities.firstWhereOrNull(
       (a) => a.quizId == quizId,
     );
     if (quiz != null) await openNextActivity(quiz.cmId);
   }
 
-  /// Lessons are the topics of the course (the "Lesson 1", "Lesson 2" rows).
-  /// A topic counts as one lesson when it has at least one activity with
-  /// content: a video, a quiz or a file. Activities without content are skipped.
+  /// Lessons are the topics that have a video, quiz or file activity
   Map<int, List<ActivityX>> get _lessonTopics {
     final topics = <int, List<ActivityX>>{};
     for (final activity in course.value?.activities ?? <ActivityX>[]) {
@@ -233,8 +207,7 @@ class CourseDetailsController extends GetxController {
   /// Total lessons of the course
   int get lessonsTotal => _lessonTopics.length;
 
-  /// Lessons whose content activities are all done on the server
-  /// (is_completed or completion_percent 100)
+  /// Lessons whose content activities are all done (is_completed or 100 percent)
   int get lessonsDone => _lessonTopics.values
       .where((topic) => topic.every((a) => a.isDone))
       .length;
@@ -254,9 +227,7 @@ class CourseDetailsController extends GetxController {
     }
   }
 
-  /// Keep the existing five-second route-dwell trigger until the backend owner
-  /// supplies a playback completion contract. This is not measured watch time:
-  /// paused/background/seeking rules, minutes and unlocking remain blocked.
+  /// Opens the player; five seconds on its route count as watched
   Future<void> onTapLessonVideo(int index) async {
     if (!_ownsCourse || _videoBusy || _contentLease?.isCurrent != true) return;
     final selectedCourse = course.value;
@@ -274,13 +245,11 @@ class CourseDetailsController extends GetxController {
       return;
     }
     final id = courseId;
-    final language = TranslationX.getLanguageCode;
     final route = Get.currentRoute;
     final request = _loadGeneration;
     final visit = ++_visitGeneration;
     final lease = _captureScope(
       id,
-      language,
       operation:
           () =>
               visit == _visitGeneration &&
@@ -316,12 +285,10 @@ class CourseDetailsController extends GetxController {
         if (!lease.isCurrent) return;
       }
 
-      /// Back on the course page: always refetch so the checkmark and the
-      /// unlocked next lesson show without leaving the page
-      final refreshed = await _refreshCourse(lease, id, language);
+      // Back on the course page: always refetch, so the checkmark and unlock show
+      final refreshed = await _refreshCourse(lease, id);
 
-      /// The player's Next button: continue only with fresh data, and only if
-      /// this page is still the one the user came back to
+      // Not lease.isCurrent: it rejects the course the refetch just published
       openNext =
           refreshed &&
           result == VideoPlayerController.nextResult &&
@@ -349,17 +316,15 @@ class CourseDetailsController extends GetxController {
       return;
     }
     final id = courseId;
-    final language = TranslationX.getLanguageCode;
     final route = Get.currentRoute;
     final request = _loadGeneration;
     final lease = _captureScope(
       id,
-      language,
       operation: () => request == _loadGeneration && Get.currentRoute == route,
     );
     await Get.toNamed(RouteNameX.testInfo, arguments: [activity.quizId, id]);
     if (!lease.isCurrent) return;
-    await _refreshCourse(lease, id, language);
+    await _refreshCourse(lease, id);
   }
 
   /// Download lesson summary
@@ -377,11 +342,9 @@ class CourseDetailsController extends GetxController {
     final doneKey = LocalKeyX.fileDone(activity.cmId);
     final lease = _captureScope(
       courseId,
-      TranslationX.getLanguageCode,
       operation: () => identical(course.value, selectedCourse),
     );
 
-    /// Download lesson summary
     try {
       isLoading = true;
       final saved = await downloadFile(url, fileName);
@@ -405,6 +368,9 @@ class CourseDetailsController extends GetxController {
     }
     course.refresh();
   }
+
+  //============================================================================
+  // Lifecycle
 
   @override
   void onInit() {
