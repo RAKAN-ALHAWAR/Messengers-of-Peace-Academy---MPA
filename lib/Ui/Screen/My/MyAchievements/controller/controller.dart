@@ -1,4 +1,4 @@
-import 'package:messengersofpeace/Core/Service/session_lease.dart';
+import 'package:messengersofpeace/Core/Service/controller_lease.dart';
 import 'package:get/get.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
@@ -28,6 +28,8 @@ class MyAchievementsController extends GetxController {
   /// My activity points
   List<MyActivityPointX> myActivityPoints = [];
   int _loadGeneration = 0;
+
+  /// Session revision and language that own the loaded snapshot
   (int, String)? _ownerKey;
 
   //============================================================================
@@ -40,15 +42,11 @@ class MyAchievementsController extends GetxController {
     final ownerId = LocalDataX.userid;
     final key = (LocalDataX.sessionRevision, locale);
     final generation = ++_loadGeneration;
-    final lease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              generation == _loadGeneration &&
-              TranslationX.getLanguageCode == locale &&
-              Get.isRegistered<AppControllerX>() &&
-              identical(Get.find<AppControllerX>(), app) &&
-              app.user.value.id == ownerId,
+    final lease = ControllerLeaseX.capture(
+      this,
+      app: app,
+      locale: true,
+      also: () => generation == _loadGeneration && app.user.value.id == ownerId,
     );
     if (_ownerKey != key || !lease.hasAuthenticatedIdentity) {
       _clearSnapshot();
@@ -63,7 +61,7 @@ class MyAchievementsController extends GetxController {
       if (!lease.isCurrent) return;
       final loadedPoints = await DatabaseX.getMyActivityPoints();
       if (!lease.isCurrent) return;
-      // Preserve the existing selector and publish one coherent owned snapshot.
+      /// Publish one coherent snapshot of the owner
       final selectedBadge =
           loadedBadges.isEmpty
               ? null
@@ -77,13 +75,13 @@ class MyAchievementsController extends GetxController {
       myActivityPoints = loadedPoints;
       currentBadge = selectedBadge;
     } catch (_) {
-      // The retained FutureBuilder surfaces current failures. Retired loads
-      // cannot write state or start another protected request.
+      /// Only a current failure reaches the FutureBuilder
       if (!lease.isCurrent) return;
       rethrow;
     }
   }
 
+  /// Forget the loaded snapshot
   void _clearSnapshot() {
     badges = [];
     myActivityPoints = [];
