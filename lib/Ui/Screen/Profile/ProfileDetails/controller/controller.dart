@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:messengersofpeace/Core/core.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../Config/config.dart';
 import '../../../../../Core/Service/session_lease.dart';
@@ -182,6 +183,39 @@ class ProfileDetailsController extends GetxController {
 
   /// Log out
   onLogout() async => await app.logOut();
+
+  /// The site's data-deletion request page (Moodle data privacy tool)
+  static const dataDeletionRequestUrl =
+      'https://mopacademy.org/admin/tool/dataprivacy/createdatarequest.php';
+
+  /// Opens a link in the external browser. A field so tests can fake it.
+  Future<bool> Function(Uri url) launcher =
+      (url) => launchUrl(url, mode: LaunchMode.externalApplication);
+
+  /// Ask the user to confirm before leaving for the deletion request page
+  onDeleteAccount() => AlertDialogX.okAndCancel(
+    title: 'Delete account',
+    message:
+        'Your account and your data will be permanently deleted and this cannot be undone. We will take you to the data deletion request page on the website.',
+    textOK: 'Delete',
+    colorTextOk: ColorX.danger,
+    onOk: onConfirmDeleteAccount,
+  );
+
+  /// Hand the deletion request over to the website
+  Future<void> onConfirmDeleteAccount() async {
+    // TEMP(backend): the app has no account-deletion endpoint yet (none among
+    // the 163 web service functions), so it hands off to the site's data
+    // request page until the backend adds one. The session is left as is.
+    Get.back();
+    var opened = false;
+    try {
+      opened = await launcher(Uri.parse(dataDeletionRequestUrl));
+    } catch (_) {}
+    if (!opened) {
+      ToastX.error(message: 'Could not open the page, please try again');
+    }
+  }
 
   /// Change dark mode
   onChangeDarkMode() {

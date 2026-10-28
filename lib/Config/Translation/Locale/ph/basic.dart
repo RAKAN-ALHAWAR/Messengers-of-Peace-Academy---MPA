@@ -58,5 +58,11 @@ const Map<String, String> phBasic = {
   "Select Country Code": "Pumili ng Country Code",
   "Search by country name or code": "Maghanap ayon sa pangalan ng bansa o code",
   "No results found": "Walang nahanap na resulta",
+  "Delete account":
+      "Burahin ang account",
+  "Your account and your data will be permanently deleted and this cannot be undone. We will take you to the data deletion request page on the website.":
+      "Permanenteng buburahin ang iyong account at data at hindi na ito maibabalik. Dadalhin ka namin sa pahina ng kahilingan sa pagbura ng data sa website.",
+  "Could not open the page, please try again":
+      "Hindi mabuksan ang pahina, subukang muli",
   // "":"",
 };

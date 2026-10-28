@@ -185,6 +185,13 @@ class ProfileDetailsView extends GetView<ProfileDetailsController> {
                           );
                         },
                       ).fadeAnimation400,
+
+                      /// Delete account button
+                      ButtonX.dangerous(
+                        text: "Delete account",
+                        iconData: IconX.delete,
+                        onTap: controller.onDeleteAccount,
+                      ).fadeAnimation400,
                     ],
                   ),
                 ),

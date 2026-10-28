@@ -58,5 +58,11 @@ const Map<String, String> esBasic = {
   "Select Country Code": "Seleccionar código de país",
   "Search by country name or code": "Buscar por nombre de país o código",
   "No results found": "No se encontraron resultados",
+  "Delete account":
+      "Eliminar cuenta",
+  "Your account and your data will be permanently deleted and this cannot be undone. We will take you to the data deletion request page on the website.":
+      "Tu cuenta y tus datos se eliminarán de forma permanente y esto no se puede deshacer. Te llevaremos a la página de solicitud de eliminación de datos del sitio web.",
+  "Could not open the page, please try again":
+      "No se pudo abrir la página, inténtalo de nuevo",
   // "":"",
 };

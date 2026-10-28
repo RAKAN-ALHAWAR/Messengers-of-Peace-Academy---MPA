@@ -58,5 +58,11 @@ const Map<String, String> enBasic = {
   "Select Country Code": "Select Country Code",
   "Search by country name or code": "Search by country name or code",
   "No results found": "No results found",
+  "Delete account":
+      "Delete account",
+  "Your account and your data will be permanently deleted and this cannot be undone. We will take you to the data deletion request page on the website.":
+      "Your account and your data will be permanently deleted and this cannot be undone. We will take you to the data deletion request page on the website.",
+  "Could not open the page, please try again":
+      "Could not open the page, please try again",
   // "":"",
 };

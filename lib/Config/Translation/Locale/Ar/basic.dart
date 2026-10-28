@@ -58,5 +58,11 @@ const Map<String, String> arBasic = {
   "Select Country Code": "اختر رمز الدولة",
   "Search by country name or code": "ابحث عن اسم الدولة أو الرمز",
   "No results found": "لم يتم العثور على نتائج",
+  'Delete account':
+      'حذف الحساب',
+  'Your account and your data will be permanently deleted and this cannot be undone. We will take you to the data deletion request page on the website.':
+      'سيتم حذف حسابك وبياناتك نهائيًا ولا يمكن التراجع عن ذلك. سننقلك إلى صفحة طلب حذف البيانات في الموقع.',
+  'Could not open the page, please try again':
+      'تعذّر فتح الصفحة، حاول مرة أخرى',
   // "":"",
 };
