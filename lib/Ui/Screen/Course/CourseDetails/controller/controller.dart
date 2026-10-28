@@ -161,6 +161,26 @@ class CourseDetailsController extends GetxController {
     if (quiz != null) openNextActivity(quiz.cmId);
   }
 
+  /// The passed-quiz screen sits right above this page. After it goes back
+  /// here: refetch, then continue with the activity after [quizId].
+  Future<void> continueAfterPassedQuiz(String quizId) async {
+    if (!_ownsCourse || _contentLease?.isCurrent != true) return;
+    final id = courseId;
+    final language = TranslationX.getLanguageCode;
+    final route = Get.currentRoute;
+    final request = _loadGeneration;
+    final lease = _captureScope(
+      id,
+      language,
+      operation: () => request == _loadGeneration && Get.currentRoute == route,
+    );
+    if (!await _refreshCourse(lease, id, language)) return;
+    final quiz = course.value?.activities.firstWhereOrNull(
+      (a) => a.quizId == quizId,
+    );
+    if (quiz != null) await openNextActivity(quiz.cmId);
+  }
+
   /// Lessons are the topics of the course (the "Lesson 1", "Lesson 2" rows).
   /// A topic counts as one lesson when it has at least one activity with
   /// content: a video, a quiz or a file. Activities without content are skipped.
@@ -246,7 +266,14 @@ class CourseDetailsController extends GetxController {
       if (!lease.isCurrent) return;
       final dwell = DateTime.now().difference(startTime);
       if (!activity.isCompleted && dwell.inSeconds >= 5) {
-        await DatabaseX.completeVideoOfCourse(cmId: moduleId);
+        try {
+          await DatabaseX.completeVideoOfCourse(cmId: moduleId);
+        } catch (e) {
+          // Report it, but still refetch below
+          if (!lease.isCurrent) return;
+          ErrorX.console(e);
+          ToastX.error(message: '${"Something wrong".tr}. ${"Try again".tr}');
+        }
         if (!lease.isCurrent) return;
       }
 

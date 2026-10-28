@@ -172,8 +172,20 @@ class TestResultsController extends GetxController {
   onTapButton() {
     if (!ownsCurrentSession) return;
     if (isSuccess) {
-      // After a confirmed pass go to a freshly loaded course page, which opens
-      // the next activity (or stays on the page when it is locked or missing).
+      // After a confirmed pass go back to the course page below this screen and
+      // let it refetch and open the next activity. A second course page would
+      // share the controller with the old one, and the old route's disposal
+      // would delete it.
+      final details =
+          Get.isRegistered<CourseDetailsController>()
+              ? Get.find<CourseDetailsController>()
+              : null;
+      if (details != null && details.courseId == courseId) {
+        Get.until((route) => route.settings.name == RouteNameX.courseDetails);
+        details.continueAfterPassedQuiz(quizId);
+        return;
+      }
+      // No course page below (opened another way): load a fresh one.
       Get.offNamedUntil(
         RouteNameX.courseDetails,
         (route) => route.settings.name == RouteNameX.root,
