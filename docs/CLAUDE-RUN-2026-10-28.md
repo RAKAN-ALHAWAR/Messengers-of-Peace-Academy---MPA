@@ -114,3 +114,4 @@ Estimate: 7 to 13 agent-work hours (est., basis: sonnet-high median 17-32 min pe
 - Full suite hung: next_activity_test and progression_test fail `Bad state: Cannot add event while adding stream` because the new addLearnedSeconds seam is not injected there (fake-async Hive write). NOT pushed.
 - Fix lane: flutter-developer Sonnet, worktree ../mopa-wt-vt, branch claude/fix-video-tests, tests only.
 - Foreign uncommitted change in main and fold worktree: analysis_options.yaml adds analyzer exclude build/android/ios. Not mine; left untouched; report to owner.
+- Test fix 180cb1e merged; main full suite "+731: All tests passed!"; pushed.
