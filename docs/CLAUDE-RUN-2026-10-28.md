@@ -171,3 +171,10 @@ Parallel: complete-account save failure on account 2 under diagnosis (Sonnet, wo
 - Side note: update_user_form.dart:124-127 gates countrycode on howToFindUsOthers != null (owner original a57bc44); callers always pass a string, so countrycode is sent; latent only. Not changed.
 - S1 merged (5c77d2f, d70c548, ee897f1): ControllerLeaseX, 40 new tests, 15 gap tests watched red. Main full suite "+772: All tests passed!", analyze clean.
 - Next: Haiku packs for S2..S8, then 7 parallel Sonnet lanes.
+
+## Incomplete account behaviour (2026-10-29, owner decisions)
+
+- Owner on Skip signing out: «بس هاد شي مؤقت وممكن يتصلح اصلا من الباك اند ف بصير بيغدر يدخل، ف طريقتك غلط وليش قررت بدون ما تقلي». Conceded: lane A1 (e192c4d) chose sign-out and it was merged without asking. INBOX line logged.
+- Decision: Skip on Complete Account Info goes to the app root, never signs out.
+- Decision «اكيد خيار ب»: on app start, an account whose profile returns usernotfullysetup stays signed in and opens Home (no sign-out). Both added to the S5 lane as separate behaviour commits, test-first, with the `late user` trap to handle.
+- Probe build replaced on the simulator by the normal main build (owner: «شيله اذا تجريبي»). Note: `flutter build ios --simulator` fails on this macOS at the lipo arch check; xcodebuild arm64-only works.
