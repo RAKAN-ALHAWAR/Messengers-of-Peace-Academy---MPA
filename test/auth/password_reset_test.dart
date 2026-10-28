@@ -10,7 +10,9 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Core/core.dart';
+import 'package:messengersofpeace/Core/Error/error.dart';
 import 'package:messengersofpeace/Core/Helper/http/http.dart';
+import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:messengersofpeace/Data/data.dart';
 import 'package:messengersofpeace/Ui/Screen/Auth/ForgotPassword/controller/controller.dart';
 import 'package:messengersofpeace/Ui/Screen/Auth/ForgotPasswordReset/controller/controller.dart';
@@ -53,6 +55,15 @@ Widget host(List<GetPage<dynamic>> pages) => GetMaterialApp(
     ...pages,
   ],
 );
+
+/// An app controller whose session cleanup fails, like a failing disk
+class ThrowingCleanupApp extends AppControllerX {
+  @override
+  Future<void> clearLocalSession(
+    SessionLeaseX lease, {
+    bool navigate = true,
+  }) async => throw StateError('Synthetic cleanup failure');
+}
 
 bool isReset(http.BaseRequest request) =>
     request.url.queryParameters['wsfunction']!.contains('reset_password');
@@ -302,6 +313,25 @@ void main() {
       },
     );
   }
+
+  controllerTest(
+    'accepted reset still reaches login when the failed sign-in cleanup throws',
+    (tester) async {
+      Get.delete<AppControllerX>(force: true);
+      Get.put<AppControllerX>(ThrowingCleanupApp(), permanent: true);
+      final controller = await openReset(tester);
+      final client = server([], login: loginOk, profile: rejected);
+      await http.runWithClient(() async {
+        await tester.runAsync(controller.onResetPassword);
+        await tester.pumpAndSettle();
+      }, () => client);
+      // The cleanup failure is logged, not rethrown
+      expect(tester.takeException(), isA<ErrorX>());
+      expect(Get.currentRoute, RouteNameX.login);
+      expect(find.text(successMessage), findsOneWidget);
+      expect(controller.buttonState.value, ButtonStateEX.success);
+    },
+  );
 
   controllerTest(
     'rejected reset stays editable and retries once after failure',
