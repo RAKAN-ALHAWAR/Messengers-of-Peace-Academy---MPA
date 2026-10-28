@@ -6,6 +6,7 @@ import '../../../../Config/Translation/translation.dart';
 import '../../../../Config/config.dart';
 import '../../../../Core/core.dart';
 import '../../../../Core/Error/error.dart';
+import '../../../../Core/Service/controller_lease.dart';
 import '../../../../Core/Service/route_origin.dart';
 import '../../../../Core/Service/session_lease.dart';
 import '../../../Widget/widget.dart';
@@ -71,17 +72,11 @@ class HomeController extends GetxController {
   int _progressNavigationGeneration = 0;
   bool _openingProgressRoute = false;
 
-  bool get _ownsHome =>
-      !isClosed &&
-      Get.isRegistered<HomeController>() &&
-      identical(Get.find<HomeController>(), this) &&
-      Get.isRegistered<AppControllerX>() &&
-      identical(Get.find<AppControllerX>(), app);
-
-  /// Keep one owned snapshot. Independent responses must never partly replace
-  /// another account's state or be published with the wrong locale.
+  /// One owned snapshot: a late answer of a changed owner is dropped.
   Future<void> getData({bool force = false, SessionLeaseX? owner}) {
-    if (!_ownsHome || owner?.isCurrent == false) return Future.value();
+    if (!ControllerLeaseX.owns(this, app: app) || owner?.isCurrent == false) {
+      return Future.value();
+    }
     final language = TranslationX.getLanguageCode;
     final ownedCache =
         isInit && _cacheLease?.isCurrent == true && currentLanguage == language;
@@ -98,13 +93,13 @@ class HomeController extends GetxController {
     }
     final request = ++_loadGeneration;
     final id = LocalDataX.userid;
-    final lease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              _ownsHome &&
-              owner?.isCurrent != false &&
-              request == _loadGeneration &&
-              TranslationX.getLanguageCode == language,
+    final lease = ControllerLeaseX.capture(
+      this,
+      registered: true,
+      app: app,
+      owner: owner,
+      locale: true,
+      also: () => request == _loadGeneration,
     );
     _pendingLease = lease;
     _pendingOwner = owner;
@@ -144,9 +139,7 @@ class HomeController extends GetxController {
     bool force,
   ) async {
     try {
-      if (!lease.hasAuthenticatedIdentity) {
-        throw ErrorX(message: 'Session changed. Please try again.');
-      }
+      if (!lease.hasAuthenticatedIdentity) throw ErrorX.sessionChanged();
       final values = await Future.wait<Object>([
         DatabaseX.getUser(userId: id),
         DatabaseX.getUserStatistics(),
@@ -156,9 +149,7 @@ class HomeController extends GetxController {
       ]);
       if (!lease.isCurrent) return;
       final profile = values[0] as UserX;
-      if (profile.id != id) {
-        throw ErrorX(message: 'Session changed. Please try again.');
-      }
+      if (profile.id != id) throw ErrorX.sessionChanged();
       final nextLevels = values[2] as List<LevelX>;
       // TEMP(backend): the backend should return is_open for the first course.
       openFirstCourseIfNoneOpen(nextLevels);
@@ -197,27 +188,28 @@ class HomeController extends GetxController {
       lastUpdate = DateTime.now();
       isInit = true;
       // Cache ownership is independent of the next refresh's request generation.
-      _cacheLease = SessionLeaseX.capture(
-        isActive: () => _ownsHome && TranslationX.getLanguageCode == language,
+      _cacheLease = ControllerLeaseX.capture(
+        this,
+        registered: true,
+        app: app,
+        locale: true,
       );
     } catch (e) {
       if (!lease.isCurrent) return;
       if (!ownedCache || force) rethrow;
-      // An expired, same-owner snapshot remains available after a failed refresh;
-      // its timestamp is not renewed, so a retry still performs the request.
+      // A failed refresh keeps the old snapshot and its time, so a retry asks.
       ErrorX.console(e);
     }
   }
 
   Future<void> onNotifications() async {
     final request = ++_notificationGeneration;
-    final language = TranslationX.getLanguageCode;
-    final lease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              _ownsHome &&
-              request == _notificationGeneration &&
-              TranslationX.getLanguageCode == language,
+    final lease = ControllerLeaseX.capture(
+      this,
+      registered: true,
+      app: app,
+      locale: true,
+      also: () => request == _notificationGeneration,
     );
     if (!lease.isCurrent || !lease.hasAuthenticatedIdentity) return;
     try {
@@ -244,23 +236,21 @@ class HomeController extends GetxController {
   Future<void> onCourseTap(MiniCourseX course) =>
       _openAndRefreshProgress(RouteNameX.courseDetails, arguments: course.id);
 
-  /// A course may be removed by quiz-result navigation while Home is covered.
-  /// Route lifetime, rather than top-route equality, owns this read-only refresh.
+  /// Open a page, then refresh progress while the tapped route is still alive.
   Future<void> _openAndRefreshProgress(
     String destination, {
     Object? arguments,
   }) async {
-    if (_openingProgressRoute || !_ownsHome) return;
+    if (_openingProgressRoute || !ControllerLeaseX.owns(this, app: app)) return;
     final route = RouteOriginX.capture();
-    final language = TranslationX.getLanguageCode;
     final request = ++_progressNavigationGeneration;
-    final lease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              _ownsHome &&
-              route.isActive &&
-              request == _progressNavigationGeneration &&
-              TranslationX.getLanguageCode == language,
+    final lease = ControllerLeaseX.capture(
+      this,
+      registered: true,
+      app: app,
+      origin: route,
+      locale: true,
+      also: () => request == _progressNavigationGeneration,
     );
     if (!lease.isCurrent || !lease.hasAuthenticatedIdentity) return;
     _openingProgressRoute = true;
