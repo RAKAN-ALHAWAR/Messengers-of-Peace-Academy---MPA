@@ -89,3 +89,9 @@ Estimate: 7 to 13 agent-work hours (est., basis: sonnet-high median 17-32 min pe
 - Owner asked that a Sonnet agent do the work, not the orchestrator. Lane launched: flutter-developer (Sonnet 5.5 high), worktree ../mopa-wt-tap, branch claude/fix-course-tap: tap fix + counterparts + fixed local unlock (TEMP(backend)), test-first, simulator evidence.
 - Temporary debug prints were reverted (git restore), nothing committed from them.
 - NEXT: verify lane diff, merge, add the unlock item to BACKEND-REQUESTS section 2.
+
+## Lane B2 merged (2026-10-28)
+- Commits 9f6c4b5, a29f01e, efbf6b6, 4340825, 69b6bb3 merged no-ff into main. Re-run on main: `flutter test test/learning test/ui test/quiz` +247 All tests passed.
+- Review notes for the batch review: `_markFileDownloaded` doc names a missing `_applyLocalFileFlags`; `Zone.root.run` in CourseDetails exists only for fake-async tests; learned seconds count page dwell including pause.
+- BACKEND-REQUESTS items 6-9 added (file completion, video duration, minutes, first course open).
+- Tap lane still running.
