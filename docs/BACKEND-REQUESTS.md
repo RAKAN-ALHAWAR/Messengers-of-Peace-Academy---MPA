@@ -17,6 +17,7 @@
   ```json
   {"exception":"core\\exception\\moodle_exception","errorcode":"usernotfullysetup","message":"تهيئة حساب المستخدم لم تكتمل بعد"}
   ```
+- **تأكيد 2026-10-29 على الحساب التاني:** التطبيق بعت كل الحقول الإجبارية التمانية (`ulang`، `gender`، `WhatsAppNumber`، `Age`، `HearboutUs`، `nationality`، `countrycode`، `ksaunistudy`) مع `city`، والسيرفر رد بنفس الخطأ. التطبيق صار يعرض رسالة واضحة بدل نص Moodle. منطلب منكم تشوفوا من لوحة الإدارة شو الحقل الناقص بالضبط بحساب هالمستخدم.
 - **السبب المرجّح:** Moodle بيمنع كل طلبات الويب سيرفس لمستخدم ناقصة حقوله الإجبارية (`require_login` بيرمي `usernotfullysetup`)، وهالمنع بيشمل دالة الاستكمال نفسها.
 - **المطلوب:**
   - دالتا `local_otp_registration_update_user_profile` و`local_otp_registration_get_user_full_profile` لازم يشتغلوا للمستخدم الناقص (بدون `require_login` الكامل، مع التحقق إن التوكن لصاحب الحساب).
