@@ -322,15 +322,8 @@ class CompleteAccountInfoController extends GetxController {
     return () => ownsSession() && TranslationX.getLanguageCode == locale;
   }
 
-  /// Complete later
-  ///
-  /// An account without a loadable profile cannot use the app yet, so it signs
-  /// out instead; its data can be completed on the next sign in.
+  /// Skip for now: every account enters the app and can complete its data later.
   Future<void> completeLater() async {
-    if (profileMissing) {
-      await app.logOut();
-      return;
-    }
     Get.offAllNamed(RouteNameX.root);
   }
 
