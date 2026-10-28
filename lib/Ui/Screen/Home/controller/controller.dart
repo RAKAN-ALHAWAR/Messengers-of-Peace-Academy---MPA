@@ -10,6 +10,7 @@ import '../../../../Core/Service/route_origin.dart';
 import '../../../../Core/Service/session_lease.dart';
 import '../../../Widget/widget.dart';
 import '../../../../Data/Enum/meeting_option.dart';
+import '../../../../Data/Model/course/first_course_unlock.dart';
 import '../../../../Data/Model/course/level.dart';
 import '../../../../Data/Model/course/mini_course.dart';
 import '../../../../Data/Model/meeting.dart';
@@ -159,6 +160,8 @@ class HomeController extends GetxController {
         throw ErrorX(message: 'Session changed. Please try again.');
       }
       final nextLevels = values[2] as List<LevelX>;
+      // TEMP(backend): the backend should return is_open for the first course.
+      openFirstCourseIfNoneOpen(nextLevels);
       LevelX? selected;
       if (nextLevels.isNotEmpty) {
         selected = nextLevels.firstWhere(
