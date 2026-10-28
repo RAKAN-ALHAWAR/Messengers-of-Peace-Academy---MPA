@@ -435,6 +435,46 @@ void main() {
   );
 
   testWidgets(
+    'save refused as not fully set up shows a clear message, keeps the form',
+    (tester) async {
+      controller.profileMissing = true;
+      await http.runWithClient(
+        () async {
+          await mount(tester);
+          validValues();
+          await tester.pumpAndSettle();
+          final pending = controller.onEdit();
+          await tester.pump();
+          await tester.pump(const Duration(seconds: 1));
+          await pending;
+          await tester.pumpAndSettle();
+          // The raw server text is only "not set up yet", which reads as the
+          // screen the user is already on; the app says what to do instead.
+          expect(find.text('Profile not complete'), findsNothing);
+          expect(
+            find.text(
+              'Your account setup is not complete on the server, so the data could not be saved. Please contact support.',
+            ),
+            findsOneWidget,
+          );
+          expect(find.text('Root destination'), findsNothing);
+          expect(controller.buttonState.value, ButtonStateEX.failed);
+          await tester.pump(const Duration(seconds: 5));
+        },
+        () => MockClient((r) async {
+          final function = r.url.queryParameters['wsfunction'] ?? '';
+          if (function.contains('update_user_profile') &&
+              !function.contains('picture')) {
+            requests.add(r);
+            return http.Response(incompleteBody, 200);
+          }
+          return referenceResponse(r);
+        }),
+      );
+    },
+  );
+
+  testWidgets(
     'complete later signs a missing-profile account out instead of entering',
     (tester) async {
       controller.profileMissing = true;

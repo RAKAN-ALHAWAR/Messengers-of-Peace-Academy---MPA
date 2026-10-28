@@ -26,6 +26,8 @@ const Map<String, String> esGeneral = {
   "Close": "Cerrar",
   "Password changed successfully. Please sign in with your new password.":
       "Contraseña cambiada correctamente. Inicia sesión con tu nueva contraseña.",
+  "Your account setup is not complete on the server, so the data could not be saved. Please contact support.":
+      "La configuración de tu cuenta no está completa en el servidor, por lo que no se pudieron guardar los datos. Contacta con soporte.",
   "Profile information saved, but the photo could not be uploaded. Please try again.":
       "Se guardaron tus datos, pero no se pudo subir la foto. Inténtalo de nuevo.",
   "Email": "Email",
