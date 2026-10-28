@@ -88,14 +88,27 @@ class TextFieldX extends StatefulWidget {
 
 /// Converts Arabic-Indic digits to Latin, then drops every non-ASCII or
 /// whitespace character, so an email can only hold what a mail server accepts.
-final emailInputFormatters = <TextInputFormatter>[
+///
+/// [onNonAscii] is told after each edit whether a non-ASCII character (for
+/// example an Arabic letter) was typed and is being dropped, so the field can
+/// explain why nothing appeared.
+List<TextInputFormatter> emailFormatters({
+  void Function(bool droppedNonAscii)? onNonAscii,
+}) => <TextInputFormatter>[
   TextInputFormatter.withFunction(
     (oldValue, newValue) => newValue.copyWith(
       text: newValue.text.arabicToEnglishNumbers,
     ),
   ),
+  // Report before the filter removes the characters (digits are already Latin).
+  TextInputFormatter.withFunction((oldValue, newValue) {
+    onNonAscii?.call(newValue.text.runes.any((rune) => rune > 0x7E));
+    return newValue;
+  }),
   FilteringTextInputFormatter.allow(RegExp(r'[\x21-\x7E]')),
 ];
+
+final emailInputFormatters = emailFormatters();
 
 class _TextFieldXState extends State<TextFieldX> {
   late bool passwordVisible;
@@ -103,6 +116,14 @@ class _TextFieldXState extends State<TextFieldX> {
   Timer? _debounce;
   bool isShowLabel = false;
   late VoidCallback _controllerListener;
+
+  /// True while the last email edit contained a letter the field dropped
+  bool _showKeyboardHint = false;
+
+  void _onEmailEdit(bool droppedNonAscii) {
+    if (!mounted || droppedNonAscii == _showKeyboardHint) return;
+    setState(() => _showKeyboardHint = droppedNonAscii);
+  }
 
   @override
   void initState() {
@@ -218,7 +239,7 @@ class _TextFieldXState extends State<TextFieldX> {
         textAlignVertical: TextAlignVertical.center,
         controller: widget.controller,
         inputFormatters: [
-          if (isEmail) ...emailInputFormatters,
+          if (isEmail) ...emailFormatters(onNonAscii: _onEmailEdit),
           ...?widget.inputFormatters,
         ],
         onTap: widget.onTap,
@@ -302,6 +323,16 @@ class _TextFieldXState extends State<TextFieldX> {
           errorStyle: TextStyleX.bodySmall,
           errorMaxLines: widget.errorMaxLines,
           alignLabelWithHint: true,
+          // iOS keeps a separate keyboard language for the email keyboard, so
+          // explain why Arabic letters vanish. An error from the validator
+          // replaces this line.
+          helperText: _showKeyboardHint && isEmail
+              ? 'Switch the keyboard to English to type the email'.tr
+              : null,
+          helperStyle: TextStyleX.bodySmall.copyWith(
+            color: Theme.of(context).colorScheme.error,
+          ),
+          helperMaxLines: widget.errorMaxLines,
           hintText: (widget.hint ?? "").tr,
           hintMaxLines: widget.hintMaxLines,
           hintStyle: TextStyleX.bodyMedium.copyWith(

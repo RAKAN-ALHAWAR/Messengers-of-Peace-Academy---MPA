@@ -68,5 +68,7 @@ const Map<String, String> enBasic = {
       "You have used all the attempts allowed for this test, so it cannot be taken again. Contact the academy if you need a new attempt.",
   "This test is not available to start right now.":
       "This test is not available to start right now.",
+  "Switch the keyboard to English to type the email":
+      "Switch the keyboard to English to type the email",
   // "":"",
 };

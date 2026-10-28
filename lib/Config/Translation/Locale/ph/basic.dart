@@ -68,5 +68,7 @@ const Map<String, String> phBasic = {
       "Nagamit mo na ang lahat ng pinapayagang pagtatangka para sa pagsusulit na ito, kaya hindi na ito maaaring kunin muli. Makipag-ugnayan sa akademya kung kailangan mo ng bagong pagtatangka.",
   "This test is not available to start right now.":
       "Hindi pa available ang pagsusulit na ito para simulan ngayon.",
+  "Switch the keyboard to English to type the email":
+      "Palitan ang keyboard sa Ingles para i-type ang email",
   // "":"",
 };

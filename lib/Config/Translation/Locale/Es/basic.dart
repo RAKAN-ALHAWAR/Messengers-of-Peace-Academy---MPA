@@ -68,5 +68,7 @@ const Map<String, String> esBasic = {
       "Has usado todos los intentos permitidos para este examen, por lo que no se puede repetir. Ponte en contacto con la academia si necesitas un nuevo intento.",
   "This test is not available to start right now.":
       "Este examen no está disponible para comenzar en este momento.",
+  "Switch the keyboard to English to type the email":
+      "Cambia el teclado a inglés para escribir el correo electrónico",
   // "":"",
 };

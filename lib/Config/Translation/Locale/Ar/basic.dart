@@ -68,5 +68,7 @@ const Map<String, String> arBasic = {
       'استنفدت المحاولات المسموحة لهذا الاختبار، ولا يمكن إعادته. تواصل مع الأكاديمية إذا احتجت محاولة جديدة.',
   'This test is not available to start right now.':
       'هذا الاختبار غير متاح للبدء حاليًا.',
+  'Switch the keyboard to English to type the email':
+      'حوّل لوحة المفاتيح إلى الإنكليزية لكتابة البريد الإلكتروني',
   // "":"",
 };
