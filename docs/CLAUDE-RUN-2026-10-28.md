@@ -125,3 +125,11 @@ Estimate: 7 to 13 agent-work hours (est., basis: sonnet-high median 17-32 min pe
 - analysis_options.yaml analyzer exclude (build, android, ios): owner said «شوف المناسب»; kept and committed (standard exclude of generated and native folders).
 - Owner asked whether local file checkmark and learning minutes are per user and survive logout: verified in code (local_key.dart keys prefix the user id; clearLocalSession removes only userid and token), answered in chat.
 - Next: device checks lane (Sonnet), worktree cleanup, Codex simplification, GitLab evidence.
+
+## Device check of main 00a8ff5 (2026-10-28, Sonnet flutter-developer, account 1)
+
+- PASS: delete dialog new text and «فتح الصفحة» (evidence v-01-delete-account-dialog.png, viewed by orchestrator); entry exam test info explains used attempts from server fields (v-02-entry-exam-test-info.png, viewed); course cards entry exam 0/1 and course 130 shows 12 lessons (v-03-*).
+- BLOCKED on account 1 (only open course is the entry exam: no file, no video, nothing completed): file checkmark, video duration, Next button, minutes card, course 130 details (locked), toast (none arose). Needs an account with an open course that has a video and a summary file.
+- Emoji 🥳 in «دورات أكملتها» is original (Saker v0.0.1, user_statistics.dart:22 and Ar/general.dart:135); C7 bans emoji in UI; asked the owner.
+- Worktrees mopa-wt-* (9) removed after checking each was merged; fold's only change equals main's analysis_options.yaml.
+- Full report: mopa-gitlab-issues/evidence/v-REPORT-device-drive-main-00a8ff5.txt.
