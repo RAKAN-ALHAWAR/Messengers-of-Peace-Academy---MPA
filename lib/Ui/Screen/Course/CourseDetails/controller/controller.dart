@@ -11,6 +11,7 @@ import '../../../../../Config/Translation/translation.dart';
 import '../../../../../Data/Model/course/activity.dart';
 import '../../../../../Data/Model/course/course.dart';
 import '../../../../../Data/data.dart';
+import '../../VideoPlayer /controller/controller.dart';
 
 class CourseDetailsController extends GetxController {
   //============================================================================
@@ -88,68 +89,103 @@ class CourseDetailsController extends GetxController {
       if (!lease.isCurrent) return;
       rethrow;
     }
+    _openNextAfterPassedQuiz();
   }
 
   /// Checkmarks and unlocking come only from the current backend snapshot. A
   /// failed refresh retains prior content and leaves retry available.
-  Future<void> _refreshCourse(
+  /// Returns true only when the fresh course was published.
+  Future<bool> _refreshCourse(
     SessionLeaseX lease,
     String id,
     String language,
   ) async {
     try {
       final value = await DatabaseX.getCourse(courseId: id);
-      if (!lease.isCurrent) return;
+      if (!lease.isCurrent) return false;
       _publishCourse(value, id, language);
+      return true;
     } catch (e) {
-      if (!lease.isCurrent) return;
+      if (!lease.isCurrent) return false;
       ErrorX.console(e);
       ToastX.error(message: '${"Something wrong".tr}. ${"Try again".tr}');
+      return false;
     }
   }
 
-  /// Get total lessons count across all topics
-  /// Rules:
-  /// - If there are videos in a topic, count the number of videos
-  /// - If no videos but there are files (downloadUrl) in a topic, count as 1 lesson
-  /// - Quizzes are never counted
-  int get getUniqueTopicsCount {
-    if (course.value == null) return 0;
+  //============================================================================
+  // Next activity
 
-    // Group activities by topicId
-    final Map<int, List<ActivityX>> groupedByTopic = {};
-    for (var activity in course.value!.activities) {
-      if (!groupedByTopic.containsKey(activity.topicId)) {
-        groupedByTopic[activity.topicId] = [];
-      }
-      groupedByTopic[activity.topicId]!.add(activity);
+  /// Route parameter the passed-quiz screen sends (the quiz id) so this page
+  /// opens the activity after that quiz once the fresh course is loaded.
+  static const nextAfterQuizParam = 'nextAfterQuiz';
+  String? _nextAfterQuizId;
+
+  /// The activity that follows [cmId] in course order, or null when [cmId] is
+  /// the last one, is unknown, or the next activity is still locked.
+  /// Activities without any content (no video, quiz or file) are skipped.
+  static ActivityX? nextActivityAfter(List<ActivityX> activities, String cmId) {
+    final index = activities.indexWhere((a) => a.cmId == cmId);
+    if (index < 0) return null;
+    for (var i = index + 1; i < activities.length; i++) {
+      if (!activities[i].hasContent) continue;
+      return activities[i].isOpen ? activities[i] : null;
     }
-
-    int totalLessons = 0;
-
-    // Count lessons for each topic
-    for (var topicActivities in groupedByTopic.values) {
-      // Count videos (excluding quizzes)
-      final videoCount =
-          topicActivities
-              .where(
-                (activity) =>
-                    activity.videoUrl.isNotEmpty && activity.quizId == null,
-              )
-              .length;
-
-      if (videoCount > 0) {
-        // If there are videos, count them
-        totalLessons += videoCount;
-      }
-    }
-
-    return totalLessons;
+    return null;
   }
+
+  /// Open the activity after [cmId]: a video opens the player, a quiz opens its
+  /// test info and a file starts its download. When there is none, or it is
+  /// locked, nothing happens and the user stays on this page.
+  Future<void> openNextActivity(String cmId) async {
+    final current = course.value;
+    if (current == null) return;
+    final next = nextActivityAfter(current.activities, cmId);
+    if (next == null) return;
+    if (next.videoUrl.isNotEmpty) {
+      return onTapLessonVideo(current.activities.indexOf(next));
+    }
+    if (next.quizId != null) return onTapLessonQuiz(next);
+    return onTapLessonSummary(next);
+  }
+
+  /// Arriving from a passed quiz: continue with the activity after that quiz.
+  /// Not awaited by getData, so the page finishes loading underneath.
+  void _openNextAfterPassedQuiz() {
+    final quizId = _nextAfterQuizId;
+    _nextAfterQuizId = null;
+    if (quizId == null) return;
+    final quiz = course.value?.activities.firstWhereOrNull(
+      (a) => a.quizId == quizId,
+    );
+    if (quiz != null) openNextActivity(quiz.cmId);
+  }
+
+  /// Lessons are the topics of the course (the "Lesson 1", "Lesson 2" rows).
+  /// A topic counts as one lesson when it has at least one activity with
+  /// content: a video, a quiz or a file. Activities without content are skipped.
+  Map<int, List<ActivityX>> get _lessonTopics {
+    final topics = <int, List<ActivityX>>{};
+    for (final activity in course.value?.activities ?? <ActivityX>[]) {
+      if (activity.hasContent) {
+        topics.putIfAbsent(activity.topicId, () => []).add(activity);
+      }
+    }
+    return topics;
+  }
+
+  /// Total lessons of the course
+  int get lessonsTotal => _lessonTopics.length;
+
+  /// Lessons whose content activities are all done on the server
+  /// (is_completed or completion_percent 100)
+  int get lessonsDone => _lessonTopics.values
+      .where((topic) => topic.every((a) => a.isDone))
+      .length;
 
   /// Get activity count name
   String get getActivityCountName {
-    int totalActivities = getUniqueTopicsCount;
+    int totalActivities = lessonsTotal;
     switch (totalActivities) {
       case 0:
         return "No Lesson";
@@ -199,8 +235,9 @@ class CourseDetailsController extends GetxController {
     );
     final startTime = DateTime.now();
     _videoBusy = true;
+    var openNext = false;
     try {
-      await Get.toNamed(RouteNameX.videoPlayer, arguments: url);
+      final result = await Get.toNamed(RouteNameX.videoPlayer, arguments: url);
       if (!lease.isCurrent) return;
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
@@ -211,8 +248,22 @@ class CourseDetailsController extends GetxController {
       if (!activity.isCompleted && dwell.inSeconds >= 5) {
         await DatabaseX.completeVideoOfCourse(cmId: moduleId);
         if (!lease.isCurrent) return;
-        await _refreshCourse(lease, id, language);
       }
+
+      /// Back on the course page: always refetch so the checkmark and the
+      /// unlocked next lesson show without leaving the page
+      final refreshed = await _refreshCourse(lease, id, language);
+
+      /// The player's Next button: continue only with fresh data, and only if
+      /// this page is still the one the user came back to
+      openNext =
+          refreshed &&
+          result == VideoPlayerController.nextResult &&
+          _ownsCourse &&
+          courseId == id &&
+          visit == _visitGeneration &&
+          request == _loadGeneration &&
+          Get.currentRoute == route;
     } catch (e) {
       if (!lease.isCurrent) return;
       ErrorX.console(e);
@@ -220,16 +271,29 @@ class CourseDetailsController extends GetxController {
     } finally {
       if (_ownsCourse && visit == _visitGeneration) _videoBusy = false;
     }
+    if (openNext) await openNextActivity(moduleId);
   }
 
-  /// Navigate to lesson quiz
-  void onTapLessonQuiz(ActivityX activity) {
-    if (_ownsCourse &&
-        _contentLease?.isCurrent == true &&
-        course.value?.activities.contains(activity) == true &&
-        activity.isOpen) {
-      Get.toNamed(RouteNameX.testInfo, arguments: [activity.quizId, courseId]);
+  /// Navigate to lesson quiz, then refetch when the user comes back
+  Future<void> onTapLessonQuiz(ActivityX activity) async {
+    if (!_ownsCourse ||
+        _contentLease?.isCurrent != true ||
+        course.value?.activities.contains(activity) != true ||
+        !activity.isOpen) {
+      return;
     }
+    final id = courseId;
+    final language = TranslationX.getLanguageCode;
+    final route = Get.currentRoute;
+    final request = _loadGeneration;
+    final lease = _captureScope(
+      id,
+      language,
+      operation: () => request == _loadGeneration && Get.currentRoute == route,
+    );
+    await Get.toNamed(RouteNameX.testInfo, arguments: [activity.quizId, id]);
+    if (!lease.isCurrent) return;
+    await _refreshCourse(lease, id, language);
   }
 
   /// Download lesson summary
@@ -259,6 +323,12 @@ class CourseDetailsController extends GetxController {
     } finally {
       if (lease.isCurrent) isLoading = false;
     }
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    _nextAfterQuizId = Get.parameters[nextAfterQuizParam];
   }
 
   @override

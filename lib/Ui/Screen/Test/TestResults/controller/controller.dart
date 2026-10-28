@@ -7,6 +7,7 @@ import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:messengersofpeace/Data/Model/quiz/answer.dart';
 import 'package:messengersofpeace/Data/Model/quiz/question.dart';
 import 'package:messengersofpeace/Data/Model/quiz/quiz_start_attempt.dart';
+import 'package:messengersofpeace/Ui/Screen/Course/CourseDetails/controller/controller.dart';
 
 import '../../../../../Data/Model/quiz/quiz.dart';
 import '../../../../../Data/Model/quiz/quiz_result.dart';
@@ -171,11 +172,13 @@ class TestResultsController extends GetxController {
   onTapButton() {
     if (!ownsCurrentSession) return;
     if (isSuccess) {
-      // Return to the course after a confirmed pass.
+      // After a confirmed pass go to a freshly loaded course page, which opens
+      // the next activity (or stays on the page when it is locked or missing).
       Get.offNamedUntil(
         RouteNameX.courseDetails,
         (route) => route.settings.name == RouteNameX.root,
         arguments: courseId,
+        parameters: {CourseDetailsController.nextAfterQuizParam: quizId},
       );
     } else {
       returnToTestInfo();

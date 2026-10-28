@@ -7,6 +7,15 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class VideoPlayerController extends GetxController {
   //============================================================================
+  // Result
+
+  /// Sent back to the course page when the user taps Next
+  static const nextResult = 'next';
+
+  /// Go back to the course page and ask it to open the next activity
+  void goNext() => Get.back(result: nextResult);
+
+  //============================================================================
   // Variables
 
   /// Video URL from previous screen

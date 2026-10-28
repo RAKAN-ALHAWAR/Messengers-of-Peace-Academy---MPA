@@ -52,8 +52,20 @@ class CourseDetailsCompletionPercentageSection
                   SizedBox(width: 10),
 
                   /// Course completion percentage text
+                  /// Done lessons out of all lessons (digits stay left to right)
                   TextX(
-                    "${controller.course.value!.numCompletionActivities}/${controller.getUniqueTopicsCount} ${"lesson".tr}",
+                    "${controller.lessonsDone}/${controller.lessonsTotal}",
+                    textDirection: TextDirection.ltr,
+                    style: TextStyleX.labelMedium,
+                    color: ColorX.onSurfaceVariant,
+                  ),
+
+                  /// Spacer
+                  SizedBox(width: 4),
+
+                  /// Lesson word
+                  TextX(
+                    "lesson",
                     style: TextStyleX.labelMedium,
                     color: ColorX.onSurfaceVariant,
                   ),

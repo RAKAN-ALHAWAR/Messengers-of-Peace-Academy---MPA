@@ -33,6 +33,13 @@ class ActivityX {
     required this.quizId,
   });
 
+  /// Whether the activity has anything to open (a video, a quiz or a file)
+  bool get hasContent =>
+      videoUrl.isNotEmpty || quizId != null || downloadUrl.isNotEmpty;
+
+  /// Whether the server marks this activity as done
+  bool get isDone => isCompleted || completionPercent >= 100;
+
   factory ActivityX.fromJson(Map<String, dynamic> json) {
     return ModelUtilX.checkFromJson(
       json,
