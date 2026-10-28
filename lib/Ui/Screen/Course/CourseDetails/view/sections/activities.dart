@@ -212,6 +212,7 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
               TranslationX.getLanguageCode == "ar"
                   ? "${"Summary File".tr} ${activity.topicName}"
                   : "${activity.topicName} ${"Summary File".tr}",
+          isCompleted: activity.isDone,
           onTap: () {
             controller.onTapLessonSummary(activity);
           },

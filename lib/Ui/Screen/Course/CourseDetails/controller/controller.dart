@@ -23,6 +23,10 @@ class CourseDetailsController extends GetxController {
   // Variables
 
   bool isLoading = false;
+
+  /// The file download, replaceable so tests can run without a network
+  Future<bool> Function(String url, String fileName) downloadFile =
+      DownloadFileFormUrl.download;
   String courseId = Get.arguments;
   Rx<CourseX?> course = Rx<CourseX?>(null);
 
@@ -59,7 +63,22 @@ class CourseDetailsController extends GetxController {
       throw ErrorX(message: 'Session changed. Please try again.');
     }
     _contentLease = _captureScope(id, language);
+    _applyLocalFileFlags(value);
     course.value = value;
+  }
+
+  /// TEMP(backend): the server never marks a file activity as completed, so a
+  /// downloaded file is remembered on the device (per user and cmid). The
+  /// backend must send is_completed true for a file the user opened; this local
+  /// flag is removed once it does.
+  void _applyLocalFileFlags(CourseX value) {
+    for (final activity in value.activities) {
+      if (activity.downloadUrl.isEmpty) continue;
+      activity.isFileDownloaded = LocalDataX.get<bool>(
+        LocalKeyX.fileDone(activity.cmId),
+        defaultData: false,
+      );
+    }
   }
 
   /// The request owns its account, course and locale. A same-course reload also
@@ -334,6 +353,8 @@ class CourseDetailsController extends GetxController {
     final selectedCourse = course.value!;
     final url = activity.downloadUrl;
     final fileName = '${selectedCourse.name}_${activity.name}';
+    // Built before the download so the flag lands on the user who tapped
+    final doneKey = LocalKeyX.fileDone(activity.cmId);
     final lease = _captureScope(
       courseId,
       TranslationX.getLanguageCode,
@@ -343,13 +364,26 @@ class CourseDetailsController extends GetxController {
     /// Download lesson summary
     try {
       isLoading = true;
-      await DownloadFileFormUrl.download(url, fileName);
+      final saved = await downloadFile(url, fileName);
+      if (saved) await _markFileDownloaded(doneKey, activity.cmId);
     } catch (e) {
       if (!lease.isCurrent) return;
       ErrorX.console(e);
     } finally {
       if (lease.isCurrent) isLoading = false;
     }
+  }
+
+  /// TEMP(backend): remember the downloaded file locally and show the checkmark
+  /// now. Removed together with [_applyLocalFileFlags].
+  Future<void> _markFileDownloaded(String key, String cmId) async {
+    await LocalDataX.put<bool>(key, true);
+    // Another account may be signed in by now, its page must not change
+    if (!_ownsCourse || key != LocalKeyX.fileDone(cmId)) return;
+    for (final activity in course.value?.activities ?? <ActivityX>[]) {
+      if (activity.cmId == cmId) activity.isFileDownloaded = true;
+    }
+    course.refresh();
   }
 
   @override
