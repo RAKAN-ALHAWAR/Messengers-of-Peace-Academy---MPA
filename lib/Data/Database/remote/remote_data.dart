@@ -44,13 +44,16 @@ class RemoteDataSourceX {
 
     if (error?.errorCode == ErrorCodesX.unauthorized) throw error!;
 
-    // Legacy cache entries have no account ownership. Do not read or populate
-    // them for authenticated requests; explicit owned caches can be added later.
-
-    if (!authenticated &&
-        (error?.errorCode ?? -1) != ErrorCodesX.unauthorized &&
+    // The cache of an authenticated request is owned by the user who made it:
+    // the key carries the user id, so one account never reads another's data.
+    // Old keys without the id are never read here. The session is still the
+    // same one at this point (checked above), so the current id is the owner.
+    if ((error?.errorCode ?? -1) != ErrorCodesX.unauthorized &&
         (param.page == null || param.page == 1)) {
-      result = _useLocal<T>(param.localCacheKey, result);
+      result = _useLocal<T>(
+        _cacheKey(param.localCacheKey, authenticated),
+        result,
+      );
     }
 
     // Return the result if it's not null
@@ -92,6 +95,13 @@ class RemoteDataSourceX {
       error = ErrorX.createErrorByCode(ErrorCodesX.notFound);
     }
     throw error;
+  }
+
+  static String? _cacheKey(String? localCacheKey, bool authenticated) {
+    if (!authenticated || localCacheKey == null || localCacheKey.isEmpty) {
+      return localCacheKey;
+    }
+    return '${LocalDataX.userid}:$localCacheKey';
   }
 
   static T? _useLocal<T>(String? localCacheKey, T? result) {
