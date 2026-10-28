@@ -51,12 +51,7 @@ void main() {
     Get.reset();
   });
   tearDownAll(() async {
-    // The dwell test writes through Hive inside the fake async zone, which
-    // leaves the box close waiting for ever, so do not wait for it.
-    await Hive.close().timeout(
-      const Duration(seconds: 1),
-      onTimeout: () => <void>[],
-    );
+    await Hive.close();
     await directory.delete(recursive: true);
   });
 
@@ -135,16 +130,11 @@ void main() {
           );
           Get.back();
           await tester.pumpAndSettle();
-          // The Hive write needs the real event loop, then the fake one again
-          await tester.runAsync(
-            () => Future<void>.delayed(const Duration(milliseconds: 300)),
-          );
-          await tester.pumpAndSettle();
           await pending;
+          // The save is not awaited by the page, give the disk write time
           await tester.runAsync(
             () => Future<void>.delayed(const Duration(milliseconds: 300)),
           );
-          await tester.pumpAndSettle();
           expect(UserStatisticsX.localLearnedSeconds, inInclusiveRange(2, 4));
         },
         () => MockClient(

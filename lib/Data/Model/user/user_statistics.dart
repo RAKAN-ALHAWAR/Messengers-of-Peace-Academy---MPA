@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Core/Error/error.dart';
 import 'package:messengersofpeace/Core/Extension/convert/convert.dart';
 import 'package:messengersofpeace/Core/Helper/model/model.dart';
 import 'package:messengersofpeace/Data/data.dart';
@@ -46,10 +47,15 @@ class UserStatisticsX {
 
   static Future<void> addLocalLearnedSeconds(int seconds) async {
     if (seconds <= 0) return;
-    await LocalDataX.put<int>(
-      LocalKeyX.learnedSeconds,
-      localLearnedSeconds + seconds,
-    );
+    try {
+      await LocalDataX.put<int>(
+        LocalKeyX.learnedSeconds,
+        localLearnedSeconds + seconds,
+      );
+    } catch (e) {
+      // Only a statistic, never break the lesson flow for it
+      ErrorX.console(e);
+    }
   }
 
   /// The server minutes when above zero, else the local total in whole minutes

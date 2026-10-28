@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
@@ -295,9 +297,13 @@ class CourseDetailsController extends GetxController {
       ]);
       if (!lease.isCurrent) return;
       final dwell = DateTime.now().difference(startTime);
-      // TEMP(backend): see UserStatisticsX.localLearnedSeconds
-      await UserStatisticsX.addLocalLearnedSeconds(dwell.inSeconds);
-      if (!lease.isCurrent) return;
+      // TEMP(backend): see UserStatisticsX.localLearnedSeconds. Not awaited, so
+      // saving it never holds the navigation back. It runs in the root zone
+      // because a test clock (fake async) would never finish the disk write
+      // and would block the next write to the box.
+      Zone.root.run(
+        () => UserStatisticsX.addLocalLearnedSeconds(dwell.inSeconds),
+      );
       if (!activity.isCompleted && dwell.inSeconds >= 5) {
         try {
           await DatabaseX.completeVideoOfCourse(cmId: moduleId);
