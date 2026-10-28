@@ -181,9 +181,17 @@ class TestResultsController extends GetxController {
               ? Get.find<CourseDetailsController>()
               : null;
       if (details != null && details.courseId == courseId) {
-        Get.until((route) => route.settings.name == RouteNameX.courseDetails);
-        details.continueAfterPassedQuiz(quizId);
-        return;
+        var foundPage = false;
+        // Stops at the first route too, so a controller whose page is gone
+        // never pops every route
+        Get.until((route) {
+          foundPage = route.settings.name == RouteNameX.courseDetails;
+          return foundPage || route.isFirst;
+        });
+        if (foundPage) {
+          details.continueAfterPassedQuiz(quizId);
+          return;
+        }
       }
       // No course page below (opened another way): load a fresh one.
       Get.offNamedUntil(
