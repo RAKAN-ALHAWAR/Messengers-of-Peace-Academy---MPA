@@ -117,3 +117,11 @@ Estimate: 7 to 13 agent-work hours (est., basis: sonnet-high median 17-32 min pe
 - Test fix 180cb1e merged; main full suite "+731: All tests passed!"; pushed.
 - CI gap: repo has no .github/workflows, so no run ever starts (D8 requires CI). Proposed to owner: flutter analyze + flutter test workflow (public repo, free minutes).
 - Remaining: device checks (delete-account page reachable, TestInfo message, course 130 count, #18 grading, Next/checkmark, toast), simplify Codex abstractions + explanation doc, GitLab evidence per ticket, worktree cleanup (a, a2, b1, fix1, c, b2, tap, fold, vt), SEC-10 report, INBOX retro, owner answer on analysis_options.yaml.
+
+## Owner answers after batch 2 (2026-10-28)
+
+- Account deletion: owner said «بخصوص حذف الحساب رح يكون عبر نقطة api مو فتح صفحة خارجية». Opening the website page stays as the temporary path until the backend ships the function; BACKEND-REQUESTS item 2 updated. App switch waits for the function name and contract.
+- CI: owner said «مافي داعي» (no workflow). D8 gap recorded as the owner's decision.
+- analysis_options.yaml analyzer exclude (build, android, ios): owner said «شوف المناسب»; kept and committed (standard exclude of generated and native folders).
+- Owner asked whether local file checkmark and learning minutes are per user and survive logout: verified in code (local_key.dart keys prefix the user id; clearLocalSession removes only userid and token), answered in chat.
+- Next: device checks lane (Sonnet), worktree cleanup, Codex simplification, GitLab evidence.
