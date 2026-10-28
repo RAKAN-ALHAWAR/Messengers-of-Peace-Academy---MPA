@@ -1,4 +1,4 @@
-import 'package:messengersofpeace/Core/Service/session_lease.dart';
+import 'package:messengersofpeace/Core/Service/controller_lease.dart';
 import 'package:messengersofpeace/Core/Extension/date_time.dart';
 import 'dart:async';
 
@@ -52,13 +52,10 @@ class EventDetailsController extends GetxController {
   Future<void> getData() async {
     if (isClosed) return;
     final generation = ++_loadGeneration;
-    final locale = TranslationX.getLanguageCode;
-    final lease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              generation == _loadGeneration &&
-              TranslationX.getLanguageCode == locale,
+    final lease = ControllerLeaseX.capture(
+      this,
+      locale: true,
+      also: () => generation == _loadGeneration,
     );
     try {
       final loaded = await DatabaseX.getEventDetails(eventId: event.id);
@@ -83,9 +80,9 @@ class EventDetailsController extends GetxController {
 
   /// Handle delete event
   Future<bool> onDeleteEvent(EventOptionEX delete) async {
-    // Check outside try/finally: ignored taps must not unlock the active request.
+    /// Ignored taps return before try so they cannot unlock the active request
     if (isClosed || isLoading.value || _deleteAccepted) return false;
-    final lease = SessionLeaseX.capture(isActive: () => !isClosed);
+    final lease = ControllerLeaseX.capture(this);
     _buttonResetTimer?.cancel();
     isLoading.value = true;
     _setDeleteState(delete, ButtonStateEX.loading);
@@ -137,7 +134,7 @@ class EventDetailsController extends GetxController {
   /// Handle edit event
   void onEdit() async {
     if (isClosed) return;
-    final lease = SessionLeaseX.capture(isActive: () => !isClosed);
+    final lease = ControllerLeaseX.capture(this);
 
     /// Go to edit event screen
     var result = await Get.toNamed(

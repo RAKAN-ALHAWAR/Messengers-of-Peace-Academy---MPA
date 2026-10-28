@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Core/Service/controller_lease.dart';
 import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:messengersofpeace/Core/Error/error.dart';
 import 'package:get/get.dart';
@@ -27,13 +28,10 @@ class NotificationsController extends GetxController {
   Future<void> getData() async {
     if (isClosed) return;
     final generation = ++_loadGeneration;
-    final locale = TranslationX.getLanguageCode;
-    final lease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              generation == _loadGeneration &&
-              TranslationX.getLanguageCode == locale,
+    final lease = ControllerLeaseX.capture(
+      this,
+      locale: true,
+      also: () => generation == _loadGeneration,
     );
     if (!lease.hasAuthenticatedIdentity) {
       throw ErrorX.createErrorByCode(ErrorCodesX.unauthorized);
@@ -62,7 +60,7 @@ class NotificationsController extends GetxController {
       return;
     }
     final generation = ++_readGeneration;
-    final lease = SessionLeaseX.capture(isActive: () => !isClosed);
+    final lease = ControllerLeaseX.capture(this);
     _readLease = lease;
     try {
       if (!lease.hasAuthenticatedIdentity) {
@@ -75,8 +73,7 @@ class NotificationsController extends GetxController {
       /// Mark all as read
       await DatabaseX.readNotifications();
       if (!lease.isCurrent) return;
-      // A list started before this acknowledgement may still contain unread
-      // rows. Only a new read may replace the acknowledged local snapshot.
+      /// Retire a list load that started before this acknowledgement
       _loadGeneration++;
 
       /// Show the localized message instead of the raw backend one

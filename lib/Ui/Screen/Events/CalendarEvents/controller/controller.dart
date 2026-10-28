@@ -5,6 +5,7 @@ import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Core/Extension/date_time.dart';
 
 import '../../../../../Config/Translation/translation.dart';
+import '../../../../../Core/Service/controller_lease.dart';
 import '../../../../../Core/Service/session_lease.dart';
 import '../../../../../Core/Error/error.dart';
 import '../../../../../Data/Model/event.dart';
@@ -45,6 +46,8 @@ class CalendarController extends GetxController {
 
   /// Is initialized
   bool isInit = false;
+
+  /// Session revision and language of the loaded events
   (int, String)? _loadedKey;
   int _loadGeneration = 0;
 
@@ -54,8 +57,7 @@ class CalendarController extends GetxController {
   /// Get data from database
   Future<void> getData({bool isMust = false}) async {
     if (isClosed) return;
-    // This authenticated screen may briefly survive logout navigation. Do not
-    // let its reload adopt the public service credential.
+    /// This screen may outlive logout: never reload with the public credential
     if (!SessionLeaseX.capture().hasAuthenticatedIdentity) {
       throw ErrorX.createErrorByCode(ErrorCodesX.unauthorized);
     }
@@ -70,12 +72,10 @@ class CalendarController extends GetxController {
       return;
     }
     final generation = ++_loadGeneration;
-    final lease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              generation == _loadGeneration &&
-              TranslationX.getLanguageCode == locale,
+    final lease = ControllerLeaseX.capture(
+      this,
+      locale: true,
+      also: () => generation == _loadGeneration,
     );
     try {
       final loadedEvents = await DatabaseX.getEvents();
@@ -89,7 +89,7 @@ class CalendarController extends GetxController {
       isInit = true;
     } catch (_) {
       if (!lease.isCurrent) return;
-      // An older account or locale is never a fallback for this request.
+      /// An older account or language is never a fallback for this request
       if (!isInit || _loadedKey != key) rethrow;
     }
   }
@@ -149,7 +149,7 @@ class CalendarController extends GetxController {
 
   /// Handle add event
   Future<void> onAddEvent() async {
-    final lease = SessionLeaseX.capture(isActive: () => !isClosed);
+    final lease = ControllerLeaseX.capture(this);
 
     /// Open add event screen
     var result = await Get.toNamed(RouteNameX.addEvent);
@@ -163,7 +163,7 @@ class CalendarController extends GetxController {
   /// Handle open event
   void onOpenEvent(EventX event) async {
     if (isClosed) return;
-    final lease = SessionLeaseX.capture(isActive: () => !isClosed);
+    final lease = ControllerLeaseX.capture(this);
 
     /// Check if the event is system
     if (event.isSystem) {
@@ -172,9 +172,7 @@ class CalendarController extends GetxController {
       /// Open event details screen
       var result = await Get.toNamed(RouteNameX.eventDetails, arguments: event);
 
-      /// If the result is true, get data
-      // Native Back/gestures carry no result. Re-read instead of inventing a
-      // changed flag; explicit false is the toolbar's known-unchanged result.
+      /// Native Back has no result (re-read); false means the toolbar saw no change
       if (lease.isCurrent && (result == true || result == null)) {
         await getData(isMust: true);
       }
