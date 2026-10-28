@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:messengersofpeace/Core/Service/controller_lease.dart';
 import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../../../Core/core.dart';
 import '../../../../../../Data/data.dart';
 import '../../../../../Config/config.dart';
-import '../../../../../Config/Translation/translation.dart';
 import '../../../../../Data/Form/update_user_form.dart';
 import '../../../../../Data/Model/info/country.dart';
 import '../../../../../Data/Model/info/language.dart';
@@ -72,13 +72,21 @@ class EditProfileController extends GetxController {
 
   /// Autovalidate mode
   final autoValidate = AutovalidateMode.disabled.obs;
+
+  /// Owns this page for one account and one app controller
   late final SessionLeaseX _ownerLease;
+
+  /// Success feedback and button reset timers
   Timer? _buttonResetTimer;
   Timer? _successTimer;
   Completer<void>? _successDelay;
+
+  /// Phone values as saved, kept when the user does not touch the phone
   late final String _originalPhone;
   late final String _originalPrefix;
   late final String _originalPhoneInput;
+
+  /// The last acknowledged text update, so a photo retry does not repeat it
   Map<String, String>? _acknowledgedProfile;
   SessionLeaseX? _acknowledgedLease;
   String? _acknowledgedMessage;
@@ -239,7 +247,7 @@ class EditProfileController extends GetxController {
 
   /// Save and update user data
   Future<void> onEdit() async {
-    if (isLoading.value || isClosed) return;
+    if (isLoading.value) return;
     final lease = _captureLease();
     if (!lease.isCurrent) return;
     final form = formKey.currentState;
@@ -259,7 +267,6 @@ class EditProfileController extends GetxController {
     buttonState.value = ButtonStateEX.loading;
     try {
       // An acknowledged text update is not repeated just to retry its photo.
-      // Changes to any serialized field still require a new explicit update.
       if (_acknowledgedLease?.isCurrent != true ||
           !mapEquals(_acknowledgedProfile, requestFields)) {
         final message = await DatabaseX.updateUser(
@@ -316,18 +323,14 @@ class EditProfileController extends GetxController {
     }
   }
 
-  SessionLeaseX _captureLease() =>
-      SessionLeaseX.capture(isActive: () => _ownerLease.isCurrent);
-
   bool get ownsCurrentSession => _ownerLease.isCurrent;
 
-  SessionLeaseX _captureReferenceLease() {
-    final locale = TranslationX.getLanguageCode;
-    return SessionLeaseX.capture(
-      isActive:
-          () => _ownerLease.isCurrent && TranslationX.getLanguageCode == locale,
-    );
-  }
+  SessionLeaseX _captureLease() =>
+      ControllerLeaseX.capture(this, owner: _ownerLease);
+
+  /// A lease that also dies when the app language changes
+  SessionLeaseX _captureReferenceLease() =>
+      ControllerLeaseX.capture(this, locale: true, owner: _ownerLease);
 
   Future<void> _waitForSuccessFeedback() {
     final delay = Completer<void>();
@@ -350,15 +353,11 @@ class EditProfileController extends GetxController {
   void onInit() {
     super.onInit();
     final accountId = app.user.value.id;
-    _ownerLease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              Get.isRegistered<EditProfileController>() &&
-              identical(Get.find<EditProfileController>(), this) &&
-              Get.isRegistered<AppControllerX>() &&
-              identical(Get.find<AppControllerX>(), app) &&
-              app.user.value.id == accountId,
+    _ownerLease = ControllerLeaseX.capture(
+      this,
+      registered: true,
+      app: app,
+      also: () => app.user.value.id == accountId,
     );
     _originalPhone = app.user.value.whatsapp;
     _originalPrefix = app.user.value.phoneCodeCountry;
