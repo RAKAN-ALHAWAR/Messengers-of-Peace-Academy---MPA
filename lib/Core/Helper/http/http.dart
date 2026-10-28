@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 
 import '../../Error/error.dart';
 import '../../Service/session_lease.dart';
+import 'debug_capture.dart';
 
 part 'lib/request.dart';
 part 'lib/response.dart';
@@ -102,6 +103,9 @@ class HttpX {
 
       // Handle Request
       http.Response response = await HttpRequestX.call(method, maxRetries);
+      if (HttpDebugCaptureX.isEnabled) {
+        await HttpDebugCaptureX.record(url, response.statusCode, response.body);
+      }
 
       if (response.statusCode == 401 && authenticated && !ignoreUnauthorized) {
         SessionExpiryX.report(lease);
