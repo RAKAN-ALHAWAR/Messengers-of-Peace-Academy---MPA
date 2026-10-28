@@ -3,6 +3,7 @@ import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:messengersofpeace/Core/core.dart';
 import 'package:messengersofpeace/Core/Error/error.dart';
+import 'package:messengersofpeace/Core/Service/controller_lease.dart';
 import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:messengersofpeace/Data/Model/quiz/answer.dart';
 import 'package:messengersofpeace/Data/Model/quiz/question.dart';
@@ -52,6 +53,8 @@ class TestResultsController extends GetxController {
   Object? loadError;
   QuizSubmissionStateX submissionState = QuizSubmissionStateX.notStarted;
   Future<void>? _inFlight;
+
+  /// Lease of this screen: open, registered, same app controller and account.
   late final SessionLeaseX _ownerLease;
 
   /// Is success
@@ -107,7 +110,7 @@ class TestResultsController extends GetxController {
       });
 
   Future<void> _loadData() async {
-    final lease = SessionLeaseX.capture(isActive: () => _ownerLease.isCurrent);
+    final lease = ControllerLeaseX.capture(this, owner: _ownerLease);
     if (!lease.isCurrent) return;
     if (submissionState == QuizSubmissionStateX.rejected ||
         needsSubmissionRecovery) {
@@ -160,8 +163,7 @@ class TestResultsController extends GetxController {
     }
   }
 
-  /// Only the explicit recovery action may repeat a known rejected mutation.
-  /// Locale changes/read retries cannot silently resubmit an attempt.
+  /// Only this explicit action may resubmit a rejected attempt.
   void retryRejectedSubmission() {
     if (!ownsCurrentSession || !canRetrySubmission || _inFlight != null) return;
     submissionState = QuizSubmissionStateX.notStarted;
@@ -172,18 +174,14 @@ class TestResultsController extends GetxController {
   onTapButton() {
     if (!ownsCurrentSession) return;
     if (isSuccess) {
-      // After a confirmed pass go back to the course page below this screen and
-      // let it refetch and open the next activity. A second course page would
-      // share the controller with the old one, and the old route's disposal
-      // would delete it.
+      // A confirmed pass returns to the course page below, never opens a second one.
       final details =
           Get.isRegistered<CourseDetailsController>()
               ? Get.find<CourseDetailsController>()
               : null;
       if (details != null && details.courseId == courseId) {
         var foundPage = false;
-        // Stops at the first route too, so a controller whose page is gone
-        // never pops every route
+        // Also stops at the first route, so a missing page never pops every route.
         Get.until((route) {
           foundPage = route.settings.name == RouteNameX.courseDetails;
           return foundPage || route.isFirst;
@@ -210,20 +208,19 @@ class TestResultsController extends GetxController {
     Get.offAndToNamed(RouteNameX.testInfo, arguments: [quizId, courseId]);
   }
 
+  //============================================================================
+  // Lifecycle
+
   @override
   void onInit() {
     super.onInit();
     final app = Get.find<AppControllerX>();
     final accountId = app.user.value.id;
-    _ownerLease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              Get.isRegistered<TestResultsController>() &&
-              identical(Get.find<TestResultsController>(), this) &&
-              Get.isRegistered<AppControllerX>() &&
-              identical(Get.find<AppControllerX>(), app) &&
-              app.user.value.id == accountId,
+    _ownerLease = ControllerLeaseX.capture(
+      this,
+      registered: true,
+      app: app,
+      also: () => app.user.value.id == accountId,
     );
   }
 }

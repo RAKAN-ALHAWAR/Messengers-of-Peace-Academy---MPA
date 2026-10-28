@@ -5,11 +5,15 @@ import 'package:messengersofpeace/Data/data.dart';
 import '../../../../../Config/config.dart';
 import '../../../../../Core/core.dart';
 import '../../../../../Core/Error/error.dart';
+import '../../../../../Core/Service/controller_lease.dart';
 import '../../../../../Core/Service/session_lease.dart';
 import '../../../../../Data/Model/quiz/quiz.dart';
 import '../../../../../Data/Model/quiz/quiz_start_attempt.dart';
 
 class TestQuestionsController extends GetxController {
+  //============================================================================
+  // Variables
+
   QuizX quiz = Get.arguments[0];
   String quizId = Get.arguments[1];
   String courseId = Get.arguments[2];
@@ -25,6 +29,8 @@ class TestQuestionsController extends GetxController {
   final isLoading = false.obs;
   final answerError = Rxn<String>();
   final buttonState = ButtonStateEX.normal.obs;
+
+  /// Lease of this screen: open, registered, same app controller and account.
   late final SessionLeaseX _ownerLease;
   Future<void>? _loading;
   bool _hasAttempt = false;
@@ -35,16 +41,18 @@ class TestQuestionsController extends GetxController {
   bool get needsRecovery => _needsRecovery.value;
   bool get ownsCurrentSession => _ownerLease.isCurrent;
 
+  //============================================================================
+  // Functions
+
   Future<void> getData() =>
       _loading ??= _loadData().whenComplete(() {
         if (ownsCurrentSession) _loading = null;
       });
 
   Future<void> _loadData() async {
-    final lease = SessionLeaseX.capture(isActive: () => ownsCurrentSession);
+    final lease = ControllerLeaseX.capture(this, owner: _ownerLease);
     if (!lease.isCurrent || _ready || needsRecovery) return;
-    // The current response has no authoritative saved selections/current slot.
-    // Replaying a known resumed attempt from question zero could overwrite it.
+    // A resumed attempt has no saved selections here; replaying it could overwrite them.
     if (quiz.lastAttemptStatus == QuizAttemptStatusX.inProgress) {
       _needsRecovery.value = true;
       return;
@@ -90,8 +98,7 @@ class TestQuestionsController extends GetxController {
           DateTime.now();
     } catch (error) {
       if (ownsCurrentSession) ErrorX.console(error);
-      // Preserve the existing fresh-attempt fallback; server timing semantics
-      // (including zero time limits) require a backend contract.
+      // Fresh-attempt fallback; server timing semantics need a backend contract.
       return DateTime.now();
     }
   }
@@ -126,7 +133,7 @@ class TestQuestionsController extends GetxController {
     if (answer == null || answer < 0 || answer >= question.answers.length) {
       return;
     }
-    final lease = SessionLeaseX.capture(isActive: () => ownsCurrentSession);
+    final lease = ControllerLeaseX.capture(this, owner: _ownerLease);
     isLoading.value = true;
     answerError.value = null;
     buttonState.value = ButtonStateEX.loading;
@@ -158,8 +165,7 @@ class TestQuestionsController extends GetxController {
       if (explicitRejection) {
         answerError.value = error.toString();
       } else {
-        // A local timeout/transport failure cannot prove that the server did
-        // not commit the answer. Reconciliation needs authoritative attempt data.
+        // A timeout cannot prove the server did not save the answer.
         answerError.value =
             'Answer saving status is unknown. Return to test information before trying again.';
         _needsRecovery.value = true;
@@ -204,8 +210,7 @@ class TestQuestionsController extends GetxController {
     }
     _finishRequested = true;
     _timer?.cancel();
-    // Finalize only after the in-flight answer is acknowledged or explicitly
-    // rejected. A local wait deadline alone does not establish its outcome.
+    // Finalize only after the in-flight answer is acknowledged or rejected.
     if (!isLoading.value) _showResults();
   }
 
@@ -231,20 +236,19 @@ class TestQuestionsController extends GetxController {
     Get.offAndToNamed(RouteNameX.testInfo, arguments: [quizId, courseId]);
   }
 
+  //============================================================================
+  // Lifecycle
+
   @override
   void onInit() {
     super.onInit();
     final app = Get.find<AppControllerX>();
     final accountId = app.user.value.id;
-    _ownerLease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              Get.isRegistered<TestQuestionsController>() &&
-              identical(Get.find<TestQuestionsController>(), this) &&
-              Get.isRegistered<AppControllerX>() &&
-              identical(Get.find<AppControllerX>(), app) &&
-              app.user.value.id == accountId,
+    _ownerLease = ControllerLeaseX.capture(
+      this,
+      registered: true,
+      app: app,
+      also: () => app.user.value.id == accountId,
     );
   }
 

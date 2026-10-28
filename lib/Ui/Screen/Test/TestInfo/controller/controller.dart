@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Core/core.dart';
 import 'package:messengersofpeace/Core/Error/error.dart';
+import 'package:messengersofpeace/Core/Service/controller_lease.dart';
 import 'package:messengersofpeace/Core/Service/session_lease.dart';
-import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Data/data.dart';
 
@@ -25,19 +25,18 @@ class TestInfoController extends GetxController {
   //============================================================================
   // Functions
 
+  /// Lease of this screen: open, registered, same app controller and account.
   late final SessionLeaseX _ownerLease;
   int _loadGeneration = 0;
   bool get ownsCurrentSession => _ownerLease.isCurrent;
 
   Future<void> getData() async {
     final generation = ++_loadGeneration;
-    final locale = TranslationX.getLanguageCode;
-    final lease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              ownsCurrentSession &&
-              generation == _loadGeneration &&
-              locale == TranslationX.getLanguageCode,
+    final lease = ControllerLeaseX.capture(
+      this,
+      owner: _ownerLease,
+      locale: true,
+      also: () => generation == _loadGeneration,
     );
     if (!lease.isCurrent) return;
     try {
@@ -62,19 +61,11 @@ class TestInfoController extends GetxController {
     return (quiz.gradeToPass / quiz.gradeTotal * 100).toInt().toString();
   }
 
-  /// Whether the user can enter the test screen.
-  ///
-  /// The backend reports `can_start: false` once an attempt is in progress,
-  /// but `start_or_get_quiz_attempt` resumes that attempt, so an in progress
-  /// attempt must stay reachable, otherwise the user is locked out of it.
+  /// Can enter the test; an in progress attempt stays reachable (the backend resumes it).
   bool get canEnterTest =>
       quiz.canStart || quiz.lastAttemptStatus == QuizAttemptStatusX.inProgress;
 
-  /// Why the user cannot enter the test, or null when they can.
-  ///
-  /// Built from the server fields only (never hard-coded counts): an
-  /// `attemptsAllowed` of 0 means unlimited, so a finished last attempt with a
-  /// positive limit means the attempts are used up.
+  /// Why the user cannot enter the test (null when they can); 0 attempts allowed means unlimited.
   String? get blockedReason {
     if (canEnterTest) return null;
     final status = quiz.lastAttemptStatus;
@@ -97,20 +88,19 @@ class TestInfoController extends GetxController {
     );
   }
 
+  //============================================================================
+  // Lifecycle
+
   @override
   void onInit() {
     super.onInit();
     final app = Get.find<AppControllerX>();
     final accountId = app.user.value.id;
-    _ownerLease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              Get.isRegistered<TestInfoController>() &&
-              identical(Get.find<TestInfoController>(), this) &&
-              Get.isRegistered<AppControllerX>() &&
-              identical(Get.find<AppControllerX>(), app) &&
-              app.user.value.id == accountId,
+    _ownerLease = ControllerLeaseX.capture(
+      this,
+      registered: true,
+      app: app,
+      also: () => app.user.value.id == accountId,
     );
   }
 }
