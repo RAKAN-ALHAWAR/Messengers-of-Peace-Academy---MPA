@@ -35,7 +35,7 @@ class LessonItemOnAccordion extends StatelessWidget {
                 SizedBox(width: 12),
                 Expanded(child: TextX(name, style: TextStyleX.titleSmall)),
                 SizedBox(width: 12),
-                if (videoDuration != null)
+                if (videoDuration != null && videoDuration!.isNotEmpty)
                   TextX(
                     videoDuration!,
                     style: TextStyleX.labelLarge,

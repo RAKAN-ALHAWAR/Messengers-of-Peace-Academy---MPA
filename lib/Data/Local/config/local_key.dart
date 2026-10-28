@@ -20,4 +20,8 @@ class LocalKeyX {
 
   /// Seconds this user spent watching lessons
   static String get learnedSeconds => '${LocalDataX.userid}:learnedSeconds';
+
+  /// Real length of a video in seconds. Content metadata, so it is not per
+  /// user. Keyed by the video url because the player only knows the url.
+  static String videoSeconds(String url) => 'videoSeconds:$url';
 }

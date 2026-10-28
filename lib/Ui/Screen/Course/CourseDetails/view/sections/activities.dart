@@ -182,7 +182,7 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
         LessonItemOnAccordion(
           icon: IconX.play_arrow_filled,
           name: activity.name,
-          videoDuration: activity.videoDuration,
+          videoDuration: activity.durationText,
           isCompleted: activity.isDone,
           onTap: () async {
             await controller.onTapLessonVideo(originalIndex);

@@ -64,21 +64,31 @@ class CourseDetailsController extends GetxController {
       throw ErrorX(message: 'Session changed. Please try again.');
     }
     _contentLease = _captureScope(id, language);
-    _applyLocalFileFlags(value);
+    _applyLocalProgress(value);
     course.value = value;
   }
 
-  /// TEMP(backend): the server never marks a file activity as completed, so a
-  /// downloaded file is remembered on the device (per user and cmid). The
-  /// backend must send is_completed true for a file the user opened; this local
-  /// flag is removed once it does.
-  void _applyLocalFileFlags(CourseX value) {
+  /// TEMP(backend): local progress the server does not send yet.
+  /// - A file activity is never marked completed, so a downloaded file is
+  ///   remembered on the device (per user and cmid). The backend must send
+  ///   is_completed true for a file the user opened.
+  /// - video_duration is "0:00", so the real length the video player learned
+  ///   is used. The backend must send the real duration.
+  /// Both local values are removed once the backend sends the real data.
+  void _applyLocalProgress(CourseX value) {
     for (final activity in value.activities) {
-      if (activity.downloadUrl.isEmpty) continue;
-      activity.isFileDownloaded = LocalDataX.get<bool>(
-        LocalKeyX.fileDone(activity.cmId),
-        defaultData: false,
-      );
+      if (activity.downloadUrl.isNotEmpty) {
+        activity.isFileDownloaded = LocalDataX.get<bool>(
+          LocalKeyX.fileDone(activity.cmId),
+          defaultData: false,
+        );
+      }
+      if (activity.videoUrl.isNotEmpty) {
+        activity.localDurationSeconds = LocalDataX.get<int>(
+          LocalKeyX.videoSeconds(activity.videoUrl),
+          defaultData: 0,
+        );
+      }
     }
   }
 

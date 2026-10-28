@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/Translation/translation.dart';
+import 'package:messengersofpeace/Core/Error/error.dart';
+import 'package:messengersofpeace/Data/data.dart';
 import 'package:video_player/video_player.dart' as video_player;
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
@@ -89,6 +91,8 @@ class VideoPlayerController extends GetxController {
           ),
         );
 
+        youtubeController!.addListener(_rememberYoutubeDuration);
+
         /// Set loading state to false
         isLoading.value = false;
       } else {
@@ -121,6 +125,7 @@ class VideoPlayerController extends GetxController {
           .initialize()
           .then((_) {
             if (isClosed) return;
+            rememberDuration();
 
             /// Set loading state to false
             isLoading.value = false;
@@ -143,6 +148,27 @@ class VideoPlayerController extends GetxController {
       /// Set loading state to false
       isLoading.value = false;
     }
+  }
+
+  /// TEMP(backend): the server sends video_duration "0:00", so keep the real
+  /// length the player learned (seconds, per video url) for the lesson list.
+  /// The backend must send the real duration; this is removed once it does.
+  Future<void> rememberDuration() async {
+    final seconds = totalDuration.inSeconds;
+    if (url.isEmpty || seconds <= 0) return;
+    try {
+      await LocalDataX.put<int>(LocalKeyX.videoSeconds(url), seconds);
+    } catch (e) {
+      // Only a display detail, never block the player for it
+      ErrorX.console(e);
+    }
+  }
+
+  /// YouTube learns its duration after the player is ready
+  void _rememberYoutubeDuration() {
+    if (youtubeController?.value.metaData.duration.inSeconds == 0) return;
+    youtubeController?.removeListener(_rememberYoutubeDuration);
+    rememberDuration();
   }
 
   /// Toggle play/pause
@@ -277,6 +303,8 @@ class VideoPlayerController extends GetxController {
 
   @override
   void onClose() {
+    youtubeController?.removeListener(_rememberYoutubeDuration);
+
     /// Dispose YouTube player
     youtubeController?.dispose();
 
