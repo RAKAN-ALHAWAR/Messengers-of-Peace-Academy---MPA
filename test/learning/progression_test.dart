@@ -60,6 +60,8 @@ Future<CourseDetailsController> mountCourse(WidgetTester tester) async {
   Get.toNamed('/course-test', arguments: 'synthetic-course');
   await tester.pumpAndSettle();
   final controller = Get.put<CourseDetailsController>(CourseDetailsController());
+  // A Hive disk write never finishes under the fake test clock
+  controller.addLearnedSeconds = (_) async {};
   expect(controller.isClosed, isFalse, reason: 'Synthetic controller is alive');
   expect(Get.isRegistered<CourseDetailsController>(), isTrue);
   expect(identical(Get.find<CourseDetailsController>(), controller), isTrue);

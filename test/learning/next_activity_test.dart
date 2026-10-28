@@ -188,7 +188,12 @@ void main() {
     await tester.pumpAndSettle();
     Get.toNamed('/course-test', arguments: '19', parameters: parameters);
     await tester.pumpAndSettle();
-    return Get.put<CourseDetailsController>(CourseDetailsController());
+    final controller = Get.put<CourseDetailsController>(
+      CourseDetailsController(),
+    );
+    // A Hive disk write never finishes under the fake test clock
+    controller.addLearnedSeconds = (_) async {};
+    return controller;
   }
 
   /// Watch the first video for longer than the five second rule
