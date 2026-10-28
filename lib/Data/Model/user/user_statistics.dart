@@ -1,3 +1,4 @@
+import 'package:get/get.dart';
 import 'package:messengersofpeace/Core/Error/error.dart';
 import 'package:messengersofpeace/Core/Extension/convert/convert.dart';
 import 'package:messengersofpeace/Core/Helper/model/model.dart';
@@ -45,13 +46,31 @@ class UserStatisticsX {
   static int get localLearnedSeconds =>
       LocalDataX.get<int>(LocalKeyX.learnedSeconds, defaultData: 0);
 
-  static Future<void> addLocalLearnedSeconds(int seconds) async {
-    if (seconds <= 0) return;
+  /// Bumped after every saved add so a mounted minutes card reads the new total.
+  /// A counter, not the total, because the total belongs to the signed-in user.
+  static final RxInt localLearnedRevision = 0.obs;
+
+  /// Writes wait for the previous one, so each add reads the total the earlier
+  /// add saved and fast repeated calls never lose seconds.
+  static Future<void> _lastWrite = Future<void>.value();
+
+  static Future<void> addLocalLearnedSeconds(int seconds) {
+    if (seconds <= 0) return Future<void>.value();
+    // The key is fixed now, so a user switch while waiting cannot move the add
+    final key = LocalKeyX.learnedSeconds;
+    final write = _lastWrite.then((_) => _addTo(key, seconds));
+    _lastWrite = write;
+    return write;
+  }
+
+  /// Never throws, so one failed write cannot break the chain
+  static Future<void> _addTo(String key, int seconds) async {
     try {
       await LocalDataX.put<int>(
-        LocalKeyX.learnedSeconds,
-        localLearnedSeconds + seconds,
+        key,
+        LocalDataX.get<int>(key, defaultData: 0) + seconds,
       );
+      localLearnedRevision.value++;
     } catch (e) {
       // Only a statistic, never break the lesson flow for it
       ErrorX.console(e);

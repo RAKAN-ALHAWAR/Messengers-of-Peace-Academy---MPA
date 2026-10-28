@@ -30,6 +30,10 @@ class CourseDetailsController extends GetxController {
   /// The file download, replaceable so tests can run without a network
   Future<bool> Function(String url, String fileName) downloadFile =
       DownloadFileFormUrl.download;
+
+  /// Saves the time spent on a lesson video, replaceable so tests skip the disk
+  Future<void> Function(int seconds) addLearnedSeconds =
+      UserStatisticsX.addLocalLearnedSeconds;
   String courseId = Get.arguments;
   Rx<CourseX?> course = Rx<CourseX?>(null);
 
@@ -298,12 +302,8 @@ class CourseDetailsController extends GetxController {
       if (!lease.isCurrent) return;
       final dwell = DateTime.now().difference(startTime);
       // TEMP(backend): see UserStatisticsX.localLearnedSeconds. Not awaited, so
-      // saving it never holds the navigation back. It runs in the root zone
-      // because a test clock (fake async) would never finish the disk write
-      // and would block the next write to the box.
-      Zone.root.run(
-        () => UserStatisticsX.addLocalLearnedSeconds(dwell.inSeconds),
-      );
+      // saving it never holds the navigation back.
+      unawaited(addLearnedSeconds(dwell.inSeconds));
       if (!activity.isCompleted && dwell.inSeconds >= 5) {
         try {
           await DatabaseX.completeVideoOfCourse(cmId: moduleId);
@@ -395,7 +395,7 @@ class CourseDetailsController extends GetxController {
   }
 
   /// TEMP(backend): remember the downloaded file locally and show the checkmark
-  /// now. Removed together with [_applyLocalFileFlags].
+  /// now. Removed together with [_applyLocalProgress].
   Future<void> _markFileDownloaded(String key, String cmId) async {
     await LocalDataX.put<bool>(key, true);
     // Another account may be signed in by now, its page must not change
