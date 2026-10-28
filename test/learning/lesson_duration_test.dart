@@ -135,6 +135,44 @@ void main() {
       );
     });
 
+    test(
+      'the stored key drops the query and fragment, so no token is kept',
+      () {
+        const base = 'https://x.invalid/pluginfile.php/1/video.mp4';
+        expect(
+          LocalKeyX.videoSeconds('$base?token=secret-one&forcedownload=1#t=3'),
+          LocalKeyX.videoSeconds(base),
+        );
+        expect(
+          LocalKeyX.videoSeconds('$base?token=secret-two'),
+          LocalKeyX.videoSeconds('$base?token=secret-one'),
+        );
+        expect(
+          LocalKeyX.videoSeconds('$base?token=secret-one'),
+          isNot(contains('secret')),
+        );
+        expect(LocalKeyX.videoSeconds(base), isNot(contains('?')));
+      },
+    );
+
+    testWidgets('a player url with a token stores only the plain key', (
+      tester,
+    ) async {
+      final controller = Get.put<VideoPlayerController>(_ScreenController())
+        ..url = '$_url?token=secret-one';
+      controller.videoPlayerController = _Player()
+        ..value = const vp.VideoPlayerValue(duration: Duration(seconds: 95));
+      await tester.runAsync(controller.rememberDuration);
+      expect(
+        HiveX.box.keys.where((key) => key.toString().contains('secret')),
+        isEmpty,
+      );
+      expect(
+        LocalDataX.get<int>(LocalKeyX.videoSeconds(_url), defaultData: 0),
+        95,
+      );
+    });
+
     testWidgets('an unknown duration (zero) stores nothing', (tester) async {
       final controller = Get.put<VideoPlayerController>(_ScreenController())
         ..url = _url;

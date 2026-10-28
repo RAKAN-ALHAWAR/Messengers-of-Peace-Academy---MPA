@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../../Config/config.dart';
 import '../../../../../Core/core.dart';
+import '../../../../../Core/Error/error.dart';
 import '../../../../../Data/data.dart';
 import '../../../../../Core/Service/session_lease.dart';
 import '../../../../Widget/widget.dart';
@@ -155,8 +156,14 @@ class ForgotPasswordResetController extends GetxController {
       app.isLogin.value = true;
       return true;
     } catch (_) {
-      // Does nothing when another sign-in has taken over the credentials.
-      if (owner != null) await app.clearLocalSession(owner, navigate: false);
+      // Does nothing when another sign-in has taken over the credentials. A
+      // failing cleanup must not escape: the reset is already accepted, so the
+      // flow has to reach login instead of leaving the button spinning.
+      try {
+        if (owner != null) await app.clearLocalSession(owner, navigate: false);
+      } catch (e) {
+        ErrorX.console(e);
+      }
       return false;
     }
   }

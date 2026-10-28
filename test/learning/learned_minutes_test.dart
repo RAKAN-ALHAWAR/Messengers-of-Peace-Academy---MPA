@@ -71,6 +71,23 @@ void main() {
       expect(UserStatisticsX.localLearnedSeconds, 75);
     });
 
+    test('calls that are not awaited in between still add up', () async {
+      final first = UserStatisticsX.addLocalLearnedSeconds(40);
+      final second = UserStatisticsX.addLocalLearnedSeconds(35);
+      await Future.wait([first, second]);
+      expect(UserStatisticsX.localLearnedSeconds, 75);
+    });
+
+    test('a queued add stays with the user who earned it', () async {
+      final first = UserStatisticsX.addLocalLearnedSeconds(40);
+      final second = UserStatisticsX.addLocalLearnedSeconds(35);
+      await LocalDataX.put(LocalKeyX.userid, 'synthetic-B');
+      await Future.wait([first, second]);
+      expect(UserStatisticsX.localLearnedSeconds, 0);
+      await LocalDataX.put(LocalKeyX.userid, 'synthetic-A');
+      expect(UserStatisticsX.localLearnedSeconds, 75);
+    });
+
     test('a zero or negative dwell adds nothing', () async {
       await UserStatisticsX.addLocalLearnedSeconds(0);
       await UserStatisticsX.addLocalLearnedSeconds(-5);
@@ -100,6 +117,25 @@ void main() {
       expect(find.text('3'), findsOneWidget);
     });
 
+    testWidgets('the minutes card updates when more time is added', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: UserStatisticsSection(statistics: statsWithMinutes('0')),
+          ),
+        ),
+      );
+      expect(find.text('0'), findsWidgets);
+      await tester.runAsync(() => UserStatisticsX.addLocalLearnedSeconds(185));
+      await tester.pump();
+      expect(find.text('3'), findsOneWidget);
+      await tester.runAsync(() => UserStatisticsX.addLocalLearnedSeconds(60));
+      await tester.pump();
+      expect(find.text('4'), findsOneWidget);
+    });
+
     testWidgets('the statistics card keeps a server value above zero', (
       tester,
     ) async {
@@ -122,6 +158,8 @@ void main() {
       await http.runWithClient(
         () async {
           final controller = await mountCourse(tester);
+          final saved = <int>[];
+          controller.addLearnedSeconds = (seconds) async => saved.add(seconds);
           await controller.getData();
           final pending = controller.onTapLessonVideo(0);
           await tester.pumpAndSettle();
@@ -131,11 +169,8 @@ void main() {
           Get.back();
           await tester.pumpAndSettle();
           await pending;
-          // The save is not awaited by the page, give the disk write time
-          await tester.runAsync(
-            () => Future<void>.delayed(const Duration(milliseconds: 300)),
-          );
-          expect(UserStatisticsX.localLearnedSeconds, inInclusiveRange(2, 4));
+          expect(saved, hasLength(1));
+          expect(saved.single, inInclusiveRange(2, 4));
         },
         () => MockClient(
           (_) async => utf8Response({

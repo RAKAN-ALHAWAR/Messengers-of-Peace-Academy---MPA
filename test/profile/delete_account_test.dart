@@ -48,9 +48,9 @@ void main() {
 
   testWidgets('confirm opens the data deletion request page', (tester) async {
     await openDialog(tester);
-    expect(find.textContaining('cannot be undone'), findsOneWidget);
+    expect(find.textContaining('send a request'), findsOneWidget);
 
-    await tester.tap(find.text('Delete'));
+    await tester.tap(find.text('Open page'));
     await tester.pumpAndSettle();
 
     expect(launched.map((u) => u.toString()), [
@@ -60,7 +60,7 @@ void main() {
       ProfileDetailsController.dataDeletionRequestUrl,
       'https://mopacademy.org/admin/tool/dataprivacy/createdatarequest.php',
     );
-    expect(find.textContaining('cannot be undone'), findsNothing);
+    expect(find.textContaining('send a request'), findsNothing);
   });
 
   testWidgets('cancel does not open anything', (tester) async {
@@ -70,14 +70,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(launched, isEmpty);
-    expect(find.textContaining('cannot be undone'), findsNothing);
+    expect(find.textContaining('send a request'), findsNothing);
   });
 
   testWidgets('a failed launch shows an error toast', (tester) async {
     launchResult = false;
     await openDialog(tester);
 
-    await tester.tap(find.text('Delete'));
+    await tester.tap(find.text('Open page'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 

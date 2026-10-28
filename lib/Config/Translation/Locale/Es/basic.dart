@@ -42,7 +42,6 @@ const Map<String, String> esBasic = {
   "Logout": "Logout",
   "Ok": "Ok",
   "Cancel": "Cancel",
-  "Delete": "Delete",
   "Gender": "Gender",
   "Male": "Male",
   "Female": "Female",
@@ -60,8 +59,9 @@ const Map<String, String> esBasic = {
   "No results found": "No se encontraron resultados",
   "Delete account":
       "Eliminar cuenta",
-  "Your account and your data will be permanently deleted and this cannot be undone. We will take you to the data deletion request page on the website.":
-      "Tu cuenta y tus datos se eliminarán de forma permanente y esto no se puede deshacer. Te llevaremos a la página de solicitud de eliminación de datos del sitio web.",
+  "We will open the website page where you can send a request to delete your account and data. The team reviews the request and then deletes the account.":
+      "Abriremos la página del sitio web donde puedes enviar una solicitud para eliminar tu cuenta y tus datos. El equipo revisa la solicitud y luego elimina la cuenta.",
+  "Open page": "Abrir página",
   "Could not open the page, please try again":
       "No se pudo abrir la página, inténtalo de nuevo",
   "You have used all the attempts allowed for this test, so it cannot be taken again. Contact the academy if you need a new attempt.":

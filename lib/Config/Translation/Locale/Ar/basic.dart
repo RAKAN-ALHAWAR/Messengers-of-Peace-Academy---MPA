@@ -42,7 +42,6 @@ const Map<String, String> arBasic = {
   'Logout': 'تسجيل الخروج',
   'Ok': 'نعم',
   'Cancel': 'إلغاء',
-  'Delete': 'حذف',
   'Gender': 'الجنس',
   'Male': 'ذكر',
   'Female': 'أنثى',
@@ -60,8 +59,9 @@ const Map<String, String> arBasic = {
   "No results found": "لم يتم العثور على نتائج",
   'Delete account':
       'حذف الحساب',
-  'Your account and your data will be permanently deleted and this cannot be undone. We will take you to the data deletion request page on the website.':
-      'سيتم حذف حسابك وبياناتك نهائيًا ولا يمكن التراجع عن ذلك. سننقلك إلى صفحة طلب حذف البيانات في الموقع.',
+  'We will open the website page where you can send a request to delete your account and data. The team reviews the request and then deletes the account.':
+      'سنفتح لك صفحة الموقع التي يمكنك منها إرسال طلب لحذف حسابك وبياناتك. يراجع الفريق الطلب ثم يحذف الحساب.',
+  'Open page': 'فتح الصفحة',
   'Could not open the page, please try again':
       'تعذّر فتح الصفحة، حاول مرة أخرى',
   'You have used all the attempts allowed for this test, so it cannot be taken again. Contact the academy if you need a new attempt.':

@@ -22,6 +22,11 @@ class LocalKeyX {
   static String get learnedSeconds => '${LocalDataX.userid}:learnedSeconds';
 
   /// Real length of a video in seconds. Content metadata, so it is not per
-  /// user. Keyed by the video url because the player only knows the url.
-  static String videoSeconds(String url) => 'videoSeconds:$url';
+  /// user. Keyed by the video url because the player only knows the url. The
+  /// query and fragment are dropped (a Moodle file link can carry a `token=`),
+  /// so no credential outlives the session and one video has one key.
+  static String videoSeconds(String url) {
+    final end = url.indexOf(RegExp(r'[?#]'));
+    return 'videoSeconds:${end == -1 ? url : url.substring(0, end)}';
+  }
 }

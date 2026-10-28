@@ -42,7 +42,6 @@ const Map<String, String> enBasic = {
   "Logout": "Logout",
   "Ok": "Ok",
   "Cancel": "Cancel",
-  "Delete": "Delete",
   "Gender": "Gender",
   "Male": "Male",
   "Female": "Female",
@@ -60,8 +59,9 @@ const Map<String, String> enBasic = {
   "No results found": "No results found",
   "Delete account":
       "Delete account",
-  "Your account and your data will be permanently deleted and this cannot be undone. We will take you to the data deletion request page on the website.":
-      "Your account and your data will be permanently deleted and this cannot be undone. We will take you to the data deletion request page on the website.",
+  "We will open the website page where you can send a request to delete your account and data. The team reviews the request and then deletes the account.":
+      "We will open the website page where you can send a request to delete your account and data. The team reviews the request and then deletes the account.",
+  "Open page": "Open page",
   "Could not open the page, please try again":
       "Could not open the page, please try again",
   "You have used all the attempts allowed for this test, so it cannot be taken again. Contact the academy if you need a new attempt.":

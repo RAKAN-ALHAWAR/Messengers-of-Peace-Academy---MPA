@@ -197,8 +197,8 @@ class ProfileDetailsController extends GetxController {
   onDeleteAccount() => AlertDialogX.okAndCancel(
     title: 'Delete account',
     message:
-        'Your account and your data will be permanently deleted and this cannot be undone. We will take you to the data deletion request page on the website.',
-    textOK: 'Delete',
+        'We will open the website page where you can send a request to delete your account and data. The team reviews the request and then deletes the account.',
+    textOK: 'Open page'.tr,
     colorTextOk: ColorX.danger,
     onOk: onConfirmDeleteAccount,
   );

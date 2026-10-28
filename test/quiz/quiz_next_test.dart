@@ -137,6 +137,7 @@ void main() {
   Future<void> mountResults(
     WidgetTester tester, {
     bool detailsBelow = true,
+    bool strayDetails = false,
   }) async {
     tester.view.physicalSize = const Size(1200, 2000);
     tester.view.devicePixelRatio = 1;
@@ -163,6 +164,16 @@ void main() {
               Get.lazyPut(() => CourseDetailsController());
             }),
           ),
+          // A course page controller that outlives its route
+          GetPage(
+            name: '/stray',
+            page: () {
+              if (!Get.isRegistered<CourseDetailsController>()) {
+                Get.put(CourseDetailsController(), permanent: true);
+              }
+              return const Scaffold(body: Text('Synthetic stray'));
+            },
+          ),
           GetPage(
             name: RouteNameX.videoPlayer,
             page: () => const Scaffold(body: Text('Synthetic player')),
@@ -173,6 +184,10 @@ void main() {
     await tester.pumpAndSettle();
     if (detailsBelow) {
       Get.toNamed(RouteNameX.courseDetails, arguments: 'synthetic-course');
+      await afterTap(tester);
+    }
+    if (strayDetails) {
+      Get.toNamed('/stray', arguments: 'synthetic-course');
       await afterTap(tester);
     }
     Get.toNamed(
@@ -223,22 +238,38 @@ void main() {
     },
   );
 
-  testWidgets('without a course page below, a fresh one opens the next lesson', (
-    tester,
-  ) async {
+  testWidgets(
+    'without a course page below, a fresh one opens the next lesson',
+    (tester) async {
+      await http.runWithClient(() async {
+        await mountResults(tester, detailsBelow: false);
+        await afterTap(tester);
+        Get.find<TestResultsController>().onTapButton();
+        await afterTap(tester);
+        expect(tester.takeException(), isNull);
+        expect(Get.currentRoute, startsWith(RouteNameX.videoPlayer));
+        expect(Get.arguments, 'https://x.invalid/2');
+        Get.back();
+        await afterTap(tester);
+        final details = Get.find<CourseDetailsController>();
+        expect(details.isClosed, isFalse);
+        expect(details.lessonsDone, 1);
+      }, client());
+    },
+  );
+
+  testWidgets('a registered course controller without its route cannot pop '
+      'every route', (tester) async {
     await http.runWithClient(() async {
-      await mountResults(tester, detailsBelow: false);
+      await mountResults(tester, detailsBelow: false, strayDetails: true);
       await afterTap(tester);
+      expect(Get.isRegistered<CourseDetailsController>(), isTrue);
       Get.find<TestResultsController>().onTapButton();
       await afterTap(tester);
       expect(tester.takeException(), isNull);
-      expect(Get.currentRoute, startsWith(RouteNameX.videoPlayer));
-      expect(Get.arguments, 'https://x.invalid/2');
-      Get.back();
-      await afterTap(tester);
-      final details = Get.find<CourseDetailsController>();
-      expect(details.isClosed, isFalse);
-      expect(details.lessonsDone, 1);
+      // The fresh course page opened instead of an empty navigator
+      expect(Get.currentRoute, startsWith(RouteNameX.courseDetails));
+      expect(find.byType(CourseDetailsView), findsOneWidget);
     }, client());
   });
 

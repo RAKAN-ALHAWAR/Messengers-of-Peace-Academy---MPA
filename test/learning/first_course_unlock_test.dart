@@ -64,14 +64,25 @@ void main() {
     expect(levels[1].isOpen, isFalse);
   });
 
-  test('completed levels and courses are skipped', () {
+  test('course 1 completed, course 2 closed, nothing open: nothing changes', () {
     final levels = [
-      level('L1', [course('a', done: true)], open: true, done: true),
-      level('L2', [course('b', done: true), course('c'), course('d')]),
+      level('L1', [course('a', done: true), course('b')]),
+      level('L2', [course('c')]),
     ];
     openFirstCourseIfNoneOpen(levels);
-    expect(levels[1].isOpen, isTrue);
-    expect(openIds(levels), ['c']);
+    expect(openIds(levels), isEmpty);
+    expect(levels[0].isOpen, isFalse);
+    expect(levels[1].isOpen, isFalse);
+  });
+
+  test('only the very first course of the first level is ever opened', () {
+    final levels = [
+      level('L1', [course('a', done: true)], open: true, done: true),
+      level('L2', [course('b'), course('c')]),
+    ];
+    openFirstCourseIfNoneOpen(levels);
+    expect(openIds(levels), isEmpty);
+    expect(levels[1].isOpen, isFalse);
   });
 
   test('an already open course changes nothing', () {

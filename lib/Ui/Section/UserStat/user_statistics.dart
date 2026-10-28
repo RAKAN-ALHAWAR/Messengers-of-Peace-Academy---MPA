@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../../Config/config.dart';
 import '../../../Data/Model/user/user_statistics.dart';
@@ -26,12 +27,18 @@ class UserStatisticsSection extends StatelessWidget {
               ),
               SizedBox(width: 12),
               Flexible(
-                child: StatisticsCardX(
-                  title: "Minutes I learned",
-                  subValue: "minute",
-                  value: statistics.minutesShown(UserStatisticsX.localLearnedSeconds),
-                  icon: IconX.schedule,
-                ),
+                // Reads the revision so the card follows a save made after build
+                child: Obx(() {
+                  UserStatisticsX.localLearnedRevision.value;
+                  return StatisticsCardX(
+                    title: "Minutes I learned",
+                    subValue: "minute",
+                    value: statistics.minutesShown(
+                      UserStatisticsX.localLearnedSeconds,
+                    ),
+                    icon: IconX.schedule,
+                  );
+                }),
               ),
             ],
           ),
