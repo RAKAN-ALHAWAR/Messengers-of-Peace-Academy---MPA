@@ -64,5 +64,9 @@ const Map<String, String> enBasic = {
       "Your account and your data will be permanently deleted and this cannot be undone. We will take you to the data deletion request page on the website.",
   "Could not open the page, please try again":
       "Could not open the page, please try again",
+  "You have used all the attempts allowed for this test, so it cannot be taken again. Contact the academy if you need a new attempt.":
+      "You have used all the attempts allowed for this test, so it cannot be taken again. Contact the academy if you need a new attempt.",
+  "This test is not available to start right now.":
+      "This test is not available to start right now.",
   // "":"",
 };

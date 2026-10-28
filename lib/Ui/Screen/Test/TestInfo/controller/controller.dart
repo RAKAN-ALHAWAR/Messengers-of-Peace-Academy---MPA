@@ -70,6 +70,24 @@ class TestInfoController extends GetxController {
   bool get canEnterTest =>
       quiz.canStart || quiz.lastAttemptStatus == QuizAttemptStatusX.inProgress;
 
+  /// Why the user cannot enter the test, or null when they can.
+  ///
+  /// Built from the server fields only (never hard-coded counts): an
+  /// `attemptsAllowed` of 0 means unlimited, so a finished last attempt with a
+  /// positive limit means the attempts are used up.
+  String? get blockedReason {
+    if (canEnterTest) return null;
+    final status = quiz.lastAttemptStatus;
+    final hasFinishedAttempt =
+        status.isNotEmpty &&
+        status != QuizAttemptStatusX.notAttempted &&
+        status != QuizAttemptStatusX.inProgress;
+    if (quiz.attemptsAllowed > 0 && hasFinishedAttempt) {
+      return 'You have used all the attempts allowed for this test, so it cannot be taken again. Contact the academy if you need a new attempt.';
+    }
+    return 'This test is not available to start right now.';
+  }
+
   /// Handle start test
   void onStartTest() {
     if (!ownsCurrentSession || !isInit.value || !canEnterTest) return;

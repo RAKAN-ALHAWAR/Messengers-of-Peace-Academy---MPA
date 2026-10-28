@@ -64,5 +64,9 @@ const Map<String, String> esBasic = {
       "Tu cuenta y tus datos se eliminarán de forma permanente y esto no se puede deshacer. Te llevaremos a la página de solicitud de eliminación de datos del sitio web.",
   "Could not open the page, please try again":
       "No se pudo abrir la página, inténtalo de nuevo",
+  "You have used all the attempts allowed for this test, so it cannot be taken again. Contact the academy if you need a new attempt.":
+      "Has usado todos los intentos permitidos para este examen, por lo que no se puede repetir. Ponte en contacto con la academia si necesitas un nuevo intento.",
+  "This test is not available to start right now.":
+      "Este examen no está disponible para comenzar en este momento.",
   // "":"",
 };

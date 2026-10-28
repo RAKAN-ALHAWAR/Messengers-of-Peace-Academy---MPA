@@ -64,5 +64,9 @@ const Map<String, String> arBasic = {
       'سيتم حذف حسابك وبياناتك نهائيًا ولا يمكن التراجع عن ذلك. سننقلك إلى صفحة طلب حذف البيانات في الموقع.',
   'Could not open the page, please try again':
       'تعذّر فتح الصفحة، حاول مرة أخرى',
+  'You have used all the attempts allowed for this test, so it cannot be taken again. Contact the academy if you need a new attempt.':
+      'استنفدت المحاولات المسموحة لهذا الاختبار، ولا يمكن إعادته. تواصل مع الأكاديمية إذا احتجت محاولة جديدة.',
+  'This test is not available to start right now.':
+      'هذا الاختبار غير متاح للبدء حاليًا.',
   // "":"",
 };

@@ -172,6 +172,15 @@ class TestInfoView extends GetView<TestInfoController> {
                     onTap: controller.onStartTest,
                     disabled: !controller.canEnterTest,
                   ).fadeAnimation200,
+
+                  /// Why the test cannot be started
+                  if (controller.blockedReason != null)
+                    TextX(
+                      controller.blockedReason!,
+                      textAlign: TextAlign.center,
+                      style: TextStyleX.labelLarge,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ).marginOnly(top: 12).fadeAnimation200,
                 ],
               ),
             );

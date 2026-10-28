@@ -64,5 +64,9 @@ const Map<String, String> phBasic = {
       "Permanenteng buburahin ang iyong account at data at hindi na ito maibabalik. Dadalhin ka namin sa pahina ng kahilingan sa pagbura ng data sa website.",
   "Could not open the page, please try again":
       "Hindi mabuksan ang pahina, subukang muli",
+  "You have used all the attempts allowed for this test, so it cannot be taken again. Contact the academy if you need a new attempt.":
+      "Nagamit mo na ang lahat ng pinapayagang pagtatangka para sa pagsusulit na ito, kaya hindi na ito maaaring kunin muli. Makipag-ugnayan sa akademya kung kailangan mo ng bagong pagtatangka.",
+  "This test is not available to start right now.":
+      "Hindi pa available ang pagsusulit na ito para simulan ngayon.",
   // "":"",
 };
