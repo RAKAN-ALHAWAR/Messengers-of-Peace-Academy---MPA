@@ -69,4 +69,6 @@ Estimate: 7 to 13 agent-work hours (est., basis: sonnet-high median 17-32 min pe
   - Major 2 (topic with a file may never complete): folded into lane B2 (#18 file checkmark).
   - Major 3 (stale CourseDetails controller after a passed quiz, UNVERIFIED) and Minor (completion failure skips the refetch): fix lane, worktree /Users/saker/Desktop/Flutter/mopa-wt-fix1, branch claude/fix-batch1 (flutter-developer, Sonnet high), test first.
   - Other minors (5 s dwell before Next, silent file download after a pass, "N Lessons" sub-label, .part leftover, font-dependent goldens, cold start with usernotfullysetup signs out): lane C/B2 candidates or final report.
+- Device check 2026-10-28 (merged main faa51f3, simulator 7A51E729): second account login now lands on CompleteAccountInfo (evidence: mopa-gitlab-issues/evidence/incomplete-profile-routes-to-complete-account.png). Saving needs real personal data (birth date, WhatsApp number, country) written to the owner's live profile: asked the owner to fill it himself instead of inventing values.
+- Lane C pack: haiku-locator building section C-account-quiz-ux.
 - Owner killed the hung flutter_tester 16685 himself (A1 had asked the orchestrator to kill it; refused as permission laundering).
