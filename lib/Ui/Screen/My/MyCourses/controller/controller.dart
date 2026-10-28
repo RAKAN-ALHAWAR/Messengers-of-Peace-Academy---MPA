@@ -2,8 +2,8 @@ import 'package:get/get.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
 
 import '../../../../../Config/config.dart';
-import '../../../../../Config/Translation/translation.dart';
 import '../../../../../Core/Error/error.dart';
+import '../../../../../Core/Service/controller_lease.dart';
 import '../../../../../Core/Service/route_origin.dart';
 import '../../../../../Core/Service/session_lease.dart';
 import '../../../../../Data/Model/course/my_course.dart';
@@ -16,23 +16,24 @@ class MyCoursesController extends GetxController {
   /// My courses
   final RxList<MyCourse> myCourses = <MyCourse>[].obs;
 
+  /// The newest load wins
+  int _loadGeneration = 0;
+
+  /// A course page is open, ignore taps
+  bool _openingCourse = false;
+
   //============================================================================
   // Functions
 
   /// Get data from database
-  int _loadGeneration = 0;
-  bool _openingCourse = false;
   Future<void> getData({SessionLeaseX? owner}) async {
     if (isClosed || owner?.isCurrent == false) return;
     final generation = ++_loadGeneration;
-    final locale = TranslationX.getLanguageCode;
-    final lease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              owner?.isCurrent != false &&
-              generation == _loadGeneration &&
-              TranslationX.getLanguageCode == locale,
+    final lease = ControllerLeaseX.capture(
+      this,
+      owner: owner,
+      locale: true,
+      also: () => generation == _loadGeneration,
     );
     if (!lease.hasAuthenticatedIdentity) {
       throw ErrorX.createErrorByCode(ErrorCodesX.unauthorized);
@@ -50,15 +51,11 @@ class MyCoursesController extends GetxController {
   Future<void> onTapCourse(MyCourse course) async {
     if (_openingCourse || isClosed) return;
     final origin = RouteOriginX.capture();
-    final locale = TranslationX.getLanguageCode;
-    final lease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              origin.isActive &&
-              Get.isRegistered<MyCoursesController>() &&
-              identical(Get.find<MyCoursesController>(), this) &&
-              TranslationX.getLanguageCode == locale,
+    final lease = ControllerLeaseX.capture(
+      this,
+      origin: origin,
+      registered: true,
+      locale: true,
     );
     if (!lease.hasAuthenticatedIdentity) return;
     _openingCourse = true;

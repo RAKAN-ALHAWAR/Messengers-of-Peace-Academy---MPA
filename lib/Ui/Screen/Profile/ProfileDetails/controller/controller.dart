@@ -5,6 +5,7 @@ import 'package:messengersofpeace/Core/core.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../Config/config.dart';
+import '../../../../../Core/Service/controller_lease.dart';
 import '../../../../../Core/Service/route_origin.dart';
 import '../../../../../Core/Service/session_lease.dart';
 import '../../../../../Core/Error/error.dart';
@@ -36,6 +37,8 @@ class ProfileDetailsController extends GetxController {
 
   /// User statistics
   late Rx<UserStatisticsX> statistics;
+
+  /// The first snapshot made `user` and `statistics`
   bool _snapshotInitialized = false;
 
   /// Current badge
@@ -49,9 +52,17 @@ class ProfileDetailsController extends GetxController {
 
   /// Is init
   bool isInit = false;
+
+  /// Account and language of the snapshot now shown
   (int, String)? _loadedKey;
+
+  /// The newest load wins
   int _loadGeneration = 0;
+
+  /// The newest page tap wins
   int _navigationGeneration = 0;
+
+  /// A progress page is open, ignore taps
   bool _openingProgressRoute = false;
 
   //============================================================================
@@ -60,8 +71,7 @@ class ProfileDetailsController extends GetxController {
   /// Get data from database
   Future<void> getData({bool force = false, SessionLeaseX? owner}) async {
     if (isClosed || owner?.isCurrent == false) return;
-    // This authenticated screen may briefly survive logout navigation. Do not
-    // let its reload adopt the public service credential.
+    // After logout this screen must not reload with the public credential.
     if (!SessionLeaseX.capture().hasAuthenticatedIdentity) {
       throw ErrorX.createErrorByCode(ErrorCodesX.unauthorized);
     }
@@ -77,13 +87,11 @@ class ProfileDetailsController extends GetxController {
     }
     final accountId = LocalDataX.userid;
     final generation = ++_loadGeneration;
-    final lease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              owner?.isCurrent != false &&
-              generation == _loadGeneration &&
-              TranslationX.getLanguageCode == locale,
+    final lease = ControllerLeaseX.capture(
+      this,
+      owner: owner,
+      locale: true,
+      also: () => generation == _loadGeneration,
     );
     try {
       final loadedUser = await DatabaseX.getUser();
@@ -98,8 +106,7 @@ class ProfileDetailsController extends GetxController {
       final badges = await DatabaseX.getBadges();
       if (!lease.isCurrent) return;
 
-      // Publish one complete snapshot only while its identity is still current.
-      // Keep the same observable containers for already-mounted consumers.
+      // Publish one whole snapshot, in the same containers the views watch.
       if (_snapshotInitialized) {
         user.value = loadedUser;
         statistics.value = loadedStatistics;
@@ -147,17 +154,13 @@ class ProfileDetailsController extends GetxController {
   Future<void> _openAndRefresh(String destination) async {
     if (isClosed || _openingProgressRoute) return;
     final origin = RouteOriginX.capture();
-    final locale = TranslationX.getLanguageCode;
     final generation = ++_navigationGeneration;
-    final lease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              generation == _navigationGeneration &&
-              Get.isRegistered<ProfileDetailsController>() &&
-              identical(Get.find<ProfileDetailsController>(), this) &&
-              origin.isActive &&
-              TranslationX.getLanguageCode == locale,
+    final lease = ControllerLeaseX.capture(
+      this,
+      origin: origin,
+      registered: true,
+      locale: true,
+      also: () => generation == _navigationGeneration,
     );
     if (!lease.hasAuthenticatedIdentity || !lease.isCurrent) return;
     _openingProgressRoute = true;

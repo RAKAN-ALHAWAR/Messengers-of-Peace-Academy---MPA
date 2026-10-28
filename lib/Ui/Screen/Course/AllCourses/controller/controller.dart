@@ -1,3 +1,4 @@
+import 'package:messengersofpeace/Core/Service/controller_lease.dart';
 import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:messengersofpeace/Core/Service/route_origin.dart';
 import 'package:messengersofpeace/Config/Translation/translation.dart';
@@ -14,10 +15,19 @@ class AllCoursesController extends GetxController {
   //============================================================================
   // Variables
 
+  /// Levels with their courses
   RxList<LevelX> levels = RxList<LevelX>([]);
+
+  /// The newest load wins
   int _loadGeneration = 0;
+
+  /// The newest course tap wins
   int _navigationGeneration = 0;
+
+  /// A course page is open, ignore taps
   bool _openingCourse = false;
+
+  /// Account and language of the levels now shown
   (int, String)? _ownerKey;
 
   //============================================================================
@@ -29,13 +39,11 @@ class AllCoursesController extends GetxController {
     final locale = TranslationX.getLanguageCode;
     final key = (LocalDataX.sessionRevision, locale);
     final generation = ++_loadGeneration;
-    final lease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              owner?.isCurrent != false &&
-              generation == _loadGeneration &&
-              TranslationX.getLanguageCode == locale,
+    final lease = ControllerLeaseX.capture(
+      this,
+      owner: owner,
+      locale: true,
+      also: () => generation == _loadGeneration,
     );
     if (_ownerKey != key || !lease.hasAuthenticatedIdentity) {
       levels.clear();
@@ -60,15 +68,12 @@ class AllCoursesController extends GetxController {
   Future<void> onCourseTap(MiniCourseX course) async {
     if (isClosed || _openingCourse) return;
     final origin = RouteOriginX.capture();
-    final locale = TranslationX.getLanguageCode;
     final generation = ++_navigationGeneration;
-    final lease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              generation == _navigationGeneration &&
-              origin.isActive &&
-              TranslationX.getLanguageCode == locale,
+    final lease = ControllerLeaseX.capture(
+      this,
+      origin: origin,
+      locale: true,
+      also: () => generation == _navigationGeneration,
     );
     if (!lease.hasAuthenticatedIdentity || !lease.isCurrent) return;
     _openingCourse = true;
