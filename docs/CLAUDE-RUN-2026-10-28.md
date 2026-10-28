@@ -64,4 +64,9 @@ Estimate: 7 to 13 agent-work hours (est., basis: sonnet-high median 17-32 min pe
   4. Lane B2: #18 file checkmark (local), #18 duration, #19 minutes (local).
   5. Simplify Codex abstractions to the owner's style; BACKEND-REQUESTS file; final review; push to GitHub (approved after verification).
 - The second account: login_user ok, get_user_full_profile errorcode usernotfullysetup.
+- Batch 1 blind review (Sonnet, report in the session scratchpad review-batch1.md): verdict fix first, no Blocker. Triage:
+  - Major 1 (offline cache inert): verified, but not a regression: no caller set localCacheKey at v0.0.1 (a57bc44) either, so offline mode never existed; A1 only made the dormant per-user key safe. No fix in this run; listed as a possible feature for the owner.
+  - Major 2 (topic with a file may never complete): folded into lane B2 (#18 file checkmark).
+  - Major 3 (stale CourseDetails controller after a passed quiz, UNVERIFIED) and Minor (completion failure skips the refetch): fix lane, worktree /Users/saker/Desktop/Flutter/mopa-wt-fix1, branch claude/fix-batch1 (flutter-developer, Sonnet high), test first.
+  - Other minors (5 s dwell before Next, silent file download after a pass, "N Lessons" sub-label, .part leftover, font-dependent goldens, cold start with usernotfullysetup signs out): lane C/B2 candidates or final report.
 - Owner killed the hung flutter_tester 16685 himself (A1 had asked the orchestrator to kill it; refused as permission laundering).
