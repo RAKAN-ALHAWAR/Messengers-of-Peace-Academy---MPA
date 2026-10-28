@@ -46,6 +46,10 @@ class ErrorX implements Exception {
     }
   }
 
+  /// An answer that belongs to a previous login; the text is a translation key.
+  factory ErrorX.sessionChanged() =>
+      ErrorX(message: 'Session changed. Please try again.');
+
   /// Restructure the error message - Static version
   static void console(error) {
     FlutterError.reportError(

@@ -72,8 +72,7 @@ class HttpX {
     } finally {
       cancelled = true;
       client.close();
-      // Stream cancellation may itself wait on a stalled transport. The owned
-      // client is closed immediately; cleanup cannot extend the request deadline.
+      // A stalled cancel must not extend the request deadline.
       if (subscription != null) unawaited(subscription!.cancel());
     }
   }
