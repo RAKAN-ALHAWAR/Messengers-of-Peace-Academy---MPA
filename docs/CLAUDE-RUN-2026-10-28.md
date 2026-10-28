@@ -102,3 +102,9 @@ Estimate: 7 to 13 agent-work hours (est., basis: sonnet-high median 17-32 min pe
 - Pushed main f338fa9..a688a4b. CI status still to read with ci-status.
 - Blind review of batch 2 (8da747b..HEAD) launched on code-reviewer Opus medium.
 - NEXT: review findings, fold fixes on Sonnet, ci-status, device checks list, simplify Codex abstractions, worktree cleanup (a, a2, b1, fix1, c, b2, tap).
+
+## Batch 2 review result and fold (2026-10-28)
+- Reviewer (code-reviewer Opus medium): no Blocker. Major 1: first-course unlock opened any next course (defeats server sequencing); narrowed to the owner's words: only the first course of the first level when nothing is open. Major 2: delete-account dialog claimed permanent deletion while only a web request page opens; reword. Minors m1-m7: stale doc name, Zone.root seam, lost increments, non-reactive minutes card, Get.until without isFirst, reset cleanup throw spins forever, video URL key may persist a token.
+- Reviewer saw 8 shader-asset env failures (ink_sparkle.frag); main full run was +723 green, treated as env.
+- Fold lane: flutter-developer Sonnet high, worktree ../mopa-wt-fold, branch claude/review2-fold. Then re-check only the listed findings (round 1 of max 2).
+- CI: no run yet on main after push (pending).
