@@ -122,7 +122,9 @@ void main() {
             await pending;
             await tester.pump();
             expect(completions, 1);
-            expect(loads, failure == 'refresh' ? 2 : 1);
+            // A failed completion still refetches: every return to the course
+            // page shows the server state.
+            expect(loads, 2);
             expect(
               controller.course.value!.activities.first.isCompleted,
               isFalse,

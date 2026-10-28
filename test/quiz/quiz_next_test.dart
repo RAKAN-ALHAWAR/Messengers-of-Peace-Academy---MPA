@@ -123,8 +123,21 @@ void main() {
     return () => mock;
   }
 
-  /// Course details is below the results; the next stops are stubs
-  Future<void> mountResults(WidgetTester tester) async {
+  Future<void> afterTap(WidgetTester tester) async {
+    await tester.pumpAndSettle();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 200)),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  /// Same stack as the app: root, a real course details page (course X), then
+  /// the results above it; the player is a stub. [detailsBelow] false is the
+  /// fallback: results straight above root.
+  Future<void> mountResults(
+    WidgetTester tester, {
+    bool detailsBelow = true,
+  }) async {
     tester.view.physicalSize = const Size(1200, 2000);
     tester.view.devicePixelRatio = 1;
     await tester.pumpWidget(
@@ -158,6 +171,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    if (detailsBelow) {
+      Get.toNamed(RouteNameX.courseDetails, arguments: 'synthetic-course');
+      await afterTap(tester);
+    }
     Get.toNamed(
       RouteNameX.testResults,
       arguments: [
@@ -173,25 +190,23 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   }
 
-  Future<void> afterTap(WidgetTester tester) async {
-    await tester.pumpAndSettle();
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 200)),
-    );
-    await tester.pumpAndSettle();
-  }
-
   testWidgets(
-    'passing a quiz lands on a freshly fetched course with the checkmark',
+    'passing a quiz returns to the same course page, refetched, and opens next',
     (tester) async {
       await http.runWithClient(() async {
         await mountResults(tester);
         await afterTap(tester);
         final results = Get.find<TestResultsController>();
         expect(results.isSuccess, isTrue);
+        final oldDetails = Get.find<CourseDetailsController>();
         results.onTapButton();
         await afterTap(tester);
-        // The old course page is gone, the next lesson (a video) opened.
+        expect(tester.takeException(), isNull);
+        // The visible course page keeps one live controller (the same page
+        // refreshed in place), never a closed one.
+        expect(Get.find<CourseDetailsController>(), same(oldDetails));
+        expect(oldDetails.isClosed, isFalse);
+        // The next lesson (a video) opened.
         expect(courseLoads, greaterThanOrEqualTo(1));
         expect(Get.currentRoute, startsWith(RouteNameX.videoPlayer));
         expect(Get.arguments, 'https://x.invalid/2');
@@ -199,12 +214,33 @@ void main() {
         await afterTap(tester);
         expect(Get.currentRoute, startsWith(RouteNameX.courseDetails));
         final details = Get.find<CourseDetailsController>();
+        expect(details, same(oldDetails));
+        expect(details.isClosed, isFalse);
         expect(details.course.value!.activities[1].isCompleted, isTrue);
         expect(details.lessonsDone, 1);
         expect(find.text('1/2'), findsOneWidget);
       }, client());
     },
   );
+
+  testWidgets('without a course page below, a fresh one opens the next lesson', (
+    tester,
+  ) async {
+    await http.runWithClient(() async {
+      await mountResults(tester, detailsBelow: false);
+      await afterTap(tester);
+      Get.find<TestResultsController>().onTapButton();
+      await afterTap(tester);
+      expect(tester.takeException(), isNull);
+      expect(Get.currentRoute, startsWith(RouteNameX.videoPlayer));
+      expect(Get.arguments, 'https://x.invalid/2');
+      Get.back();
+      await afterTap(tester);
+      final details = Get.find<CourseDetailsController>();
+      expect(details.isClosed, isFalse);
+      expect(details.lessonsDone, 1);
+    }, client());
+  });
 
   testWidgets('a locked next lesson leaves the user on the course page', (
     tester,
