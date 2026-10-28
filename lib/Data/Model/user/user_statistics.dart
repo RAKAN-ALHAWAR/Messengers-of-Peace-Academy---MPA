@@ -37,6 +37,27 @@ class UserStatisticsX {
     );
   }
 
+  /// TEMP(backend): the server minutes stay 0, so the app counts the time spent
+  /// on lesson videos on the device (per user). The backend must send the real
+  /// learning minutes in get_user_statistics; this local total is removed once
+  /// it does.
+  static int get localLearnedSeconds =>
+      LocalDataX.get<int>(LocalKeyX.learnedSeconds, defaultData: 0);
+
+  static Future<void> addLocalLearnedSeconds(int seconds) async {
+    if (seconds <= 0) return;
+    await LocalDataX.put<int>(
+      LocalKeyX.learnedSeconds,
+      localLearnedSeconds + seconds,
+    );
+  }
+
+  /// The server minutes when above zero, else the local total in whole minutes
+  String minutesShown(int localSeconds) {
+    if ((int.tryParse(minutes) ?? 0) > 0) return minutes;
+    return (localSeconds ~/ 60).toString();
+  }
+
   Map<String, dynamic> toJson() {
     return {
       NameX.completedCourses: completedCourses,

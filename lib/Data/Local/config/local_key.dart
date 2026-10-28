@@ -17,4 +17,7 @@ class LocalKeyX {
 
   /// A file (resource) activity was downloaded by this user
   static String fileDone(String cmId) => '${LocalDataX.userid}:fileDone:$cmId';
+
+  /// Seconds this user spent watching lessons
+  static String get learnedSeconds => '${LocalDataX.userid}:learnedSeconds';
 }

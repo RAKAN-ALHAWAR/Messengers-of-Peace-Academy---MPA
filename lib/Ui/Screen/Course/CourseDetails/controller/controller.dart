@@ -10,6 +10,7 @@ import '../../../../../Core/Service/session_lease.dart';
 import '../../../../../Config/Translation/translation.dart';
 import '../../../../../Data/Model/course/activity.dart';
 import '../../../../../Data/Model/course/course.dart';
+import '../../../../../Data/Model/user/user_statistics.dart';
 import '../../../../../Data/data.dart';
 import '../../VideoPlayer /controller/controller.dart';
 
@@ -284,6 +285,9 @@ class CourseDetailsController extends GetxController {
       ]);
       if (!lease.isCurrent) return;
       final dwell = DateTime.now().difference(startTime);
+      // TEMP(backend): see UserStatisticsX.localLearnedSeconds
+      await UserStatisticsX.addLocalLearnedSeconds(dwell.inSeconds);
+      if (!lease.isCurrent) return;
       if (!activity.isCompleted && dwell.inSeconds >= 5) {
         try {
           await DatabaseX.completeVideoOfCourse(cmId: moduleId);
