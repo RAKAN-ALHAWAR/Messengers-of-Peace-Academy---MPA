@@ -58,5 +58,17 @@ const Map<String, String> arBasic = {
   "Select Country Code": "اختر رمز الدولة",
   "Search by country name or code": "ابحث عن اسم الدولة أو الرمز",
   "No results found": "لم يتم العثور على نتائج",
+  'Delete account':
+      'حذف الحساب',
+  'Your account and your data will be permanently deleted and this cannot be undone. We will take you to the data deletion request page on the website.':
+      'سيتم حذف حسابك وبياناتك نهائيًا ولا يمكن التراجع عن ذلك. سننقلك إلى صفحة طلب حذف البيانات في الموقع.',
+  'Could not open the page, please try again':
+      'تعذّر فتح الصفحة، حاول مرة أخرى',
+  'You have used all the attempts allowed for this test, so it cannot be taken again. Contact the academy if you need a new attempt.':
+      'استنفدت المحاولات المسموحة لهذا الاختبار، ولا يمكن إعادته. تواصل مع الأكاديمية إذا احتجت محاولة جديدة.',
+  'This test is not available to start right now.':
+      'هذا الاختبار غير متاح للبدء حاليًا.',
+  'Switch the keyboard to English to type the email':
+      'حوّل لوحة المفاتيح إلى الإنكليزية لكتابة البريد الإلكتروني',
   // "":"",
 };
