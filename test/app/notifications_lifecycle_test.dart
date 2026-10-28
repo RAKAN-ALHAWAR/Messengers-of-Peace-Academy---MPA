@@ -94,6 +94,10 @@ void main() {
           }
           final expected = action == 'accepted' ? 0 : 2;
           expect(controller.getCountUnreadNotifications, expected);
+          // The toast sits at the top of the screen (original look) and covers
+          // the back arrow while visible, so dismiss it before tapping Back.
+          ToastX.dismiss();
+          await tester.pumpAndSettle();
           await tester.tap(find.byIcon(Icons.arrow_back));
           await tester.pumpAndSettle();
           expect(await result, expected);
