@@ -25,6 +25,8 @@ const Map<String, String> phGeneral = {
   "Close": "Isara",
   "Password changed successfully. Please sign in with your new password.":
       "Matagumpay na nabago ang password. Mag-sign in gamit ang bago mong password.",
+  "Your account setup is not complete on the server, so the data could not be saved. Please contact support.":
+      "Hindi pa kumpleto ang setup ng iyong account sa server, kaya hindi na-save ang data. Makipag-ugnayan sa support.",
   "Profile information saved, but the photo could not be uploaded. Please try again.":
       "Na-save ang iyong impormasyon, pero hindi na-upload ang larawan. Pakisubukang muli.",
   "Email": "Email",

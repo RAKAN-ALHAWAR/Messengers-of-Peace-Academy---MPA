@@ -23,6 +23,8 @@ const Map<String, String> arGeneral = {
   "Close": "إغلاق",
   "Password changed successfully. Please sign in with your new password.":
       "تم تغيير كلمة المرور بنجاح. سجّل الدخول باستخدام الكلمة الجديدة.",
+  "Your account setup is not complete on the server, so the data could not be saved. Please contact support.":
+      "إعداد حسابك غير مكتمل على الخادم، لذلك تعذّر حفظ البيانات. يرجى التواصل مع الدعم.",
   "Profile information saved, but the photo could not be uploaded. Please try again.":
       "تم حفظ بياناتك، لكن تعذّر رفع الصورة. حاول مجددًا.",
   "Email": "البريد الإلكتروني",

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:messengersofpeace/Core/core.dart';
+import 'package:messengersofpeace/Core/Error/error.dart';
 import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:messengersofpeace/Data/data.dart';
 import 'package:messengersofpeace/Data/Model/info/country.dart';
@@ -244,11 +245,13 @@ class CompleteAccountInfoController extends GetxController {
     isLoading.value = true;
     buttonState.value = ButtonStateEX.loading;
     final selectedImage = image;
+    var saveCall = true;
     try {
       final message = await DatabaseX.updateUser(
         form: formData,
         username: app.user.value.username.trim(),
       );
+      saveCall = false;
       if (!ownsSession()) return;
       if (selectedImage != null) {
         try {
@@ -281,7 +284,13 @@ class CompleteAccountInfoController extends GetxController {
     } catch (error) {
       if (!ownsSession()) return;
       buttonState.value = ButtonStateEX.failed;
-      ToastX.error(message: error);
+      // The server refuses every call of an account whose setup it sees as
+      // incomplete, the save included. Its own text ("setup not complete yet")
+      // reads as the screen the user is already on, so say what is happening.
+      final notSetUp =
+          saveCall &&
+          error.toErrorX.details[NameX.errorcode] == 'usernotfullysetup';
+      ToastX.error(message: notSetUp ? _accountNotSetUpMessage.tr : error);
     } finally {
       if (ownsSession()) {
         isLoading.value = false;
@@ -294,6 +303,9 @@ class CompleteAccountInfoController extends GetxController {
       }
     }
   }
+
+  static const _accountNotSetUpMessage =
+      'Your account setup is not complete on the server, so the data could not be saved. Please contact support.';
 
   /// Async results belong only to this controller and the initiating session.
   bool Function() _sessionGuard() {
