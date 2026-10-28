@@ -23,7 +23,15 @@ class CertificatesSection extends GetView<MyCertificatesController> {
           Expanded(
             child:
                 controller.certificates.isEmpty
-                    ? const Center(child: EmptyMessage('No certificates'))
+                    /// Empty state, in a Column so it sits at the top with the
+                    /// original 150 margin instead of the page centre
+                    ? Column(
+                      children: [
+                        EmptyMessage(
+                          'No certificates',
+                        ).fadeAnimation250.marginOnly(top: 150),
+                      ],
+                    )
                     : ListView.builder(
                       key: PageStorageKey((
                         LocalDataX.sessionRevision,
