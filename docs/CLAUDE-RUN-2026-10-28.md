@@ -133,3 +133,9 @@ Estimate: 7 to 13 agent-work hours (est., basis: sonnet-high median 17-32 min pe
 - Emoji 🥳 in «دورات أكملتها» is original (Saker v0.0.1, user_statistics.dart:22 and Ar/general.dart:135); C7 bans emoji in UI; asked the owner.
 - Worktrees mopa-wt-* (9) removed after checking each was merged; fold's only change equals main's analysis_options.yaml.
 - Full report: mopa-gitlab-issues/evidence/v-REPORT-device-drive-main-00a8ff5.txt.
+
+## Owner answers (2026-10-28, after device check)
+
+- Emoji 🥳: «لا اتركه مثل ما هو» (keep it; owner exception to C7).
+- «افتح من حسابي الثاني وجرب»: account 2 was last refused by the server with usernotfullysetup on every call; the password lives only in chat, so the owner signs in on the simulator himself, then a Sonnet agent drives.
+- «تمام ابداء»: start the Codex simplification. Step 1: Opus plan (inventory by Haiku), presented to the owner before any code edit.
