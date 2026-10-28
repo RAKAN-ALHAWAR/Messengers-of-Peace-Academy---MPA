@@ -38,8 +38,19 @@ class AppControllerX extends GetxController {
     late UserX profile;
     try {
       profile = await DatabaseX.getUser(userId: id);
-    } catch (_) {
+    } catch (e) {
       if (!lease.isCurrent) return null;
+      // The server refuses the profile of an account whose data is not complete
+      // yet (the login flow keeps that session to let the user complete it).
+      // Retrying cannot help, so start signed out and let the user sign in again.
+      if (e.toErrorX.details[NameX.errorcode] == 'usernotfullysetup') {
+        final clearing = clearLocalSession(lease, navigate: false);
+        final cleared = SessionLeaseX.capture(
+          isActive: () => _ownsApp && request == _initRequest,
+        );
+        await clearing;
+        return cleared.isCurrent ? cleared : null;
+      }
       rethrow;
     }
     if (!lease.isCurrent) return null;

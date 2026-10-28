@@ -8,6 +8,7 @@ import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Core/core.dart';
 import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:messengersofpeace/Data/Model/auth/otp.dart';
+import 'package:messengersofpeace/Data/Model/user/user.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
 import '../../../../../Core/Error/error.dart';
 import '../../../../../Data/data.dart';
@@ -19,8 +20,9 @@ class LoginController extends GetxController {
   final buttonStateLogin = ButtonStateEX.normal.obs;
   final GoogleSignIn googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
-    clientId:
-        Platform.isAndroid ? ConstantX.clientIdAndroid : ConstantX.clientIdIOS,
+    clientId: Platform.isAndroid
+        ? ConstantX.clientIdAndroid
+        : ConstantX.clientIdIOS,
   );
   late GlobalKey<FormState> formKey;
   final email = TextEditingController();
@@ -30,13 +32,15 @@ class LoginController extends GetxController {
   int _submission = 0;
   SessionLeaseX? _provisional;
 
+  // True when the account signed in but its profile is not fully set up yet.
+  bool _profileMissing = false;
+
   SessionLeaseX _capture(String route) => SessionLeaseX.capture(
-    isActive:
-        () =>
-            !isClosed &&
-            Get.currentRoute == route &&
-            Get.isRegistered<AppControllerX>() &&
-            identical(Get.find<AppControllerX>(), app),
+    isActive: () =>
+        !isClosed &&
+        Get.currentRoute == route &&
+        Get.isRegistered<AppControllerX>() &&
+        identical(Get.find<AppControllerX>(), app),
   );
 
   /// Profile loading needs the newly issued token. Until the profile is verified,
@@ -45,9 +49,11 @@ class LoginController extends GetxController {
     (String, String) data,
     SessionLeaseX owner,
     String route,
-    void Function(SessionLeaseX) onLease,
-  ) async {
+    void Function(SessionLeaseX) onLease, {
+    String? username,
+  }) async {
     if (!owner.isCurrent) return null;
+    _profileMissing = false;
     if (data.$1.trim().isEmpty || data.$2.trim().isEmpty) {
       throw ErrorX(
         message: 'Unable to start a secure session. Please sign in again.',
@@ -65,14 +71,41 @@ class LoginController extends GetxController {
     try {
       await Future.wait(writes);
       if (!committed.isCurrent) return null;
-      final user = await DatabaseX.getUser(userId: data.$1);
+      UserX user;
+      try {
+        user = await DatabaseX.getUser(userId: data.$1);
+      } catch (e) {
+        // The server refuses the profile of an account whose data is not
+        // complete yet. Keep the session and let the user complete the data,
+        // starting from what is known (the login name is the email).
+        final incomplete =
+            e.toErrorX.details[NameX.errorcode] == 'usernotfullysetup';
+        if (!incomplete || username == null) rethrow;
+        if (!committed.isCurrent) return null;
+        _profileMissing = true;
+        user = UserX(
+          id: data.$1,
+          username: username,
+          firstname: '',
+          lastname: '',
+          email: username,
+          lang: 'en',
+          customfields: [],
+          city: '',
+          image: '',
+          points: 0,
+        );
+      }
       if (!committed.isCurrent) return null;
       if (user.id != data.$1) {
         throw ErrorX(
           message: 'Unable to start a secure session. Please sign in again.',
         );
       }
-      await LocalDataX.put(LocalKeyX.route, RouteNameX.root);
+      await LocalDataX.put(
+        LocalKeyX.route,
+        _profileMissing ? RouteNameX.completeAccountInfo : RouteNameX.root,
+      );
       if (!committed.isCurrent) return null;
       app.user = user.obs;
       app.isLogin.value = true;
@@ -140,8 +173,9 @@ class LoginController extends GetxController {
       if (isClosed || Get.currentRoute != route) return;
       buttonStateGoogle.value = ButtonStateEX.failed;
       ToastX.error(
-        message:
-            e.toString().contains('PlatformException(') ? 'Something wrong' : e,
+        message: e.toString().contains('PlatformException(')
+            ? 'Something wrong'
+            : e,
       );
       _reset(buttonStateGoogle);
     } finally {
@@ -173,6 +207,7 @@ class LoginController extends GetxController {
         lease,
         route,
         (next) => lease = next,
+        username: submittedEmail,
       );
       if (authenticated == null) return;
       lease = authenticated;
@@ -182,7 +217,14 @@ class LoginController extends GetxController {
         const Duration(seconds: StyleX.successButtonSecond),
       );
       if (!lease.isCurrent) return;
-      Get.offAndToNamed(RouteNameX.root);
+      if (_profileMissing) {
+        Get.offAndToNamed(
+          RouteNameX.completeAccountInfo,
+          arguments: {'profileMissing': true},
+        );
+      } else {
+        Get.offAndToNamed(RouteNameX.root);
+      }
     } catch (e) {
       if (!lease.isCurrent) return;
       if (isClosed || Get.currentRoute != route) return;
@@ -193,8 +235,9 @@ class LoginController extends GetxController {
         // Only the known userid response field can establish verification identity.
         // Backend recovery without that field remains a contract blocker.
         final value = error.details[NameX.userId];
-        final id =
-            value is String || value is num ? value.toString().trim() : '';
+        final id = value is String || value is num
+            ? value.toString().trim()
+            : '';
         if (id.isNotEmpty) {
           isLoading.value = false;
           buttonStateLogin.value = ButtonStateEX.normal;

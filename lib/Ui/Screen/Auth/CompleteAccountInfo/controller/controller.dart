@@ -56,6 +56,11 @@ class CompleteAccountInfoController extends GetxController {
   final howToFindUsList = ConstantX.howToFindUsList;
   final universities = ConstantX.universities;
 
+  // True when the server refused the profile of this account at login, so the
+  // profile in memory is only a placeholder until this data is saved.
+  bool profileMissing =
+      Get.arguments is Map && (Get.arguments as Map)['profileMissing'] == true;
+
   // Form key
   late GlobalKey<FormState> formKey;
 
@@ -259,6 +264,14 @@ class CompleteAccountInfoController extends GetxController {
         }
         if (!ownsSession()) return;
       }
+      if (profileMissing) {
+        // The data is saved, so the real profile can be loaded now. If the
+        // server still refuses it, the error shows here and the user stays.
+        final user = await DatabaseX.getUser(userId: app.user.value.id);
+        if (!ownsSession()) return;
+        app.user = user.obs;
+        profileMissing = false;
+      }
       ToastX.success(message: message);
       buttonState.value = ButtonStateEX.success;
       await Future<void>.delayed(
@@ -297,7 +310,16 @@ class CompleteAccountInfoController extends GetxController {
   }
 
   /// Complete later
-  void completeLater() => Get.offAllNamed(RouteNameX.root);
+  ///
+  /// An account without a loadable profile cannot use the app yet, so it signs
+  /// out instead; its data can be completed on the next sign in.
+  Future<void> completeLater() async {
+    if (profileMissing) {
+      await app.logOut();
+      return;
+    }
+    Get.offAllNamed(RouteNameX.root);
+  }
 
   /// Change country code
   void changeCountryCode(String value) => countryCode.value = value;
@@ -332,14 +354,13 @@ class CompleteAccountInfoController extends GetxController {
     super.onInit();
     final accountId = app.user.value.id;
     _ownerLease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              Get.isRegistered<CompleteAccountInfoController>() &&
-              identical(Get.find<CompleteAccountInfoController>(), this) &&
-              Get.isRegistered<AppControllerX>() &&
-              identical(Get.find<AppControllerX>(), app) &&
-              app.user.value.id == accountId,
+      isActive: () =>
+          !isClosed &&
+          Get.isRegistered<CompleteAccountInfoController>() &&
+          identical(Get.find<CompleteAccountInfoController>(), this) &&
+          Get.isRegistered<AppControllerX>() &&
+          identical(Get.find<AppControllerX>(), app) &&
+          app.user.value.id == accountId,
     );
 
     /// Initialize form key
