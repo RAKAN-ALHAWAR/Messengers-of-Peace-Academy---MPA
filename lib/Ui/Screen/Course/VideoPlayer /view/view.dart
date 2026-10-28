@@ -31,6 +31,18 @@ class VideoPlayerView extends GetView<VideoPlayerController> {
                   icon: const Icon(Icons.arrow_back),
                   onPressed: Get.back,
                 ),
+
+                /// Next: back to the course page, which opens the next lesson
+                actions: [
+                  TextButton(
+                    onPressed: controller.goNext,
+                    child: TextX(
+                      'Next',
+                      style: TextStyleX.labelLarge,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
                 systemOverlayStyle: const SystemUiOverlayStyle(
                   statusBarColor: Colors.black,
                   statusBarIconBrightness: Brightness.light,

@@ -140,6 +140,11 @@ void main() {
             await tester.pumpAndSettle();
             await retry;
             await tester.pump(const Duration(seconds: 5));
+            // A short return still refetches (the page always shows the
+            // server state), so the failing refresh reports again.
+            if (failure == 'refresh') {
+              expect(tester.takeException(), isNotNull);
+            }
           },
           () => MockClient((request) async {
             if (request.url.queryParameters['wsfunction'] ==
