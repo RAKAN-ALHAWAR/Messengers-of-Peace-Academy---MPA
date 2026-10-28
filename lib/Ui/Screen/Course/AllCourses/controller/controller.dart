@@ -1,8 +1,10 @@
 import 'package:messengersofpeace/Core/Service/session_lease.dart';
+import 'package:messengersofpeace/Core/Service/route_origin.dart';
 import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
+import 'package:messengersofpeace/Data/Model/course/first_course_unlock.dart';
 import 'package:messengersofpeace/Data/Model/course/level.dart';
 import '../../../../../Data/Model/course/mini_course.dart';
 
@@ -49,46 +51,15 @@ class AllCoursesController extends GetxController {
     }
     if (!lease.isCurrent) return;
 
-    /// Check if has any level open for open first course manual
-    if (loaded
-        .map(
-          (element) =>
-              element.isOpen &&
-              element.isCompleted == false &&
-              element.courses
-                  .map((e) => e.isOpen && e.isCompleted == false)
-                  .isNotEmpty,
-        )
-        .isEmpty) {
-      /// Get index of first level has course close but not completed
-      var index = loaded.indexWhere(
-        (element) =>
-            element.isCompleted == false &&
-            element.courses.map((e) => e.isCompleted == false).isNotEmpty,
-      );
-
-      /// If found level index
-      if (index != -1) {
-        /// Get index of first course close but not completed
-        var indexCourse = loaded[index].courses.indexWhere(
-          (e) => e.isCompleted == false,
-        );
-
-        /// If found course index
-        if (indexCourse != -1) {
-          /// Open level and course manual
-          loaded[index].isOpen = true;
-          loaded[index].courses[indexCourse].isOpen = true;
-        }
-      }
-    }
+    // TEMP(backend): the backend should return is_open for the first course.
+    openFirstCourseIfNoneOpen(loaded);
     levels.assignAll(loaded);
   }
 
   /// Navigate to course details
   Future<void> onCourseTap(MiniCourseX course) async {
     if (isClosed || _openingCourse) return;
-    final origin = Get.rawRoute;
+    final origin = RouteOriginX.capture();
     final locale = TranslationX.getLanguageCode;
     final generation = ++_navigationGeneration;
     final lease = SessionLeaseX.capture(
@@ -96,7 +67,7 @@ class AllCoursesController extends GetxController {
           () =>
               !isClosed &&
               generation == _navigationGeneration &&
-              (origin?.isActive ?? false) &&
+              origin.isActive &&
               TranslationX.getLanguageCode == locale,
     );
     if (!lease.hasAuthenticatedIdentity || !lease.isCurrent) return;
