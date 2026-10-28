@@ -42,67 +42,80 @@ class ToastX {
       overlay: Get.key.currentState?.overlay,
       duration: const Duration(seconds: StyleX.toastSecond),
       builder:
-          (dismiss) => Positioned(
-        // Keep page navigation reachable while feedback is visible.
-        top: StyleX.appBarHeight,
-            left: StyleX.hPaddingApp,
-            right: StyleX.hPaddingApp,
-            child: SafeArea(
-              bottom: false,
+          (dismiss) => Align(
+            // Top of the screen under the status bar, like the old snackbar.
+            // Align only hit-tests its child, so the page below stays usable.
+            alignment: Alignment.topCenter,
+            child: _ToastSlideX(
               child: Dismissible(
-                key: UniqueKey(),
+                key: const Key('toast'),
                 direction: DismissDirection.horizontal,
                 onDismissed: (_) => dismiss(),
                 child: Semantics(
                   liveRegion: true,
-                  child: Material(
-                    color: color,
-                    borderRadius: BorderRadius.circular(StyleX.radiusMd),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: StyleX.hPaddingApp,
-                        vertical: StyleX.vPaddingApp,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(icon, color: Colors.white),
-                          const SizedBox(width: StyleX.toastContentGap),
-                          Expanded(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (message == null || title != null)
-                                  TextX(
-                                    title ?? fallbackTitle,
-                                    style: TextStyleX.bodyMedium.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                if (title != null && message != null)
-                                  const SizedBox(height: StyleX.radiusSm),
-                                if (message != null)
-                                  TextX(
-                                    message,
-                                    style: TextStyleX.bodyMedium.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                              ],
-                            ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: StyleX.hPaddingApp,
+                    ),
+                    child: SafeArea(
+                      bottom: false,
+                      left: false,
+                      right: false,
+                      child: Material(
+                        color: color,
+                        borderRadius: BorderRadius.circular(StyleX.radiusMd),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: StyleX.hPaddingApp,
+                            vertical: StyleX.vPaddingApp,
                           ),
-                          const SizedBox(width: StyleX.toastContentGap),
-                          IconButton(
-                            tooltip: 'Close'.tr,
-                            onPressed: dismiss,
-                            icon: const Icon(
-                              Icons.close_rounded,
-                              color: Colors.white54,
-                            ),
+                          child: Row(
+                            children: [
+                              Icon(icon, color: Colors.white),
+                              const SizedBox(width: StyleX.toastContentGap),
+                              Expanded(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (message == null || title != null)
+                                      TextX(
+                                        title ?? fallbackTitle,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    if (message != null || title != null)
+                                      const SizedBox(height: 4),
+                                    if (message != null)
+                                      TextX(
+                                        message,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: StyleX.toastContentGap),
+                              // Closes only this toast (never Get.back, which
+                              // would pop the page under it).
+                              Semantics(
+                                button: true,
+                                label: 'Close'.tr,
+                                child: GestureDetector(
+                                  onTap: dismiss,
+                                  child: const Icon(
+                                    Icons.close_rounded,
+                                    color: Colors.white54,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -110,6 +123,30 @@ class ToastX {
               ),
             ),
           ),
+    );
+  }
+}
+
+/// Entrance animation: slides down from above the screen edge, like the GetX
+/// snackbar did (1s, easeOutCirc). Transform only, no layout work per frame,
+/// and no motion at all when the system asks to disable animations.
+class _ToastSlideX extends StatelessWidget {
+  const _ToastSlideX({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: -1.0, end: 0.0),
+      duration:
+          MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(seconds: 1),
+      curve: Curves.easeOutCirc,
+      child: child,
+      builder:
+          (context, y, child) =>
+              FractionalTranslation(translation: Offset(0, y), child: child),
     );
   }
 }

@@ -10,12 +10,22 @@ import 'package:share_plus/share_plus.dart';
 import '../../Ui/Widget/widget.dart';
 
 class DownloadFileFormUrl {
-  static download(String url, String fileName) async {
+  /// Returns true only when the file was really saved on the device.
+  /// Existing callers may ignore the result.
+  ///
+  /// [dio] and [getDirectory] exist so tests can run without a network and
+  /// without the platform plugins, the app always uses the defaults.
+  static Future<bool> download(
+    String url,
+    String fileName, {
+    Dio? dio,
+    Future<(Directory, bool)> Function()? getDirectory,
+  }) async {
     try {
       // Validate download URL
-      if (url.isEmpty || !Uri.tryParse(url)!.isAbsolute) {
+      if (url.isEmpty || Uri.tryParse(url)?.isAbsolute != true) {
         ToastX.error(title: "Error", message: "Invalid download URL");
-        return;
+        return false;
       }
 
       // Show loading message
@@ -25,20 +35,37 @@ class DownloadFileFormUrl {
       // specific directory is always writable, the public Downloads folder is
       // only used when it happens to be writable as well
       final (Directory downloadDir, bool isPublicDownloads) =
-          await _getDownloadDirectory();
+          await (getDirectory ?? _getDownloadDirectory)();
 
-      // Get extension from url
-      String extension = _getExtensionFromUrl(url);
-
-      // Create filename
+      // Create filename: keep the letters (Arabic included), drop only what a
+      // file name cannot contain. Long Arabic names are cut, a file name is
+      // limited to 255 bytes and every Arabic letter takes two.
       fileName = fileName
           .replaceAll(' ', '_')
-          .replaceAll(RegExp(r'[^\w\s-.]'), '');
-      String filePath = '${downloadDir.path}/$fileName.$extension';
+          .replaceAll(RegExp(r'[\\/:*?"<>|\x00-\x1F]'), '');
+      if (fileName.runes.length > 80) {
+        fileName = String.fromCharCodes(fileName.runes.take(80));
+      }
+      if (fileName.isEmpty) fileName = 'file';
 
-      // Download file
-      Dio dio = Dio();
-      await dio.download(url, filePath);
+      // The extension is only known from the response headers, so download to
+      // a temporary name first and rename once we know what the file is
+      final tempPath = '${downloadDir.path}/$fileName.part';
+      final response = await (dio ?? Dio()).download(url, tempPath);
+
+      // An HTML login page or a JSON error answers 200 as well, never save it
+      if (!_isFile(response.headers)) {
+        await File(tempPath).delete();
+        ToastX.error(title: "Error", message: "Download failed".tr);
+        return false;
+      }
+
+      final extension = _getExtension(response.headers, url);
+      final filePath =
+          extension.isEmpty
+              ? '${downloadDir.path}/$fileName'
+              : '${downloadDir.path}/$fileName.$extension';
+      await File(tempPath).rename(filePath);
 
       // Show success message telling where the file actually landed
       String locationMessage =
@@ -54,6 +81,8 @@ class DownloadFileFormUrl {
 
       // حاول فتح الملف مباشرة، وإن تعذر شارك الملف
       // try to open the file directly, share it when that is not possible
+      // The file is already saved, so a failure here never turns the result
+      // into a failed download
       try {
         final result = await OpenFile.open(filePath);
         if (result.type != ResultType.done) {
@@ -62,10 +91,13 @@ class DownloadFileFormUrl {
           );
         }
       } catch (_) {
-        await SharePlus.instance.share(
-          ShareParams(files: [XFile(filePath)], text: fileName),
-        );
+        try {
+          await SharePlus.instance.share(
+            ShareParams(files: [XFile(filePath)], text: fileName),
+          );
+        } catch (_) {}
       }
+      return true;
     } catch (e) {
       String errorMessage = "Download failed".tr;
 
@@ -85,17 +117,79 @@ class DownloadFileFormUrl {
       }
 
       ToastX.error(title: "Error", message: errorMessage);
+      return false;
     }
   }
 
-  static String _getExtensionFromUrl(String url) {
-    final uri = Uri.parse(url);
-    final path = uri.path;
-    final extension = path.split('.').last;
-    if (extension.length <= 5 && !extension.contains('/')) {
-      return extension;
+  /// The file name Content-Disposition suggests, for example
+  /// `attachment; filename="a.pdf"` or `filename*=UTF-8''%D8%AF.pdf`.
+  /// Null when the header is missing.
+  static String? _dispositionName(Headers headers) {
+    final value = headers.value('content-disposition');
+    if (value == null) return null;
+    final match = RegExp(
+      r'''filename\*?=(?:UTF-8'')?"?([^";]+)"?''',
+      caseSensitive: false,
+    ).firstMatch(value);
+    return match?.group(1);
+  }
+
+  /// A response is a real file when the server says it is an attachment, or
+  /// when it is not a web page or a JSON message (login page, Moodle error).
+  static bool _isFile(Headers headers) {
+    if (_dispositionName(headers) != null) return true;
+    final type = (headers.value('content-type') ?? '').toLowerCase();
+    return !(type.startsWith('text/html') ||
+        type.startsWith('application/xhtml') ||
+        type.startsWith('application/json'));
+  }
+
+  static const _typeExtensions = {
+    'application/pdf': 'pdf',
+    'image/png': 'png',
+    'image/jpeg': 'jpg',
+    'image/gif': 'gif',
+    'image/webp': 'webp',
+    'application/zip': 'zip',
+    'application/msword': 'doc',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        'docx',
+    'application/vnd.ms-excel': 'xls',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+    'application/vnd.ms-powerpoint': 'ppt',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+        'pptx',
+    'text/plain': 'txt',
+    'video/mp4': 'mp4',
+    'audio/mpeg': 'mp3',
+  };
+
+  /// Extension from Content-Disposition, then Content-Type, then the url.
+  /// Empty when none of them tells, we never guess an extension.
+  static String _getExtension(Headers headers, String url) {
+    final name = _dispositionName(headers);
+    if (name != null) {
+      final ext = _plainExtension(Uri.decodeFull(name));
+      if (ext != null) return ext;
     }
-    return 'png'; // fallback
+
+    final type = (headers.value('content-type') ?? '').split(';').first;
+    final byType = _typeExtensions[type.trim().toLowerCase()];
+    if (byType != null) return byType;
+
+    // A url ending in .php is the script that serves the file, not its type
+    const scripts = {'php', 'asp', 'aspx', 'jsp'};
+    final byUrl = _plainExtension(Uri.parse(url).path);
+    return byUrl == null || scripts.contains(byUrl) ? '' : byUrl;
+  }
+
+  /// The extension of the last path segment, or null when it does not look
+  /// like a file extension.
+  static String? _plainExtension(String path) {
+    final segment = path.split('/').last;
+    if (!segment.contains('.')) return null;
+    final extension = segment.split('.').last.toLowerCase();
+    return RegExp(r'^[a-z0-9]{1,5}$').hasMatch(extension) ? extension : null;
   }
 
   /// Whether the legacy storage permission is actually granted.

@@ -85,19 +85,66 @@ class CertificateCard extends StatelessWidget {
                   ),
                 ),
 
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 8,
+                /// Download and share buttons, each one takes half of the row
+                Row(
                   children: [
-                    _action(
-                      'Download',
-                      IconX.download,
-                      () => onDownloadCertificate(certificate),
+                    /// Download button
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          onDownloadCertificate(certificate);
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: 4,
+                            horizontal: 16,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              /// Download icon
+                              Icon(IconX.download, size: 20),
+
+                              /// Spacer
+                              SizedBox(width: 4),
+
+                              /// Download text, Flexible so a big text scale
+                              /// shortens it instead of overflowing
+                              Flexible(child: TextX("Download")),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                    _action(
-                      'Share',
-                      IconX.share,
-                      () => onShareCertificate(certificate),
+
+                    /// Spacer
+                    SizedBox(width: 12),
+
+                    /// Share button
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          onShareCertificate(certificate);
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: 4,
+                            horizontal: 16,
+                          ),
+                          child: Row(
+                            children: [
+                              /// Share icon
+                              Icon(IconX.share, size: 20),
+
+                              /// Spacer
+                              SizedBox(width: 4),
+
+                              /// Share text
+                              Flexible(child: TextX("Share")),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -105,23 +152,6 @@ class CertificateCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _action(String label, IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 20),
-            const SizedBox(width: 4),
-            Flexible(child: TextX(label)),
-          ],
-        ),
       ),
     );
   }

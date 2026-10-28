@@ -44,13 +44,18 @@ class AllMeetingsView extends GetView<AllMeetingsController> {
                 child:
                     (_) => Obx(() {
                       if (controller.selectedMeetings.isEmpty) {
-                        return Center(
-                          child:
-                              TextX(
+                        /// Empty state, in a Column so it sits at the top with
+                        /// the original 150 margin instead of the page centre
+                        return Column(
+                          children: [
+                            Center(
+                              child: TextX(
                                 'No meetings and encounters currently',
                                 style: TextStyleX.titleMedium,
                                 color: Theme.of(context).colorScheme.secondary,
-                              ).fadeAnimation200,
+                              ).fadeAnimation200.marginOnly(top: 150),
+                            ),
+                          ],
                         );
                       }
                       return ListView.builder(
