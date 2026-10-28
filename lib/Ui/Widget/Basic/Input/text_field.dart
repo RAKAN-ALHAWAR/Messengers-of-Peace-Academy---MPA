@@ -86,6 +86,17 @@ class TextFieldX extends StatefulWidget {
   State<TextFieldX> createState() => _TextFieldXState();
 }
 
+/// Converts Arabic-Indic digits to Latin, then drops every non-ASCII or
+/// whitespace character, so an email can only hold what a mail server accepts.
+final emailInputFormatters = <TextInputFormatter>[
+  TextInputFormatter.withFunction(
+    (oldValue, newValue) => newValue.copyWith(
+      text: newValue.text.arabicToEnglishNumbers,
+    ),
+  ),
+  FilteringTextInputFormatter.allow(RegExp(r'[\x21-\x7E]')),
+];
+
 class _TextFieldXState extends State<TextFieldX> {
   late bool passwordVisible;
   final FocusNode _focusNode = FocusNode();
@@ -149,10 +160,16 @@ class _TextFieldXState extends State<TextFieldX> {
           widget.borderErrorRadius?.resolve(Directionality.of(context)) ??
           BorderRadius.circular(StyleX.radius),
     );
+    /// Email fields accept ASCII only as typed: Arabic letters never enter the
+    /// field, and Arabic-Indic digits are converted to Latin ones.
+    final isEmail = widget.textInputType == TextInputType.emailAddress;
     return Padding(
       padding: widget.margin,
       child: TextFormField(
         textAlign: widget.textAlign ?? TextAlign.start,
+        textDirection: isEmail ? TextDirection.ltr : null,
+        autocorrect: !isEmail,
+        enableSuggestions: !isEmail,
         maxLength: widget.maxLength,
         minLines: widget.minLines,
         style: TextStyleX.titleSmall.copyWith(
@@ -200,7 +217,10 @@ class _TextFieldXState extends State<TextFieldX> {
         maxLines: widget.maxLines,
         textAlignVertical: TextAlignVertical.center,
         controller: widget.controller,
-        inputFormatters: widget.inputFormatters,
+        inputFormatters: [
+          if (isEmail) ...emailInputFormatters,
+          ...?widget.inputFormatters,
+        ],
         onTap: widget.onTap,
         onTapOutside: (event) {
           FocusManager.instance.primaryFocus?.unfocus();
