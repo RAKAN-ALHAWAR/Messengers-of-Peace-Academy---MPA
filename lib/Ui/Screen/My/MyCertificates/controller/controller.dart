@@ -1,5 +1,5 @@
 import 'package:messengersofpeace/Config/Translation/translation.dart';
-import 'package:messengersofpeace/Core/Service/session_lease.dart';
+import 'package:messengersofpeace/Core/Service/controller_lease.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Data/Model/course/my_course.dart';
@@ -27,6 +27,8 @@ class MyCertificatesController extends GetxController {
   /// Is loading
   RxBool isLoading = true.obs;
   int _loadGeneration = 0;
+
+  /// Session revision and language that own the loaded certificates
   (int, String)? _ownerKey;
 
   //============================================================================
@@ -38,12 +40,10 @@ class MyCertificatesController extends GetxController {
     final locale = TranslationX.getLanguageCode;
     final key = (LocalDataX.sessionRevision, locale);
     final generation = ++_loadGeneration;
-    final lease = SessionLeaseX.capture(
-      isActive:
-          () =>
-              !isClosed &&
-              generation == _loadGeneration &&
-              TranslationX.getLanguageCode == locale,
+    final lease = ControllerLeaseX.capture(
+      this,
+      locale: true,
+      also: () => generation == _loadGeneration,
     );
     if (_ownerKey != key || !lease.hasAuthenticatedIdentity) {
       certificates = [];
