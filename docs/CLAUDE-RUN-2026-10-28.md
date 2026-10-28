@@ -115,3 +115,5 @@ Estimate: 7 to 13 agent-work hours (est., basis: sonnet-high median 17-32 min pe
 - Fix lane: flutter-developer Sonnet, worktree ../mopa-wt-vt, branch claude/fix-video-tests, tests only.
 - Foreign uncommitted change in main and fold worktree: analysis_options.yaml adds analyzer exclude build/android/ios. Not mine; left untouched; report to owner.
 - Test fix 180cb1e merged; main full suite "+731: All tests passed!"; pushed.
+- CI gap: repo has no .github/workflows, so no run ever starts (D8 requires CI). Proposed to owner: flutter analyze + flutter test workflow (public repo, free minutes).
+- Remaining: device checks (delete-account page reachable, TestInfo message, course 130 count, #18 grading, Next/checkmark, toast), simplify Codex abstractions + explanation doc, GitLab evidence per ticket, worktree cleanup (a, a2, b1, fix1, c, b2, tap, fold, vt), SEC-10 report, INBOX retro, owner answer on analysis_options.yaml.
