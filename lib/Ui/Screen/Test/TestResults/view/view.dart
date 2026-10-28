@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Config/Translation/translation.dart';
+import 'package:messengersofpeace/Data/Model/quiz/answer.dart';
 import 'package:messengersofpeace/Data/Model/quiz/question.dart';
 import 'package:messengersofpeace/Ui/Animation/fade/fade_animation.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
@@ -375,6 +376,7 @@ class _TestResultsViewState extends State<TestResultsView> {
           TextX(
             '${"Question".tr} $number ${"of".tr} ${controller.quiz.totalQuestions}',
             style: TextStyleX.labelMedium,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 8),
           HtmlWidgetX(html: question.text, textStyle: TextStyleX.titleMedium),
@@ -384,42 +386,68 @@ class _TestResultsViewState extends State<TestResultsView> {
           else if (selected == null)
             const TextX('Not answered'),
           for (var index = 0; index < question.answers.length; index++)
-            RadioButtonX<int>(
-              key: ValueKey('result-choice-${question.slot}-$index'),
-              value: index,
-              groupValue: selected,
-              borderColor:
-                  selected != index || answer?.right == null
-                      ? null
-                      : answer!.right!
-                      ? (context.isDarkMode
-                          ? ColorX.successDark
-                          : ColorX.success)
-                      : Theme.of(context).colorScheme.error,
-              onChanged: (_) {},
-              child: Padding(
-                padding: const EdgeInsetsDirectional.only(
-                  bottom: 12,
-                  top: 12,
-                  end: 12,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    HtmlWidgetX(
-                      html: question.answers[index],
-                      textStyle: TextStyleX.bodyMedium,
-                    ),
-                    if (selected == index && answer?.right != null)
-                      TextX(
-                        answer!.right! ? 'Correct answer' : 'Incorrect answer',
-                      ),
-                  ],
-                ),
-              ),
-            ),
+            _answerOption(context, question, answer, selected, index),
         ],
       ),
     );
+  }
+
+  /// One answer option. The chosen answer is green when right and red when
+  /// wrong; the other options keep the neutral colour.
+  Widget _answerOption(
+    BuildContext context,
+    QuestionX question,
+    AnswerX? answer,
+    int? selected,
+    int index,
+  ) {
+    final colors = Theme.of(context).colorScheme;
+    // Only a graded, chosen option is coloured (right is null when ungraded)
+    final isChosen = selected == index && answer?.right != null;
+    final isRight = isChosen && answer!.right!;
+    final success = context.isDarkMode ? ColorX.successDark : ColorX.success;
+    return RadioButtonX<int>(
+      key: ValueKey('result-choice-${question.slot}-$index'),
+      value: index,
+      groupValue: selected,
+      color:
+          isRight
+              ? (context.isDarkMode
+                  ? ColorX.successContainerDark
+                  : ColorX.successContainer)
+              : isChosen
+              ? colors.errorContainer
+              : colors.onInverseSurface,
+      borderColor:
+          isRight
+              ? success
+              : isChosen
+              ? colors.error
+              : null,
+      onChanged: (_) {},
+      child: Padding(
+        padding: const EdgeInsetsDirectional.only(
+          bottom: 12,
+          top: 12,
+          end: 12,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            HtmlWidgetX(
+              html: question.answers[index],
+              textStyle: TextStyleX.bodyMedium,
+            ),
+            if (isChosen)
+              TextX(
+                isRight ? 'Correct answer' : 'Incorrect answer',
+                style: TextStyleX.bodyMedium,
+                color: isRight ? success : colors.error,
+              ).marginOnly(top: 4),
+          ],
+        ),
+      ),
+    ).fadeAnimation250;
   }
 }
