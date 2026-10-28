@@ -1,10 +1,13 @@
 import 'level.dart';
 
-/// Opens the first not-completed course locally when no level offers an open,
-/// not-completed course. One function so Home and Courses agree.
+/// Opens the very first course (currently the entry exam) locally when no
+/// level offers an open, not-completed course. It never opens any other
+/// course: later courses follow the server's sequencing. One function so Home
+/// and Courses agree.
 // TEMP(backend): the backend should return is_open for the first course; drop
 // this local unlock once it does.
 void openFirstCourseIfNoneOpen(List<LevelX> levels) {
+  if (levels.isEmpty || levels.first.courses.isEmpty) return;
   final hasOpenCourse = levels.any(
     (level) =>
         level.isOpen &&
@@ -12,13 +15,8 @@ void openFirstCourseIfNoneOpen(List<LevelX> levels) {
         level.courses.any((course) => course.isOpen && !course.isCompleted),
   );
   if (hasOpenCourse) return;
-  final levelIndex = levels.indexWhere(
-    (level) =>
-        !level.isCompleted &&
-        level.courses.any((course) => !course.isCompleted),
-  );
-  if (levelIndex == -1) return;
-  final level = levels[levelIndex];
-  level.isOpen = true;
-  level.courses.firstWhere((course) => !course.isCompleted).isOpen = true;
+  final first = levels.first.courses.first;
+  if (first.isCompleted) return;
+  levels.first.isOpen = true;
+  first.isOpen = true;
 }
