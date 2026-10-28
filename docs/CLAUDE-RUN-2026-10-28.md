@@ -108,3 +108,9 @@ Estimate: 7 to 13 agent-work hours (est., basis: sonnet-high median 17-32 min pe
 - Reviewer saw 8 shader-asset env failures (ink_sparkle.frag); main full run was +723 green, treated as env.
 - Fold lane: flutter-developer Sonnet high, worktree ../mopa-wt-fold, branch claude/review2-fold. Then re-check only the listed findings (round 1 of max 2).
 - CI: no run yet on main after push (pending).
+
+## Fold merged, main red on two tests (2026-10-28)
+- claude/review2-fold merged no-ff (5640031); I re-checked all 9 listed findings in the diff: fixed. analyze clean.
+- Full suite hung: next_activity_test and progression_test fail `Bad state: Cannot add event while adding stream` because the new addLearnedSeconds seam is not injected there (fake-async Hive write). NOT pushed.
+- Fix lane: flutter-developer Sonnet, worktree ../mopa-wt-vt, branch claude/fix-video-tests, tests only.
+- Foreign uncommitted change in main and fold worktree: analysis_options.yaml adds analyzer exclude build/android/ios. Not mine; left untouched; report to owner.
