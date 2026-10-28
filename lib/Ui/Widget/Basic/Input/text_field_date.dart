@@ -98,26 +98,33 @@ class _TextFieldDateXState extends State<TextFieldDateX> {
                   initialDate: date ?? widget.initialDate ?? DateTime.now(),
                   firstDate: widget.firstDate ?? DateTime(1900),
                   lastDate: widget.lastDate ?? DateTime(2100),
-                  locale: widget.locale,
                   builder: (context, child) {
                     final theme = Theme.of(context);
                     final isDark = theme.brightness == Brightness.dark;
 
-                    return Theme(
-                      data: theme.copyWith(
-                        dialogTheme: DialogThemeData(
-                          backgroundColor:
-                              isDark
-                                  ? ColorX.surfaceContainerLowestDark
-                                  : Colors.white,
-                          surfaceTintColor: Colors.transparent,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                    // The locale is set here and not with showDatePicker's
+                    // locale, which sits inside the builder and would hide the
+                    // Latin digits delegate
+                    return Localizations.override(
+                      context: context,
+                      locale: widget.locale,
+                      delegates: const [_LatinDigitsMaterialDelegate()],
+                      child: Theme(
+                        data: theme.copyWith(
+                          dialogTheme: DialogThemeData(
+                            backgroundColor:
+                                isDark
+                                    ? ColorX.surfaceContainerLowestDark
+                                    : Colors.white,
+                            surfaceTintColor: Colors.transparent,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
                         ),
+                        child: child!,
                       ),
-                      child: child!,
                     );
                   },
                 );
@@ -141,4 +148,40 @@ class _TextFieldDateXState extends State<TextFieldDateX> {
 class AlwaysDisabledFocusNode extends FocusNode {
   @override
   bool get hasFocus => false;
+}
+
+/// The stock Material texts, but dates in Latin digits. intl formats dates
+/// with the Arabic-Indic digits of the locale unless useNativeDigits is off,
+/// and the app writes every number with Latin digits.
+class _LatinDigitsMaterialDelegate
+    extends LocalizationsDelegate<MaterialLocalizations> {
+  const _LatinDigitsMaterialDelegate();
+
+  @override
+  bool isSupported(Locale locale) =>
+      GlobalMaterialLocalizations.delegate.isSupported(locale);
+
+  @override
+  Future<MaterialLocalizations> load(Locale locale) {
+    final name = locale.languageCode;
+    intl.DateFormat latin(intl.DateFormat format) =>
+        format..useNativeDigits = false;
+    return Future.value(
+      getMaterialTranslation(
+        locale,
+        latin(intl.DateFormat.y(name)),
+        latin(intl.DateFormat.yMd(name)),
+        latin(intl.DateFormat.yMMMd(name)),
+        latin(intl.DateFormat.MMMEd(name)),
+        latin(intl.DateFormat.yMMMMEEEEd(name)),
+        latin(intl.DateFormat.yMMMM(name)),
+        latin(intl.DateFormat.MMMd(name)),
+        intl.NumberFormat.decimalPattern(name),
+        intl.NumberFormat('00', name),
+      )!,
+    );
+  }
+
+  @override
+  bool shouldReload(_LatinDigitsMaterialDelegate old) => false;
 }

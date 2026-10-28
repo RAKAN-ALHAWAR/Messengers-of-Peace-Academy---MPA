@@ -29,7 +29,7 @@ class UserStatisticsSection extends StatelessWidget {
                 child: StatisticsCardX(
                   title: "Minutes I learned",
                   subValue: "minute",
-                  value: statistics.minutes,
+                  value: statistics.minutesShown(UserStatisticsX.localLearnedSeconds),
                   icon: IconX.schedule,
                 ),
               ),

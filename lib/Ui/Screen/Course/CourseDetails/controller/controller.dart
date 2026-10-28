@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
@@ -10,6 +12,7 @@ import '../../../../../Core/Service/session_lease.dart';
 import '../../../../../Config/Translation/translation.dart';
 import '../../../../../Data/Model/course/activity.dart';
 import '../../../../../Data/Model/course/course.dart';
+import '../../../../../Data/Model/user/user_statistics.dart';
 import '../../../../../Data/data.dart';
 import '../../VideoPlayer /controller/controller.dart';
 
@@ -23,6 +26,10 @@ class CourseDetailsController extends GetxController {
   // Variables
 
   bool isLoading = false;
+
+  /// The file download, replaceable so tests can run without a network
+  Future<bool> Function(String url, String fileName) downloadFile =
+      DownloadFileFormUrl.download;
   String courseId = Get.arguments;
   Rx<CourseX?> course = Rx<CourseX?>(null);
 
@@ -59,7 +66,32 @@ class CourseDetailsController extends GetxController {
       throw ErrorX(message: 'Session changed. Please try again.');
     }
     _contentLease = _captureScope(id, language);
+    _applyLocalProgress(value);
     course.value = value;
+  }
+
+  /// TEMP(backend): local progress the server does not send yet.
+  /// - A file activity is never marked completed, so a downloaded file is
+  ///   remembered on the device (per user and cmid). The backend must send
+  ///   is_completed true for a file the user opened.
+  /// - video_duration is "0:00", so the real length the video player learned
+  ///   is used. The backend must send the real duration.
+  /// Both local values are removed once the backend sends the real data.
+  void _applyLocalProgress(CourseX value) {
+    for (final activity in value.activities) {
+      if (activity.downloadUrl.isNotEmpty) {
+        activity.isFileDownloaded = LocalDataX.get<bool>(
+          LocalKeyX.fileDone(activity.cmId),
+          defaultData: false,
+        );
+      }
+      if (activity.videoUrl.isNotEmpty) {
+        activity.localDurationSeconds = LocalDataX.get<int>(
+          LocalKeyX.videoSeconds(activity.videoUrl),
+          defaultData: 0,
+        );
+      }
+    }
   }
 
   /// The request owns its account, course and locale. A same-course reload also
@@ -265,6 +297,13 @@ class CourseDetailsController extends GetxController {
       ]);
       if (!lease.isCurrent) return;
       final dwell = DateTime.now().difference(startTime);
+      // TEMP(backend): see UserStatisticsX.localLearnedSeconds. Not awaited, so
+      // saving it never holds the navigation back. It runs in the root zone
+      // because a test clock (fake async) would never finish the disk write
+      // and would block the next write to the box.
+      Zone.root.run(
+        () => UserStatisticsX.addLocalLearnedSeconds(dwell.inSeconds),
+      );
       if (!activity.isCompleted && dwell.inSeconds >= 5) {
         try {
           await DatabaseX.completeVideoOfCourse(cmId: moduleId);
@@ -334,6 +373,8 @@ class CourseDetailsController extends GetxController {
     final selectedCourse = course.value!;
     final url = activity.downloadUrl;
     final fileName = '${selectedCourse.name}_${activity.name}';
+    // Built before the download so the flag lands on the user who tapped
+    final doneKey = LocalKeyX.fileDone(activity.cmId);
     final lease = _captureScope(
       courseId,
       TranslationX.getLanguageCode,
@@ -343,13 +384,26 @@ class CourseDetailsController extends GetxController {
     /// Download lesson summary
     try {
       isLoading = true;
-      await DownloadFileFormUrl.download(url, fileName);
+      final saved = await downloadFile(url, fileName);
+      if (saved) await _markFileDownloaded(doneKey, activity.cmId);
     } catch (e) {
       if (!lease.isCurrent) return;
       ErrorX.console(e);
     } finally {
       if (lease.isCurrent) isLoading = false;
     }
+  }
+
+  /// TEMP(backend): remember the downloaded file locally and show the checkmark
+  /// now. Removed together with [_applyLocalFileFlags].
+  Future<void> _markFileDownloaded(String key, String cmId) async {
+    await LocalDataX.put<bool>(key, true);
+    // Another account may be signed in by now, its page must not change
+    if (!_ownsCourse || key != LocalKeyX.fileDone(cmId)) return;
+    for (final activity in course.value?.activities ?? <ActivityX>[]) {
+      if (activity.cmId == cmId) activity.isFileDownloaded = true;
+    }
+    course.refresh();
   }
 
   @override

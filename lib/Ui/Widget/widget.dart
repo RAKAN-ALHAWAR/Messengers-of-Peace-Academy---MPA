@@ -6,6 +6,8 @@ import 'dart:ui';
 import 'package:intl/intl.dart' as intl;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    show GlobalMaterialLocalizations, getMaterialTranslation;
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../Animation/animation.dart';

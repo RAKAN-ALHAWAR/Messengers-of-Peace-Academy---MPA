@@ -17,6 +17,16 @@ class ActivityX {
   final String cmId;
   final String? quizId;
 
+  /// TEMP(backend): the server never marks a file (resource) activity as
+  /// completed, so the course page sets this after the user downloaded the
+  /// file. Remove it once the server sends is_completed for files.
+  bool isFileDownloaded = false;
+
+  /// TEMP(backend): the server sends video_duration "0:00", so the course page
+  /// sets the real length (seconds) the video player learned. Remove it once
+  /// the server sends the real duration.
+  int localDurationSeconds = 0;
+
   ActivityX({
     required this.topicId,
     required this.name,
@@ -37,8 +47,24 @@ class ActivityX {
   bool get hasContent =>
       videoUrl.isNotEmpty || quizId != null || downloadUrl.isNotEmpty;
 
-  /// Whether the server marks this activity as done
-  bool get isDone => isCompleted || completionPercent >= 100;
+  /// Whether the activity is done: the server flags first, then the local
+  /// flag of a downloaded file
+  bool get isDone =>
+      isCompleted || completionPercent >= 100 || isFileDownloaded;
+
+  /// The duration text for the lesson row, or null when there is nothing to
+  /// show. A real server value wins; the server sends "0:00" for every video
+  /// today, then the length the player learned is shown.
+  String? get durationText {
+    final server = videoDuration.trim();
+    if (server.replaceAll(RegExp(r'[0:\s]'), '').isNotEmpty) return server;
+    if (localDurationSeconds <= 0) return null;
+    final time = Duration(seconds: localDurationSeconds);
+    final seconds = (time.inSeconds % 60).toString().padLeft(2, '0');
+    if (time.inHours == 0) return '${time.inMinutes}:$seconds';
+    final minutes = (time.inMinutes % 60).toString().padLeft(2, '0');
+    return '${time.inHours}:$minutes:$seconds';
+  }
 
   factory ActivityX.fromJson(Map<String, dynamic> json) {
     return ModelUtilX.checkFromJson(
