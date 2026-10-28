@@ -22,9 +22,9 @@ Living state file (J1). Owner: Saker. Orchestrator: Claude Opus 5.5.
 | Wave | Lane | Scope | Status |
 | --- | --- | --- | --- |
 | 0 | orchestrator | debug API capture (541e067), email ASCII-only (bbf3565), issues and images in docs/gitlab-issues | done |
-| 1 | A1 | worktree /Users/saker/Desktop/Flutter/mopa-wt-a, branch claude/a-regressions: offline cache per user, reset auto-login, pubspec.lock no downgrades vs origin | running (flutter-developer, Sonnet high) |
-| 1 | A2 | worktree mopa-wt-a2, branch claude/a2-toast-download: toast original look, #21 downloader returns bool + Arabic names + real extension, restore empty-state and certificate card UI | running (flutter-developer) |
-| 1 | B1 | worktree mopa-wt-b1, branch claude/b1-progression: #17 card 1/1 (TEMP when numsections 0), #18 count all activities, #20 refetch + Next rule, restore TestResults answer colours | running (flutter-developer) |
+| 1 (merged) | A1 | worktree /Users/saker/Desktop/Flutter/mopa-wt-a, branch claude/a-regressions: offline cache per user, reset auto-login, pubspec.lock no downgrades vs origin | running (flutter-developer, Sonnet high) |
+| 1 (merged) | A2 | worktree mopa-wt-a2, branch claude/a2-toast-download: toast original look, #21 downloader returns bool + Arabic names + real extension, restore empty-state and certificate card UI | running (flutter-developer) |
+| 1 (merged) | B1 | worktree mopa-wt-b1, branch claude/b1-progression: #17 card 1/1 (TEMP when numsections 0), #18 count all activities, #20 refetch + Next rule, restore TestResults answer colours | running (flutter-developer) |
 | 1 | audit | Codex UI side effects: report in scratchpad codex-ui-audit.md; restores assigned to A2 and B1; device checks pending (home level track, blog load-more, carousel, buttons) | done |
 | 1 | orchestrator | diagnose #18 lesson 2 grading on the owner's account | BLOCKED: entry quiz (course 19, quiz 2) has attempts_allowed 1, last_attempt_status finished, can_start false, course still 0% and not completed, so courses after it stay locked. Needs an account past the entry exam or a backend attempt reset |
 | 2 | B2 | #18 file checkmark (local), #18 duration, #19 minutes (local) | pending |
@@ -52,3 +52,16 @@ Estimate: 7 to 13 agent-work hours (est., basis: sonnet-high median 17-32 min pe
 - Attempts message wording: do not show counts like "(1 من 1)"; explain from server fields without a count.
 - Second test account: login_user succeeds, get_user_full_profile returns errorcode usernotfullysetup, app stayed silently on Login. Owner decision: route to CompleteAccountInfo so the user completes data (not a blocking message). Sent to lane A1.
 - Email field: simulator keyboards are ar then en; the Mac input source was Arabic PC; iOS keeps a separate input language for the email keyboard type, so typed keys arrive as Arabic letters and the ASCII-only formatter drops them silently. Automated typing (Maestro) of an ASCII email works. Queued for lane C: when a non-ASCII letter is rejected, show a hint under the field to switch the keyboard to English, instead of dropping silently.
+
+## Checkpoint 2026-10-28 evening (merge batch 1 done)
+
+- Merged into main (not pushed): A1 957b929, A2 f4893bc, B1 d1c8d19, test fix 06629a6. Full suite `+678: All tests passed!`, analyze clean (merge agent; lane results re-verified by the orchestrator: A2 test/ui +70, B1 test/learning+quiz +149, A1 lock has 0 version lines differing from origin/main).
+- Owner decision: toast stays at the original top position (covers the back arrow for its short life, as originally); the two notification tests now dismiss it first.
+- Next steps, in order:
+  1. Blind review of merge batch 1 (Sonnet, read-only) - launched.
+  2. Relaunch the app on simulator 7A51E729 (iPhone 17 Pro) with `--dart-define=MOPA_CAPTURE=true`; log in with the second account (credentials are in the chat, never written to files); verify: incomplete profile routes to CompleteAccountInfo, save works, then courses: card 1/1 entry exam, course 130 lesson count (expect 12, UNVERIFIED), lesson 2 quiz grading (#18), Next button, immediate checkmark, toast look, email field.
+  3. Lane C (needs a haiku pack first): delete-account screen (temporary path opens the site data-request page; backend endpoint mandatory), attempts explanation on TestInfo from server fields with NO counts, email field hint when Arabic letters are rejected, OTP controller line 78 same disposed-controller bug as Login, per-topic "N lessons" sub-label (decide after device check).
+  4. Lane B2: #18 file checkmark (local), #18 duration, #19 minutes (local).
+  5. Simplify Codex abstractions to the owner's style; BACKEND-REQUESTS file; final review; push to GitHub (approved after verification).
+- The second account: login_user ok, get_user_full_profile errorcode usernotfullysetup.
+- Owner killed the hung flutter_tester 16685 himself (A1 had asked the orchestrator to kill it; refused as permission laundering).
