@@ -34,7 +34,7 @@ class RemoteDataSourceX {
     }
 
     if (authenticated && !lease.isCurrent) {
-      throw ErrorX(message: 'Session changed. Please try again.');
+      throw ErrorX.sessionChanged();
     }
     if (authenticated &&
         (result is Map && result['errorcode'] == 'invalidtoken')) {
@@ -44,10 +44,7 @@ class RemoteDataSourceX {
 
     if (error?.errorCode == ErrorCodesX.unauthorized) throw error!;
 
-    // The cache of an authenticated request is owned by the user who made it:
-    // the key carries the user id, so one account never reads another's data.
-    // Old keys without the id are never read here. The session is still the
-    // same one at this point (checked above), so the current id is the owner.
+    // The cache key carries the user id, so one account never reads another's.
     if ((error?.errorCode ?? -1) != ErrorCodesX.unauthorized &&
         (param.page == null || param.page == 1)) {
       result = _useLocal<T>(
