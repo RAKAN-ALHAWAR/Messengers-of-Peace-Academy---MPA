@@ -178,3 +178,4 @@ Parallel: complete-account save failure on account 2 under diagnosis (Sonnet, wo
 - Decision: Skip on Complete Account Info goes to the app root, never signs out.
 - Decision «اكيد خيار ب»: on app start, an account whose profile returns usernotfullysetup stays signed in and opens Home (no sign-out). Both added to the S5 lane as separate behaviour commits, test-first, with the `late user` trap to handle.
 - Probe build replaced on the simulator by the normal main build (owner: «شيله اذا تجريبي»). Note: `flutter build ios --simulator` fails on this macOS at the lipo arch check; xcodebuild arm64-only works.
+- Owner (2026-10-29): «خلص بلا اختبارات». S2 and S5 stop the Step 0 test-writing pass and finish; one final run of existing tests only, to keep main green before merge.
