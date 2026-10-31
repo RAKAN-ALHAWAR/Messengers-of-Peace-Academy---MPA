@@ -24,8 +24,11 @@ class AllCoursesView extends GetView<AllCoursesController> {
           loading: const AllCoursesLoading(),
 
           /// Data state
-          child:
-              (data) => Obx(() {
+          ///
+          /// While the levels are refetched, the first-load skeleton covers them
+          child: (data) => Stack(
+            children: [
+              Obx(() {
                 /// Empty message
                 if (controller.levels.isEmpty) {
                   return const EmptyMessage('No courses found');
@@ -69,6 +72,20 @@ class AllCoursesView extends GetView<AllCoursesController> {
                   },
                 );
               }),
+
+              /// Loading cover
+              Obx(
+                () => controller.isRefreshing.value
+                    ? SizedBox.expand(
+                        child: ColoredBox(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          child: const AllCoursesLoading(),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
         ),
       ),
     );
