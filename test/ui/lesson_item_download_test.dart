@@ -57,6 +57,52 @@ void main() {
     expect(downloadIcon, findsNothing);
   });
 
+  testWidgets('the percent sits inside the ring, same size as the icons', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      showDownloadIcon: true,
+      isDownloading: true,
+      progress: 0.45,
+    );
+    final ringRect = tester.getRect(ring);
+    final textRect = tester.getRect(find.text('45%'));
+    expect(ringRect.contains(textRect.center), isTrue);
+    expect(ringRect.inflate(0.5).overlaps(textRect), isTrue);
+    expect(
+      (textRect.center - ringRect.center).distance,
+      lessThan(1.5),
+      reason: 'the number is centered in the ring',
+    );
+    // 100% must stay inside the ring too
+    await _pump(
+      tester,
+      showDownloadIcon: true,
+      isDownloading: true,
+      progress: 1.0,
+    );
+    final full = tester.getRect(find.text('100%'));
+    final ring100 = tester.getRect(ring);
+    expect(ring100.inflate(0.5).contains(full.topLeft), isTrue);
+    expect(ring100.inflate(0.5).contains(full.bottomRight), isTrue);
+
+    // the row marks keep one size across the three states
+    final ringSize = tester.getSize(ring);
+    await _pump(tester, showDownloadIcon: true);
+    final iconBox = tester.getSize(
+      find
+          .ancestor(of: downloadIcon, matching: find.byType(DecoratedBox))
+          .first,
+    );
+    await _pump(tester, showDownloadIcon: true, isCompleted: true);
+    final checkBox = tester.getSize(
+      find.ancestor(of: checkIcon, matching: find.byType(DecoratedBox)).first,
+    );
+    expect(iconBox, checkBox);
+    expect(ringSize.width, iconBox.width);
+  });
+
   testWidgets('an unknown total shows an indeterminate ring, no percent', (
     tester,
   ) async {

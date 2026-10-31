@@ -61,31 +61,26 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
                       ),
                     )
                   else
-                    /// Course completion percentage progress bar (average of all activities in group)
+                    /// Section ring: average of the activities, a downloaded file counts 100
                     Center(
                       child: CircularPercentIndicator(
                         radius: 24.0,
                         lineWidth: 5.0,
                         animation: true,
                         percent:
-                            (topicEntry.value
-                                    .map((a) => a.completionPercent)
-                                    .fold<double>(
-                                      0.0,
-                                      (sum, val) => sum + val,
-                                    ) /
-                                topicEntry.value.length /
-                                100),
+                            (ActivityX.topicPercent(topicEntry.value) / 100)
+                                .clamp(0.0, 1.0),
                         circularStrokeCap: CircularStrokeCap.round,
                         progressColor: Theme.of(context).colorScheme.primary,
                         center: TextX(
-                          "%${((topicEntry.value.map((a) => a.completionPercent).fold<double>(0.0, (sum, val) => sum + val) / topicEntry.value.length)).toInt()}",
+                          "%${ActivityX.topicPercent(topicEntry.value).toInt()}",
                           style: TextStyleX.labelMedium,
                           textDirection: TextDirection.ltr,
                           color: Theme.of(context).colorScheme.primary,
                         ),
-                        backgroundColor:
-                            Theme.of(context).colorScheme.secondaryContainer,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.secondaryContainer,
                       ),
                     ),
 
@@ -153,13 +148,11 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
   /// Get count of videos in a group (shown under the lesson title)
   int _getLessonsCountInGroup(List<ActivityX> activities) {
     // Count videos (excluding quizzes)
-    final videoCount =
-        activities
-            .where(
-              (activity) =>
-                  activity.videoUrl.isNotEmpty && activity.quizId == null,
-            )
-            .length;
+    final videoCount = activities
+        .where(
+          (activity) => activity.videoUrl.isNotEmpty && activity.quizId == null,
+        )
+        .length;
 
     // If there are videos, return video count
     if (videoCount > 0) {
@@ -193,10 +186,9 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
       if (activity.quizId != null)
         LessonItemOnAccordion(
           icon: IconX.quiz,
-          name:
-              TranslationX.getLanguageCode == "ar"
-                  ? "${"Test".tr} ${activity.topicName}"
-                  : "${activity.topicName} ${"Test".tr}",
+          name: TranslationX.getLanguageCode == "ar"
+              ? "${"Test".tr} ${activity.topicName}"
+              : "${activity.topicName} ${"Test".tr}",
           isCompleted: activity.isDone,
           onTap: () {
             controller.onTapLessonQuiz(activity);
@@ -209,10 +201,9 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
         Obx(
           () => LessonItemOnAccordion(
             icon: IconX.description,
-            name:
-                TranslationX.getLanguageCode == "ar"
-                    ? "${"Summary File".tr} ${activity.topicName}"
-                    : "${activity.topicName} ${"Summary File".tr}",
+            name: TranslationX.getLanguageCode == "ar"
+                ? "${"Summary File".tr} ${activity.topicName}"
+                : "${activity.topicName} ${"Summary File".tr}",
             isCompleted: activity.isDone,
             showDownloadIcon: true,
             isDownloading: controller.fileProgress.containsKey(activity.cmId),

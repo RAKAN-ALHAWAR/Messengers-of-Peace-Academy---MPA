@@ -52,6 +52,19 @@ class ActivityX {
   bool get isDone =>
       isCompleted || completionPercent >= 100 || isFileDownloaded;
 
+  /// The percent the section ring counts: a file downloaded on this device is
+  /// 100, the same way [isDone] counts it, else the server percent. The server
+  /// never sends a percent for a file, so without this the section stays at 0.
+  double get progressPercent => isFileDownloaded ? 100 : completionPercent;
+
+  /// The section ring percent: the average of [progressPercent] over the
+  /// section's activities, 0 for an empty section
+  static double topicPercent(List<ActivityX> activities) {
+    if (activities.isEmpty) return 0;
+    final sum = activities.fold<double>(0, (s, a) => s + a.progressPercent);
+    return sum / activities.length;
+  }
+
   /// The duration text for the lesson row, or null when there is nothing to
   /// show. A real server value wins; the server sends "0:00" for every video
   /// today, then the length the player learned is shown.
