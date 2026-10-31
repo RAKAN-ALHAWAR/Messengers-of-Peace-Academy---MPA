@@ -38,6 +38,23 @@ void main() {
       );
     });
 
+    test('masks access_token= and the URL-encoded token%3D forms', () {
+      final out = HttpDebugCaptureX.mask([
+        'https://x.test/a?access_token=$secret&y=2',
+        'https://x.test/r?u=https%3A%2F%2Fx.test%2Fa%3Ftoken%3D$secret%26y%3D2',
+        'https://x.test/r?u=a%3Fwstoken%3D$secret',
+      ]);
+      expect(out.toString(), isNot(contains(secret)));
+      expect(
+        (out as List)[0],
+        'https://x.test/a?access_token=<masked>&y=2',
+      );
+      expect(
+        out[1],
+        'https://x.test/r?u=https%3A%2F%2Fx.test%2Fa%3Ftoken%3D<masked>%26y%3D2',
+      );
+    });
+
     test('masks inside nested lists and maps', () {
       final out = HttpDebugCaptureX.mask({
         'activities': [

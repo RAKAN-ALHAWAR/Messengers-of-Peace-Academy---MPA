@@ -14,10 +14,12 @@ class HttpDebugCaptureX {
   static const _enabled = bool.fromEnvironment('MOPA_CAPTURE');
   static const _maskedKeys = {'token', 'wstoken', 'privatetoken', 'password'};
 
-  /// `token=<value>`, `wstoken=<value>`, `privatetoken=<value>` inside any
-  /// string (a download_url carries the user's wstoken as a query value).
+  /// `token=<value>` inside any string (a download_url carries the user's
+  /// wstoken as a query value), which also covers `wstoken=`, `privatetoken=`
+  /// and `access_token=`, and the URL-encoded `token%3D<value>` of a url
+  /// nested inside another one (the value then ends at `%26`).
   static final _tokenInText = RegExp(
-    r'\b((?:ws|private)?token=)[^&\s"<>]+',
+    r'(token(?:=|%3D))(?:(?!%26)[^&\s"<>])+',
     caseSensitive: false,
   );
   static int _counter = 0;

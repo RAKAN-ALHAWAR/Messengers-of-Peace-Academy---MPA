@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' show Offset, Size;
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -300,6 +301,50 @@ void main() {
     test('another file with a longer name is not mistaken for it', () async {
       File('${dir.path}/lesson_two.pdf').writeAsBytesSync([1]);
       expect(await find('lesson'), isNull);
+    });
+
+    test('a name with a dot never matches another file', () async {
+      File('${dir.path}/lesson.v2.pdf').writeAsBytesSync([1]);
+      expect(await find('lesson'), isNull);
+      File('${dir.path}/lesson_v2.pdf').writeAsBytesSync([1]);
+      final path = await find('lesson.v2');
+      expect(path, isNotNull);
+      expect(path!.endsWith('lesson_v2.pdf'), isTrue);
+    });
+
+    test('two files with the same long name stay two files, found by cmId', () async {
+      final course = 'دورة ' * 30;
+      final one = '${course}_ملخص الدرس الأول';
+      final two = '${course}_ملخص الدرس الثاني';
+      // The caller puts the cmId first, so the cut never removes it
+      await run('https://x.test/1.pdf', '101_$one',
+          _FakeAdapter(headers: {'content-type': ['application/pdf']}, body: [1]));
+      await run('https://x.test/2.pdf', '102_$two',
+          _FakeAdapter(headers: {'content-type': ['application/pdf']}, body: [2]));
+      expect(saved().length, 2, reason: 'the second must not overwrite the first');
+      final first = await find('101_$one');
+      final second = await find('102_$two');
+      expect(first, isNotNull);
+      expect(second, isNotNull);
+      expect(first, isNot(second));
+      expect(File(first!).readAsBytesSync(), [1]);
+      expect(File(second!).readAsBytesSync(), [2]);
+    });
+
+    test('a file saved under the old scheme is not opened for a new name', () async {
+      File('${dir.path}/Course_Summary.pdf').writeAsBytesSync([1]);
+      expect(await find('101_Course_Summary'), isNull);
+    });
+
+    test('the share sheet gets a non empty origin, centered, for the iPad', () {
+      final params = DownloadFileFormUrl.shareParamsFor(
+        '/tmp/a.pdf',
+        const Size(820, 1180),
+      );
+      final origin = params.sharePositionOrigin!;
+      expect(origin.isEmpty, isFalse);
+      expect(origin.center, const Offset(410, 590));
+      expect(params.files!.single.path, '/tmp/a.pdf');
     });
 
     test('openSaved says whether a copy was found', () async {

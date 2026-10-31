@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' show PlatformDispatcher, Rect, Size;
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:get/get.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -110,11 +112,15 @@ class DownloadFileFormUrl {
   }
 
   /// A file name the file system accepts: keep the letters (Arabic included),
-  /// drop only what a file name cannot contain. Long Arabic names are cut, a
-  /// file name is limited to 255 bytes and every Arabic letter takes two.
+  /// drop only what a file name cannot contain. Dots become underscores, so
+  /// the only dot in a saved file is the one before its extension. Long Arabic
+  /// names are cut, a file name is limited to 255 bytes and every Arabic letter
+  /// takes two. The caller puts what identifies the file (the activity cmId)
+  /// first, so the cut never removes it.
   static String _safeName(String fileName) {
     var name = fileName
         .replaceAll(' ', '_')
+        .replaceAll('.', '_')
         .replaceAll(RegExp(r'[\\/:*?"<>|\x00-\x1F]'), '');
     if (name.runes.length > 80) {
       name = String.fromCharCodes(name.runes.take(80));
@@ -123,7 +129,8 @@ class DownloadFileFormUrl {
   }
 
   /// The saved copy of [fileName] (any extension), null when there is none.
-  /// A half written `.part` file is never a saved copy.
+  /// A half written `.part` file is never a saved copy, and only the exact
+  /// name matches: `name` or `name.<extension>`.
   static Future<String?> findSaved(
     String fileName, {
     Future<(Directory, bool)> Function()? getDirectory,
@@ -135,7 +142,13 @@ class DownloadFileFormUrl {
         if (entity is! File) continue;
         final base = entity.uri.pathSegments.last;
         if (base.endsWith('.part')) continue;
-        if (base == name || base.startsWith('$name.')) return entity.path;
+        // A saved name has no dot of its own, so what follows the name must
+        // be one extension and nothing else
+        if (base == name ||
+            (base.startsWith('$name.') &&
+                !base.substring(name.length + 1).contains('.'))) {
+          return entity.path;
+        }
       }
     } catch (_) {
       // No readable folder means no saved copy, the caller downloads again
@@ -177,10 +190,26 @@ class DownloadFileFormUrl {
       }
     }
     try {
-      await SharePlus.instance.share(ShareParams(files: [XFile(filePath)]));
-    } catch (_) {
+      final view = PlatformDispatcher.instance.implicitView;
+      final size =
+          view == null ? const Size(1, 1) : view.physicalSize / view.devicePixelRatio;
+      await SharePlus.instance.share(shareParamsFor(filePath, size));
+    } catch (e) {
       // Nothing more to try, the file stays saved where the toast said
+      debugPrint('Sharing the saved file failed: $e');
     }
+  }
+
+  /// The share sheet request for [filePath]. The iPad shows the sheet as a
+  /// popover and refuses it without an anchor rect, so the rect is a small one
+  /// in the center of the screen ([screen] in logical pixels). The phones
+  /// ignore it.
+  static ShareParams shareParamsFor(String filePath, Size screen) {
+    final center = Rect.fromLTWH(screen.width / 2, screen.height / 2, 0, 0);
+    return ShareParams(
+      files: [XFile(filePath)],
+      sharePositionOrigin: center.inflate(5),
+    );
   }
 
   /// A Dio whose transfer cannot hang for ever: the server of the course

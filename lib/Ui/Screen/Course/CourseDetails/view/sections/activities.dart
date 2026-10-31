@@ -176,7 +176,7 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
           icon: IconX.play_arrow_filled,
           name: activity.name,
           videoDuration: activity.durationText,
-          isCompleted: activity.isDone,
+          isCompleted: activity.isServerDone,
           onTap: () async {
             await controller.onTapLessonVideo(originalIndex);
           },
@@ -189,7 +189,7 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
           name: TranslationX.getLanguageCode == "ar"
               ? "${"Test".tr} ${activity.topicName}"
               : "${activity.topicName} ${"Test".tr}",
-          isCompleted: activity.isDone,
+          isCompleted: activity.isServerDone,
           onTap: () {
             controller.onTapLessonQuiz(activity);
           },
@@ -204,7 +204,7 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
             name: TranslationX.getLanguageCode == "ar"
                 ? "${"Summary File".tr} ${activity.topicName}"
                 : "${activity.topicName} ${"Summary File".tr}",
-            isCompleted: activity.isDone,
+            isCompleted: activity.isFileDone,
             showDownloadIcon: true,
             isDownloading: controller.fileProgress.containsKey(activity.cmId),
             downloadProgress: controller.fileProgress[activity.cmId],

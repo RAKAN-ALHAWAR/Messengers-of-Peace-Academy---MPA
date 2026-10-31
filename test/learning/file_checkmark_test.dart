@@ -75,6 +75,22 @@ void main() {
       await body(controller);
     }, () => MockClient((_) async => courseResponse()));
 
+    testWidgets('the saved file name starts with the activity cmId', (
+      tester,
+    ) async {
+      await inCourse(tester, (controller) async {
+        final names = <String>[];
+        controller.downloadFile = (url, name, {onProgress}) async {
+          names.add(name);
+          return false;
+        };
+        final file = controller.course.value!.activities[1];
+        await tester.runAsync(() => controller.onTapLessonSummary(file));
+        expect(names, hasLength(1));
+        expect(names.single.startsWith('f2_'), isTrue, reason: names.single);
+      });
+    });
+
     testWidgets('a successful download marks the file done and its topic', (
       tester,
     ) async {
@@ -277,7 +293,7 @@ void main() {
         await controller.onTapLessonSummary(file);
         expect(downloads, 1, reason: 'the second tap reuses the saved copy');
         expect(opened, hasLength(1));
-        expect(opened.single, 'Course_${file.name}');
+        expect(opened.single, '${file.cmId}_Course_${file.name}');
         expect(controller.fileProgress, isEmpty, reason: 'not left busy');
         expect(file.isDone, isTrue, reason: 'the checkmark stays');
       });

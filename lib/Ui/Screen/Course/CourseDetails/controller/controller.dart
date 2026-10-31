@@ -370,7 +370,9 @@ class CourseDetailsController extends GetxController {
     }
     final selectedCourse = course.value!;
     final url = activity.downloadUrl;
-    final fileName = '${selectedCourse.name}_${activity.name}';
+    // The cmId comes first: two files of one course with a long name must not
+    // share a name, and the name is cut when it is too long
+    final fileName = '${activity.cmId}_${selectedCourse.name}_${activity.name}';
     // Built before the download so the flag lands on the user who tapped
     final doneKey = LocalKeyX.fileDone(activity.cmId);
     final lease = _captureScope(
@@ -382,7 +384,7 @@ class CourseDetailsController extends GetxController {
     try {
       // A downloaded file opens again from the saved copy; when the copy is
       // gone (the user deleted it, a reinstall) it is downloaded again
-      if (activity.isFileDownloaded) {
+      if (activity.isFileDone) {
         _opening.add(cmId);
         try {
           if (await openSavedFile(fileName)) return;
