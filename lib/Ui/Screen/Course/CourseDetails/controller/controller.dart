@@ -37,9 +37,15 @@ class CourseDetailsController extends GetxController {
   String courseId = Get.arguments;
   Rx<CourseX?> course = Rx<CourseX?>(null);
 
+  /// A refetch of the shown course is pending, so the page shows its loading sign
+  final RxBool isRefreshing = false.obs;
+
   /// A newer load retires older loads; a newer video tap retires older taps
   int _loadGeneration = 0;
   int _visitGeneration = 0;
+
+  /// A newer refetch retires older ones, only the newest turns the sign off
+  int _refreshGeneration = 0;
 
   /// A lesson video is open, so further video taps are ignored
   bool _videoBusy = false;
@@ -105,6 +111,9 @@ class CourseDetailsController extends GetxController {
     _visitGeneration++;
     _videoBusy = false;
     isLoading = false;
+    // This load shows its own loading, it retires any refetch sign
+    _refreshGeneration++;
+    isRefreshing.value = false;
     final id = courseId;
     final lease = _captureScope(
       id,
@@ -124,7 +133,11 @@ class CourseDetailsController extends GetxController {
   }
 
   /// Refetches the course, a failed refresh keeps the shown one; true if published
+  ///
+  /// The page shows its loading sign meanwhile, the server stays the truth
   Future<bool> _refreshCourse(SessionLeaseX lease, String id) async {
+    final refresh = ++_refreshGeneration;
+    isRefreshing.value = true;
     try {
       final value = await DatabaseX.getCourse(courseId: id);
       if (!lease.isCurrent) return false;
@@ -135,6 +148,8 @@ class CourseDetailsController extends GetxController {
       ErrorX.console(e);
       ToastX.error(message: '${"Something wrong".tr}. ${"Try again".tr}');
       return false;
+    } finally {
+      if (refresh == _refreshGeneration) isRefreshing.value = false;
     }
   }
 
@@ -382,6 +397,7 @@ class CourseDetailsController extends GetxController {
   void onClose() {
     _loadGeneration++;
     _visitGeneration++;
+    _refreshGeneration++;
     super.onClose();
   }
 }

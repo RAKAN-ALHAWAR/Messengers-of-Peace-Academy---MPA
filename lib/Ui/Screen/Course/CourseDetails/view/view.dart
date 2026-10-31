@@ -41,88 +41,106 @@ class CourseDetailsView extends GetView<CourseDetailsController> {
               return const EmptyMessage('No course details found');
             }
 
-            /// Content
-            return SingleChildScrollView(
-              padding: StyleX.paddingApp,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  /// Course image
-                  ImageNetworkX(
-                    radius: StyleX.radiusLg,
-                    imageUrl: controller.course.value!.image,
-                    width: double.infinity,
-                    height: 200,
-                    fit: BoxFit.cover,
-                  ).fadeAnimation150,
-
-                  /// Spacer
-                  SizedBox(height: 24),
-
-                  /// Course name
-                  TextX(
-                    controller.course.value!.name,
-                    style: TextStyleX.titleSLarge,
-                  ).fadeAnimation150,
-
-                  /// Spacer
-                  SizedBox(height: 4),
-
-                  /// Course level name
-                  TextX(
-                    controller.course.value!.levelName,
-                    style: TextStyleX.bodyMedium,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ).fadeAnimation150,
-
-                  /// Spacer
-                  SizedBox(height: 24),
-
-                  /// Course completion percentage
-                  CourseDetailsCompletionPercentageSection().fadeAnimation200,
-
-                  /// Spacer
-                  SizedBox(height: 24),
-
-                  /// Course content
-                  Row(
-                    children: [
-                      /// Course content title
-                      TextX("Course Content", style: TextStyleX.titleMedium),
-
-                      /// Spacer
-                      SizedBox(width: 4),
-
-                      /// Course content count
-                      TextX(
-                        "(${controller.getActivityCountName.tr})",
-                        style: TextStyleX.labelLarge,
-                      ),
-                    ],
-                  ).fadeAnimation200,
-
-                  /// Spacer
-                  SizedBox(height: 12),
-
-                  /// Check if there are no activities
-                  if (controller.course.value!.activities.isEmpty)
-                    /// Empty message
-                    ContainerX(
-                      height: 150,
-                      margin: EdgeInsets.only(top: 20),
-                      color: Theme.of(context).colorScheme.surfaceContainerLow,
-                      child: EmptyMessage('There are no lessons'),
-                    ).fadeAnimation250,
-
-                  /// Check if there are activities
-                  if (controller.course.value!.activities.isNotEmpty)
-                    /// Course activities list
-                    CourseDetailsActivitiesSection(),
-                ],
-              ),
+            /// Content, covered by the loading while the course is refetched
+            ///
+            /// The content stays mounted under it, so the scroll position survives
+            return Stack(
+              children: [
+                _content(context),
+                if (controller.isRefreshing.value)
+                  Positioned.fill(
+                    child: ColoredBox(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      child: const CourseDetailsLoading(),
+                    ),
+                  ),
+              ],
             );
           }),
         ),
+      ),
+    );
+  }
+
+  /// The course content
+  Widget _content(BuildContext context) {
+    return SingleChildScrollView(
+      padding: StyleX.paddingApp,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// Course image
+          ImageNetworkX(
+            radius: StyleX.radiusLg,
+            imageUrl: controller.course.value!.image,
+            width: double.infinity,
+            height: 200,
+            fit: BoxFit.cover,
+          ).fadeAnimation150,
+
+          /// Spacer
+          SizedBox(height: 24),
+
+          /// Course name
+          TextX(
+            controller.course.value!.name,
+            style: TextStyleX.titleSLarge,
+          ).fadeAnimation150,
+
+          /// Spacer
+          SizedBox(height: 4),
+
+          /// Course level name
+          TextX(
+            controller.course.value!.levelName,
+            style: TextStyleX.bodyMedium,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ).fadeAnimation150,
+
+          /// Spacer
+          SizedBox(height: 24),
+
+          /// Course completion percentage
+          CourseDetailsCompletionPercentageSection().fadeAnimation200,
+
+          /// Spacer
+          SizedBox(height: 24),
+
+          /// Course content
+          Row(
+            children: [
+              /// Course content title
+              TextX("Course Content", style: TextStyleX.titleMedium),
+
+              /// Spacer
+              SizedBox(width: 4),
+
+              /// Course content count
+              TextX(
+                "(${controller.getActivityCountName.tr})",
+                style: TextStyleX.labelLarge,
+              ),
+            ],
+          ).fadeAnimation200,
+
+          /// Spacer
+          SizedBox(height: 12),
+
+          /// Check if there are no activities
+          if (controller.course.value!.activities.isEmpty)
+            /// Empty message
+            ContainerX(
+              height: 150,
+              margin: EdgeInsets.only(top: 20),
+              color: Theme.of(context).colorScheme.surfaceContainerLow,
+              child: EmptyMessage('There are no lessons'),
+            ).fadeAnimation250,
+
+          /// Check if there are activities
+          if (controller.course.value!.activities.isNotEmpty)
+            /// Course activities list
+            CourseDetailsActivitiesSection(),
+        ],
       ),
     );
   }
