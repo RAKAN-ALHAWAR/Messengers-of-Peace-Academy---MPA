@@ -28,10 +28,16 @@ class CourseCard extends StatelessWidget {
   /// numsections 0, so the card would read 0/0. Until the server counts the
   /// quiz in numsections we show 1 lesson and done only when the course is
   /// completed. Remove this once get_user_categories_summary counts quizzes.
+  ///
+  /// TEMP(backend): the server returns is_completed true with completion_percent
+  /// 0 and completed_topics_total 0, so a completed course shows 100% and N/N.
   (int done, int total) get _lessons {
     if (course.numSections == 0) return (course.isCompleted ? 1 : 0, 1);
+    if (course.isCompleted) return (course.numSections, course.numSections);
     return (course.numCompletionSections, course.numSections);
   }
+
+  double get _percent => course.isCompleted ? 100 : course.completionPercent;
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +127,7 @@ class CourseCard extends StatelessWidget {
 
                       /// Completion percentage
                       TextX(
-                        "${course.completionPercent.toInt()}%",
+                        "${_percent.toInt()}%",
                         style: TextStyleX.labelSmall,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -134,7 +140,7 @@ class CourseCard extends StatelessWidget {
                   /// Completion percentage
                   LinearProgressIndicator(
                     minHeight: progressHeight(context),
-                    value: course.completionPercent / 100,
+                    value: _percent / 100,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   SizedBox(height: 16),

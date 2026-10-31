@@ -67,11 +67,12 @@ MiniCourseX cardCourse({
   required int numSections,
   required int completed,
   bool isCompleted = false,
+  num percent = 0,
 }) => MiniCourseX.fromJson({
   'courseid': 19,
   'coursename': 'اختبار القبول',
   'numsections': numSections,
-  'completion_percent': 0,
+  'completion_percent': percent,
   'is_open': true,
   'is_completed': isCompleted,
   'completed_topics_total': completed,
@@ -284,6 +285,37 @@ void main() {
         cardCourse(numSections: 0, completed: 0, isCompleted: true),
       );
       expect(find.text('1/1'), findsOneWidget);
+    });
+
+    testWidgets('completed with percent 0 shows 100 percent and N/N', (
+      tester,
+    ) async {
+      await pumpCard(
+        tester,
+        cardCourse(numSections: 5, completed: 0, isCompleted: true),
+      );
+      expect(find.text('5/5'), findsOneWidget);
+      expect(find.text('100%'), findsOneWidget);
+      expect(find.text('0%'), findsNothing);
+      final bar = tester.widget<LinearProgressIndicator>(
+        find.byType(LinearProgressIndicator),
+      );
+      expect(bar.value, 1.0);
+    });
+
+    testWidgets('not completed keeps the server percent and counter', (
+      tester,
+    ) async {
+      await pumpCard(
+        tester,
+        cardCourse(numSections: 5, completed: 2, percent: 40),
+      );
+      expect(find.text('2/5'), findsOneWidget);
+      expect(find.text('40%'), findsOneWidget);
+      final bar = tester.widget<LinearProgressIndicator>(
+        find.byType(LinearProgressIndicator),
+      );
+      expect(bar.value, 0.4);
     });
 
     testWidgets('the counter is laid out left to right', (tester) async {
