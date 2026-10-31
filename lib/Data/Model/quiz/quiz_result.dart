@@ -13,11 +13,13 @@ class QuizResultX {
   final String feedback;
   final List<AnswerX?> answers;
 
-  /// Only the exact existing pass labels are understood. Other/missing values
-  /// remain unresolved until the backend's authoritative enum is confirmed.
+  /// Only the exact known pass labels are understood: the server sends
+  /// "Passed" or "Failed" (verified on a real get_quiz_result body), and an
+  /// empty value when the review options hide it. Other/empty/missing values
+  /// remain unresolved. "Not passed" is kept as a legacy failure label.
   bool? get isSuccess => switch (passed?.trim().toLowerCase()) {
     'passed' => true,
-    'not passed' => false,
+    'failed' || 'not passed' => false,
     _ => null,
   };
 
