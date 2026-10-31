@@ -59,10 +59,11 @@ class LessonItemOnAccordion extends StatelessWidget {
                     style: TextStyleX.labelLarge,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                if (!isCompleted && isDownloading) ..._downloading(context),
+                // A done file downloading again (its saved copy is gone) shows the ring
+                if (isDownloading) ..._downloading(context),
                 if (!isCompleted && !isDownloading && showDownloadIcon)
                   _downloadIcon(context),
-                if (isCompleted)
+                if (isCompleted && !isDownloading)
                   Center(
                     child: Container(
                       width: _markSize,

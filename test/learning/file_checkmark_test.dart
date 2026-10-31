@@ -166,7 +166,11 @@ void main() {
         };
         final pending = controller.onTapLessonSummary(file);
         expect(controller.fileProgress.containsKey(file.cmId), isTrue);
-        expect(controller.fileProgress[file.cmId], isNull, reason: 'unknown yet');
+        expect(
+          controller.fileProgress[file.cmId],
+          isNull,
+          reason: 'unknown yet',
+        );
         report(250, 1000);
         expect(controller.fileProgress[file.cmId], 0.25);
         report(1000, 1000);
@@ -296,6 +300,34 @@ void main() {
         expect(downloads, 2);
         expect(controller.fileProgress, isEmpty);
         expect(file.isDone, isTrue);
+      });
+    });
+
+    testWidgets('opening the saved copy shows no ring and ignores a 2nd tap', (
+      tester,
+    ) async {
+      await inCourse(tester, (controller) async {
+        final file = controller.course.value!.activities[1];
+        controller.downloadFile = (url, name, {onProgress}) async => true;
+        await controller.onTapLessonSummary(file);
+        final opening = Completer<bool>();
+        var opens = 0;
+        controller.openSavedFile = (name) {
+          opens++;
+          return opening.future;
+        };
+        final first = controller.onTapLessonSummary(file);
+        await tester.pump();
+        expect(
+          controller.fileProgress,
+          isEmpty,
+          reason: 'only a real download shows the ring',
+        );
+        await controller.onTapLessonSummary(file);
+        expect(opens, 1, reason: 'a tap while it opens does nothing');
+        opening.complete(true);
+        await first;
+        expect(opens, 1);
       });
     });
 

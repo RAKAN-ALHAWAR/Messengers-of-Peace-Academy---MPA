@@ -132,6 +132,21 @@ void main() {
     expect(ring, findsNothing);
   });
 
+  testWidgets('a done file downloading again (copy gone) shows the ring', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      showDownloadIcon: true,
+      isCompleted: true,
+      isDownloading: true,
+      progress: 0.3,
+    );
+    expect(find.text('30%'), findsOneWidget);
+    expect(ring, findsOneWidget);
+    expect(checkIcon, findsNothing);
+  });
+
   testWidgets('other rows (video, quiz) keep their look: no extra mark', (
     tester,
   ) async {

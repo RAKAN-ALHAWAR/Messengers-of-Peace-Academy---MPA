@@ -44,6 +44,10 @@ class CourseDetailsController extends GetxController {
   /// A file is in this map for the whole download, so a second tap is ignored.
   final RxMap<String, double?> fileProgress = <String, double?>{}.obs;
 
+  /// Files whose saved copy is being opened now, by cmId. It guards a second
+  /// tap without showing the download ring, nothing is downloading then.
+  final Set<String> _opening = <String>{};
+
   /// Saves the time spent on a lesson video, replaceable so tests skip the disk
   Future<void> Function(int seconds) addLearnedSeconds =
       UserStatisticsX.addLocalLearnedSeconds;
@@ -358,6 +362,7 @@ class CourseDetailsController extends GetxController {
   Future<void> onTapLessonSummary(ActivityX activity) async {
     // One download at a time per file: a tap while it runs does nothing
     if (fileProgress.containsKey(activity.cmId) ||
+        _opening.contains(activity.cmId) ||
         !_ownsCourse ||
         _contentLease?.isCurrent != true ||
         course.value?.activities.contains(activity) != true) {
@@ -374,12 +379,19 @@ class CourseDetailsController extends GetxController {
     );
 
     final cmId = activity.cmId;
-    // null: running, the size is not known yet
-    fileProgress[cmId] = null;
     try {
       // A downloaded file opens again from the saved copy; when the copy is
       // gone (the user deleted it, a reinstall) it is downloaded again
-      if (activity.isFileDownloaded && await openSavedFile(fileName)) return;
+      if (activity.isFileDownloaded) {
+        _opening.add(cmId);
+        try {
+          if (await openSavedFile(fileName)) return;
+        } finally {
+          _opening.remove(cmId);
+        }
+      }
+      // null: running, the size is not known yet
+      fileProgress[cmId] = null;
       final saved = await downloadFile(
         url,
         fileName,
