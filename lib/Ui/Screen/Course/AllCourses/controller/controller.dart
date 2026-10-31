@@ -18,6 +18,9 @@ class AllCoursesController extends GetxController {
   /// Levels with their courses
   RxList<LevelX> levels = RxList<LevelX>([]);
 
+  /// The levels are refetched after a course page, so the screen shows its loading
+  final RxBool isRefreshing = false.obs;
+
   /// The newest load wins
   int _loadGeneration = 0;
 
@@ -80,10 +83,13 @@ class AllCoursesController extends GetxController {
     try {
       await Get.toNamed(RouteNameX.courseDetails, arguments: course.id);
       if (!lease.isCurrent) return;
+      isRefreshing.value = true;
       await getData(owner: lease);
     } catch (error) {
       if (lease.isCurrent) ToastX.error(message: error);
     } finally {
+      // Only the tap that raised the sign lowers it
+      if (generation == _navigationGeneration) isRefreshing.value = false;
       _openingCourse = false;
     }
   }

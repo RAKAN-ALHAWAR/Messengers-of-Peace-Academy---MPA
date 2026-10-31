@@ -35,45 +35,62 @@ class HomeView extends GetView<HomeController> {
         loading: const HomeLoading(),
 
         /// Build body
+        ///
+        /// After a course page the first-load skeleton covers the body while
+        /// the progress is refetched
         child: (_) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: StyleX.vPaddingApp),
-            child: Column(
-              children: [
-                /// Empty levels are valid data, not a fabricated first level.
-                Obx(
-                  () =>
-                      controller.levels.isEmpty
+          return Stack(
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: StyleX.vPaddingApp),
+                child: Column(
+                  children: [
+                    /// Empty levels are valid data, not a fabricated first level.
+                    Obx(
+                      () => controller.levels.isEmpty
                           ? const Padding(
-                            padding: StyleX.paddingApp,
-                            child: EmptyMessage('No courses found'),
-                          )
+                              padding: StyleX.paddingApp,
+                              child: EmptyMessage('No courses found'),
+                            )
                           : const Column(
-                            children: [
-                              LevelProgressCard(),
-                              LevelsProgressSection(),
-                            ],
-                          ),
-                ),
+                              children: [
+                                LevelProgressCard(),
+                                LevelsProgressSection(),
+                              ],
+                            ),
+                    ),
 
-                /// My progress section
-                MyProgressSection(),
+                    /// My progress section
+                    MyProgressSection(),
 
-                /// Nav cards section
-                NavCardsSection(),
+                    /// Nav cards section
+                    NavCardsSection(),
 
-                /// Current level section
-                Obx(
-                  () =>
-                      controller.currentLevel.value == null
+                    /// Current level section
+                    Obx(
+                      () => controller.currentLevel.value == null
                           ? const SizedBox.shrink()
                           : const CurrentLevelSection(),
-                ),
+                    ),
 
-                /// Meetings section
-                MeetingsSection(),
-              ],
-            ),
+                    /// Meetings section
+                    MeetingsSection(),
+                  ],
+                ),
+              ),
+
+              /// Loading cover
+              Obx(
+                () => controller.isRefreshing.value
+                    ? SizedBox.expand(
+                        child: ColoredBox(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          child: const HomeLoading(),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
           );
         },
       ),

@@ -54,6 +54,9 @@ class HomeController extends GetxController {
   /// Last update
   DateTime lastUpdate = DateTime.now();
 
+  /// The progress is refetched after a course page, so Home shows its loading
+  final RxBool isRefreshing = false.obs;
+
   /// Is initialized
   bool isInit = false;
   String currentLanguage = TranslationX.getLanguageCode;
@@ -257,12 +260,15 @@ class HomeController extends GetxController {
     try {
       await Get.toNamed(destination, arguments: arguments);
       if (!lease.isCurrent) return;
+      isRefreshing.value = true;
       await getData(force: true, owner: lease);
     } catch (e) {
       if (!lease.isCurrent) return;
       ErrorX.console(e);
       ToastX.error(message: e);
     } finally {
+      // Only the visit that raised the sign lowers it
+      if (request == _progressNavigationGeneration) isRefreshing.value = false;
       if (!isClosed) _openingProgressRoute = false;
     }
   }
