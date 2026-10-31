@@ -246,9 +246,9 @@ void main() {
           // Hive writes to disk, which needs real async (the completer too)
           await tester.runAsync(() async {
             final download = Completer<bool>();
-            controller.downloadFile = (url, name) => download.future;
+            controller.downloadFile = (url, name, {onProgress}) => download.future;
             final pending = controller.onTapLessonSummary(file);
-            expect(controller.isLoading, isTrue);
+            expect(controller.fileProgress.containsKey(file.cmId), isTrue);
             if (atom == 'account') {
               await LocalDataX.put(LocalKeyX.userid, 'synthetic-B');
             } else {
@@ -273,7 +273,7 @@ void main() {
           final controller = await mount(tester);
           await controller.getData();
           final download = Completer<bool>();
-          controller.downloadFile = (url, name) => download.future;
+          controller.downloadFile = (url, name, {onProgress}) => download.future;
           final pending = controller.onTapLessonSummary(
             controller.course.value!.activities[1],
           );

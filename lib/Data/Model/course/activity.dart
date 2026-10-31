@@ -47,10 +47,37 @@ class ActivityX {
   bool get hasContent =>
       videoUrl.isNotEmpty || quizId != null || downloadUrl.isNotEmpty;
 
-  /// Whether the activity is done: the server flags first, then the local
-  /// flag of a downloaded file
-  bool get isDone =>
-      isCompleted || completionPercent >= 100 || isFileDownloaded;
+  /// The server state of the video and quiz rows: is_completed or 100 percent.
+  /// A downloaded file never counts here, one activity can feed a video, a
+  /// quiz and a file row.
+  bool get isServerDone => isCompleted || completionPercent >= 100;
+
+  /// The state of the file row only: the local TEMP(backend) flag of a
+  /// downloaded file. A file only activity also follows the server flags, in
+  /// case the server starts to send is_completed for files.
+  bool get isFileDone =>
+      isFileDownloaded || (!_hasVideoOrQuiz && isServerDone);
+
+  bool get _hasVideoOrQuiz => videoUrl.isNotEmpty || quizId != null;
+
+  /// Whether the activity is done for the lesson counter: the server state,
+  /// and for a file only activity the downloaded flag as well. A file next to
+  /// a video or quiz never decides it.
+  bool get isDone => _hasVideoOrQuiz ? isServerDone : isFileDone;
+
+  /// The percent the section ring counts for this activity: the server percent
+  /// of its video or quiz, and for a file only activity 100 once downloaded
+  /// (the server never sends a percent for a file).
+  double get progressPercent =>
+      !_hasVideoOrQuiz && isFileDownloaded ? 100 : completionPercent;
+
+  /// The section ring percent: the average of [progressPercent] over the
+  /// section's activities, 0 for an empty section
+  static double topicPercent(List<ActivityX> activities) {
+    if (activities.isEmpty) return 0;
+    final sum = activities.fold<double>(0, (s, a) => s + a.progressPercent);
+    return sum / activities.length;
+  }
 
   /// The duration text for the lesson row, or null when there is nothing to
   /// show. A real server value wins; the server sends "0:00" for every video

@@ -13,6 +13,15 @@ import 'package:path_provider/path_provider.dart';
 class HttpDebugCaptureX {
   static const _enabled = bool.fromEnvironment('MOPA_CAPTURE');
   static const _maskedKeys = {'token', 'wstoken', 'privatetoken', 'password'};
+
+  /// `token=<value>` inside any string (a download_url carries the user's
+  /// wstoken as a query value), which also covers `wstoken=`, `privatetoken=`
+  /// and `access_token=`, and the URL-encoded `token%3D<value>` of a url
+  /// nested inside another one (the value then ends at `%26`).
+  static final _tokenInText = RegExp(
+    r'(token(?:=|%3D))(?:(?!%26)[^&\s"<>])+',
+    caseSensitive: false,
+  );
   static int _counter = 0;
 
   static bool get isEnabled => kDebugMode && _enabled;
@@ -30,7 +39,7 @@ class HttpDebugCaptureX {
       final payload = {
         'function': function,
         'status': statusCode,
-        'body': _mask(_tryDecode(body)),
+        'body': mask(_tryDecode(body)),
       };
       await File('${folder.path}/$name').writeAsString(
         const JsonEncoder.withIndent('  ').convert(payload),
@@ -48,18 +57,25 @@ class HttpDebugCaptureX {
     }
   }
 
-  static Object? _mask(Object? value) {
+  @visibleForTesting
+  static Object? mask(Object? value) {
     if (value is Map) {
       return value.map(
         (key, item) => MapEntry(
           key,
           _maskedKeys.contains(key.toString().toLowerCase())
               ? '<masked>'
-              : _mask(item),
+              : mask(item),
         ),
       );
     }
-    if (value is List) return value.map(_mask).toList();
+    if (value is List) return value.map(mask).toList();
+    if (value is String) {
+      return value.replaceAllMapped(
+        _tokenInText,
+        (match) => '${match.group(1)}<masked>',
+      );
+    }
     return value;
   }
 }
