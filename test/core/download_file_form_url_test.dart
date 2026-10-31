@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -197,6 +198,140 @@ void main() {
       );
       expect(ok, isTrue);
       expect(saved(), ['a.html']);
+    });
+  });
+
+  group('Arabic Content-Disposition as the real server sends it', () {
+    // Dart reads header bytes as Latin-1, so a UTF-8 Arabic file name reaches
+    // the app as mojibake with non-ASCII characters (seen on the iOS
+    // simulator, Uri.decodeFull threw "Illegal percent encoding" on it).
+    final mojibake = latin1.decode(utf8.encode('أساسيات الدعوة.pdf'));
+
+    test('a raw non-ASCII name still gives the extension', () async {
+      final ok = await run(
+        'https://x.test/pluginfile.php/1/mod_resource/content/0/a.pdf',
+        'lesson',
+        _FakeAdapter(
+          headers: {
+            'content-type': ['application/pdf'],
+            'content-disposition': ['inline; filename="$mojibake"'],
+          },
+        ),
+      );
+      expect(ok, isTrue);
+      expect(saved(), ['lesson.pdf']);
+    });
+
+    test('a stray percent sign in the name never fails the download', () async {
+      final ok = await run(
+        'https://x.test/f',
+        'lesson',
+        _FakeAdapter(
+          headers: {
+            'content-disposition': ['attachment; filename="100% done.pdf"'],
+          },
+        ),
+      );
+      expect(ok, isTrue);
+      expect(saved(), ['lesson.pdf']);
+    });
+  });
+
+  group('progress', () {
+    test('reports received and total, ending complete', () async {
+      final calls = <(int, int)>[];
+      await DownloadFileFormUrl.download(
+        'https://x.test/f.pdf',
+        'a',
+        dio: Dio()
+          ..httpClientAdapter = _FakeAdapter(
+            headers: {
+              'content-type': ['application/pdf'],
+              'content-length': ['4'],
+            },
+          ),
+        getDirectory: () async => (dir, false),
+        onProgress: (received, total) => calls.add((received, total)),
+      );
+      expect(calls, isNotEmpty);
+      expect(calls.last, (4, 4));
+    });
+
+    test('an unknown total is reported as -1, never a fake size', () async {
+      final calls = <(int, int)>[];
+      await DownloadFileFormUrl.download(
+        'https://x.test/f.pdf',
+        'a',
+        dio: Dio()
+          ..httpClientAdapter = _FakeAdapter(
+            headers: {'content-type': ['application/pdf']},
+          ),
+        getDirectory: () async => (dir, false),
+        onProgress: (received, total) => calls.add((received, total)),
+      );
+      expect(calls, isNotEmpty);
+      expect(calls.every((c) => c.$2 <= 0), isTrue);
+    });
+  });
+
+  group('saved copy', () {
+    Future<String?> find(String name) => DownloadFileFormUrl.findSaved(
+      name,
+      getDirectory: () async => (dir, false),
+    );
+
+    test('finds the file saved by an earlier download, any extension', () async {
+      await run(
+        'https://x.test/f.pdf',
+        'دورة السلام',
+        _FakeAdapter(headers: {'content-type': ['application/pdf']}),
+      );
+      final path = await find('دورة السلام');
+      expect(path, isNotNull);
+      expect(path!.endsWith('دورة_السلام.pdf'), isTrue);
+    });
+
+    test('is null when nothing was saved, a .part file does not count', () async {
+      expect(await find('lesson'), isNull);
+      File('${dir.path}/lesson.part').writeAsBytesSync([1]);
+      expect(await find('lesson'), isNull);
+    });
+
+    test('another file with a longer name is not mistaken for it', () async {
+      File('${dir.path}/lesson_two.pdf').writeAsBytesSync([1]);
+      expect(await find('lesson'), isNull);
+    });
+
+    test('openSaved says whether a copy was found', () async {
+      expect(
+        await DownloadFileFormUrl.openSaved(
+          'lesson',
+          getDirectory: () async => (dir, false),
+        ),
+        isFalse,
+      );
+      File('${dir.path}/lesson.pdf').writeAsBytesSync([1]);
+      expect(
+        await DownloadFileFormUrl.openSaved(
+          'lesson',
+          getDirectory: () async => (dir, false),
+        ),
+        isTrue,
+      );
+    });
+  });
+
+  group('leftovers', () {
+    test('a failure after the body arrived leaves no .part file', () async {
+      // The final name is taken by a folder, so the rename step throws
+      Directory('${dir.path}/a.pdf').createSync();
+      final ok = await run(
+        'https://x.test/f.pdf',
+        'a',
+        _FakeAdapter(headers: {'content-type': ['application/pdf']}),
+      );
+      expect(ok, isFalse);
+      expect(File('${dir.path}/a.part').existsSync(), isFalse);
     });
   });
 }

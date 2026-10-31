@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -13,6 +14,9 @@ class DownloadFileFormUrl {
   /// Returns true only when the file was really saved on the device.
   /// Existing callers may ignore the result.
   ///
+  /// [onProgress] gets the bytes received and the total size, the total is
+  /// -1 (or 0) when the server did not say how big the file is.
+  ///
   /// [dio] and [getDirectory] exist so tests can run without a network and
   /// without the platform plugins, the app always uses the defaults.
   static Future<bool> download(
@@ -20,7 +24,9 @@ class DownloadFileFormUrl {
     String fileName, {
     Dio? dio,
     Future<(Directory, bool)> Function()? getDirectory,
+    void Function(int received, int total)? onProgress,
   }) async {
+    String? tempPath;
     try {
       // Validate download URL
       if (url.isEmpty || Uri.tryParse(url)?.isAbsolute != true) {
@@ -37,25 +43,20 @@ class DownloadFileFormUrl {
       final (Directory downloadDir, bool isPublicDownloads) =
           await (getDirectory ?? _getDownloadDirectory)();
 
-      // Create filename: keep the letters (Arabic included), drop only what a
-      // file name cannot contain. Long Arabic names are cut, a file name is
-      // limited to 255 bytes and every Arabic letter takes two.
-      fileName = fileName
-          .replaceAll(' ', '_')
-          .replaceAll(RegExp(r'[\\/:*?"<>|\x00-\x1F]'), '');
-      if (fileName.runes.length > 80) {
-        fileName = String.fromCharCodes(fileName.runes.take(80));
-      }
-      if (fileName.isEmpty) fileName = 'file';
+      fileName = _safeName(fileName);
 
       // The extension is only known from the response headers, so download to
       // a temporary name first and rename once we know what the file is
-      final tempPath = '${downloadDir.path}/$fileName.part';
-      final response = await (dio ?? Dio()).download(url, tempPath);
+      final partPath = tempPath = '${downloadDir.path}/$fileName.part';
+      final response = await (dio ?? _newDio()).download(
+        url,
+        partPath,
+        onReceiveProgress: onProgress,
+      );
 
       // An HTML login page or a JSON error answers 200 as well, never save it
       if (!_isFile(response.headers)) {
-        await File(tempPath).delete();
+        await File(partPath).delete();
         ToastX.error(title: "Error", message: "Download failed".tr);
         return false;
       }
@@ -65,7 +66,7 @@ class DownloadFileFormUrl {
           extension.isEmpty
               ? '${downloadDir.path}/$fileName'
               : '${downloadDir.path}/$fileName.$extension';
-      await File(tempPath).rename(filePath);
+      await File(partPath).rename(filePath);
 
       // Show success message telling where the file actually landed
       String locationMessage =
@@ -79,26 +80,13 @@ class DownloadFileFormUrl {
         message: "${"File downloaded successfully".tr}\n$locationMessage",
       );
 
-      // حاول فتح الملف مباشرة، وإن تعذر شارك الملف
-      // try to open the file directly, share it when that is not possible
-      // The file is already saved, so a failure here never turns the result
-      // into a failed download
-      try {
-        final result = await OpenFile.open(filePath);
-        if (result.type != ResultType.done) {
-          await SharePlus.instance.share(
-            ShareParams(files: [XFile(filePath)], text: fileName),
-          );
-        }
-      } catch (_) {
-        try {
-          await SharePlus.instance.share(
-            ShareParams(files: [XFile(filePath)], text: fileName),
-          );
-        } catch (_) {}
-      }
+      // The file is saved, the caller shows it as done at once. Opening it (or
+      // the share sheet) can stay on screen for as long as the user likes, so
+      // it never holds the result back.
+      unawaited(_openOrShare(filePath));
       return true;
     } catch (e) {
+      await _deleteQuietly(tempPath);
       String errorMessage = "Download failed".tr;
 
       if (e is DioException) {
@@ -119,6 +107,99 @@ class DownloadFileFormUrl {
       ToastX.error(title: "Error", message: errorMessage);
       return false;
     }
+  }
+
+  /// A file name the file system accepts: keep the letters (Arabic included),
+  /// drop only what a file name cannot contain. Long Arabic names are cut, a
+  /// file name is limited to 255 bytes and every Arabic letter takes two.
+  static String _safeName(String fileName) {
+    var name = fileName
+        .replaceAll(' ', '_')
+        .replaceAll(RegExp(r'[\\/:*?"<>|\x00-\x1F]'), '');
+    if (name.runes.length > 80) {
+      name = String.fromCharCodes(name.runes.take(80));
+    }
+    return name.isEmpty ? 'file' : name;
+  }
+
+  /// The saved copy of [fileName] (any extension), null when there is none.
+  /// A half written `.part` file is never a saved copy.
+  static Future<String?> findSaved(
+    String fileName, {
+    Future<(Directory, bool)> Function()? getDirectory,
+  }) async {
+    try {
+      final (Directory dir, _) = await (getDirectory ?? _getDownloadDirectory)();
+      final name = _safeName(fileName);
+      await for (final entity in dir.list(followLinks: false)) {
+        if (entity is! File) continue;
+        final base = entity.uri.pathSegments.last;
+        if (base.endsWith('.part')) continue;
+        if (base == name || base.startsWith('$name.')) return entity.path;
+      }
+    } catch (_) {
+      // No readable folder means no saved copy, the caller downloads again
+    }
+    return null;
+  }
+
+  /// Opens the saved copy of [fileName] again (share sheet when no app can
+  /// open it). False when the copy is gone, so the caller downloads it again.
+  /// Returns as soon as the file is handed over, never waits for the viewer.
+  static Future<bool> openSaved(
+    String fileName, {
+    Future<(Directory, bool)> Function()? getDirectory,
+  }) async {
+    final path = await findSaved(fileName, getDirectory: getDirectory);
+    if (path == null) return false;
+    unawaited(_openOrShare(path));
+    return true;
+  }
+
+  /// Shows the saved file: opened directly on Android, through the share
+  /// sheet on iOS. The file is already saved, so a failure here only ends
+  /// this attempt, it never turns the download into a failed one.
+  ///
+  /// iOS must not use `OpenFile.open`: open_file_ios finds its view controller
+  /// through `UIApplication.delegate.window`, which is nil in an app that uses
+  /// UIScene (this one), so the preview never appears and the call never
+  /// returns (seen on the iOS simulator). The share sheet works there and
+  /// offers Save to Files and Open in.
+  ///
+  /// حاول فتح الملف مباشرة، وإن تعذر شارك الملف
+  static Future<void> _openOrShare(String filePath) async {
+    if (!Platform.isIOS) {
+      try {
+        final result = await OpenFile.open(filePath);
+        if (result.type == ResultType.done) return;
+      } catch (_) {
+        // No app opens it: the share sheet below is the way to show the file
+      }
+    }
+    try {
+      await SharePlus.instance.share(ShareParams(files: [XFile(filePath)]));
+    } catch (_) {
+      // Nothing more to try, the file stays saved where the toast said
+    }
+  }
+
+  /// A Dio whose transfer cannot hang for ever: the server of the course
+  /// files is slow (tens of seconds for a few MB) but never silent that long.
+  static Dio _newDio() => Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 60),
+    ),
+  );
+
+  /// Removes the half written file after a failure, best effort cleanup: the
+  /// failure itself is already reported to the user.
+  static Future<void> _deleteQuietly(String? path) async {
+    if (path == null) return;
+    try {
+      final file = File(path);
+      if (await file.exists()) await file.delete();
+    } catch (_) {}
   }
 
   /// The file name Content-Disposition suggests, for example
@@ -169,7 +250,7 @@ class DownloadFileFormUrl {
   static String _getExtension(Headers headers, String url) {
     final name = _dispositionName(headers);
     if (name != null) {
-      final ext = _plainExtension(Uri.decodeFull(name));
+      final ext = _plainExtension(_percentDecoded(name));
       if (ext != null) return ext;
     }
 
@@ -181,6 +262,17 @@ class DownloadFileFormUrl {
     const scripts = {'php', 'asp', 'aspx', 'jsp'};
     final byUrl = _plainExtension(Uri.parse(url).path);
     return byUrl == null || scripts.contains(byUrl) ? '' : byUrl;
+  }
+
+  /// Decodes `%XX` escapes when the name has valid ones. Dart reads header
+  /// bytes as Latin-1, so a raw UTF-8 Arabic name arrives as non-ASCII
+  /// mojibake and `Uri.decodeFull` throws on it, the name is used as it is then.
+  static String _percentDecoded(String name) {
+    try {
+      return Uri.decodeFull(name);
+    } on ArgumentError {
+      return name;
+    }
   }
 
   /// The extension of the last path segment, or null when it does not look

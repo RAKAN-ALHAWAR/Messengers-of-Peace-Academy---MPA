@@ -25,11 +25,24 @@ class CourseDetailsController extends GetxController {
   //============================================================================
   // Variables
 
-  bool isLoading = false;
+  /// The file download, replaceable so tests can run without a network.
+  /// [onProgress] gets the bytes received and the total (-1 when unknown).
+  Future<bool> Function(
+    String url,
+    String fileName, {
+    void Function(int received, int total)? onProgress,
+  })
+  downloadFile = DownloadFileFormUrl.download;
 
-  /// The file download, replaceable so tests can run without a network
-  Future<bool> Function(String url, String fileName) downloadFile =
-      DownloadFileFormUrl.download;
+  /// Opens the copy saved by an earlier download, false when it is gone.
+  /// Replaceable so tests need no files or viewer.
+  Future<bool> Function(String fileName) openSavedFile =
+      DownloadFileFormUrl.openSaved;
+
+  /// Summary files being downloaded now, by cmId. The value is the fraction
+  /// 0..1, or null while the total size is unknown (indeterminate spinner).
+  /// A file is in this map for the whole download, so a second tap is ignored.
+  final RxMap<String, double?> fileProgress = <String, double?>{}.obs;
 
   /// Saves the time spent on a lesson video, replaceable so tests skip the disk
   Future<void> Function(int seconds) addLearnedSeconds =
@@ -110,7 +123,6 @@ class CourseDetailsController extends GetxController {
     final request = ++_loadGeneration;
     _visitGeneration++;
     _videoBusy = false;
-    isLoading = false;
     // This load shows its own loading, it retires any refetch sign
     _refreshGeneration++;
     isRefreshing.value = false;
@@ -344,7 +356,8 @@ class CourseDetailsController extends GetxController {
 
   /// Download lesson summary
   Future<void> onTapLessonSummary(ActivityX activity) async {
-    if (isLoading ||
+    // One download at a time per file: a tap while it runs does nothing
+    if (fileProgress.containsKey(activity.cmId) ||
         !_ownsCourse ||
         _contentLease?.isCurrent != true ||
         course.value?.activities.contains(activity) != true) {
@@ -360,16 +373,38 @@ class CourseDetailsController extends GetxController {
       operation: () => identical(course.value, selectedCourse),
     );
 
+    final cmId = activity.cmId;
+    // null: running, the size is not known yet
+    fileProgress[cmId] = null;
     try {
-      isLoading = true;
-      final saved = await downloadFile(url, fileName);
-      if (saved) await _markFileDownloaded(doneKey, activity.cmId);
+      // A downloaded file opens again from the saved copy; when the copy is
+      // gone (the user deleted it, a reinstall) it is downloaded again
+      if (activity.isFileDownloaded && await openSavedFile(fileName)) return;
+      final saved = await downloadFile(
+        url,
+        fileName,
+        onProgress: (received, total) => _reportProgress(cmId, received, total),
+      );
+      if (saved) await _markFileDownloaded(doneKey, cmId);
     } catch (e) {
       if (!lease.isCurrent) return;
       ErrorX.console(e);
     } finally {
-      if (lease.isCurrent) isLoading = false;
+      fileProgress.remove(cmId);
     }
+  }
+
+  /// Publishes the share of a file received so far. An unknown total (-1 or 0)
+  /// keeps the indeterminate state, and only a changed whole percent is
+  /// published so the row is not rebuilt for every chunk.
+  void _reportProgress(String cmId, int received, int total) {
+    if (!fileProgress.containsKey(cmId) || total <= 0) return;
+    final fraction = (received / total).clamp(0.0, 1.0);
+    final current = fileProgress[cmId];
+    if (current != null && (current * 100).floor() == (fraction * 100).floor()) {
+      return;
+    }
+    fileProgress[cmId] = fraction;
   }
 
   /// TEMP(backend): remember the downloaded file locally and show the checkmark

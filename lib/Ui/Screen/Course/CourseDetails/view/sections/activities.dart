@@ -205,17 +205,22 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
 
       /// Check if there is a summary file
       if (activity.downloadUrl.isNotEmpty)
-        /// Lesson item summary
-        LessonItemOnAccordion(
-          icon: IconX.description,
-          name:
-              TranslationX.getLanguageCode == "ar"
-                  ? "${"Summary File".tr} ${activity.topicName}"
-                  : "${activity.topicName} ${"Summary File".tr}",
-          isCompleted: activity.isDone,
-          onTap: () {
-            controller.onTapLessonSummary(activity);
-          },
+        /// Lesson item summary: download icon, then percent, then checkmark
+        Obx(
+          () => LessonItemOnAccordion(
+            icon: IconX.description,
+            name:
+                TranslationX.getLanguageCode == "ar"
+                    ? "${"Summary File".tr} ${activity.topicName}"
+                    : "${activity.topicName} ${"Summary File".tr}",
+            isCompleted: activity.isDone,
+            showDownloadIcon: true,
+            isDownloading: controller.fileProgress.containsKey(activity.cmId),
+            downloadProgress: controller.fileProgress[activity.cmId],
+            onTap: () {
+              controller.onTapLessonSummary(activity);
+            },
+          ),
         ).fadeAnimation100,
     ];
   }
