@@ -24,7 +24,8 @@ import 'package:messengersofpeace/Ui/Screen/Test/TestQuestions/view/view.dart';
 import 'package:messengersofpeace/Ui/Screen/Test/TestResults/controller/controller.dart';
 import 'package:messengersofpeace/Ui/Screen/Test/TestResults/view/view.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
-import 'result_integrity_test.dart' show resultJson, answerJson;
+import 'result_integrity_test.dart'
+    show resultJson, answerJson, capturedFailedResult;
 
 class QuizHarness {
   final quiz = QuizX(
@@ -498,6 +499,72 @@ void main() {
         expect(find.text('Go to next lesson'), findsNothing);
         expect(find.text('Retake the test'), findsNothing);
         expect(h.finalizeCalls, 1);
+        await h.finish(tester);
+      }, h.client);
+    },
+  );
+  testWidgets(
+    'a failed attempt (real server body) shows grade, counts and per-question marks',
+    (tester) async {
+      h.results = capturedFailedResult();
+      h.attempt = QuizStartAttemptX(
+        attemptId: 'synthetic-attempt',
+        state: 'inprogress',
+        status: 'success',
+        totalQuestions: 2,
+        questions: [
+          QuestionX(
+            slot: 1,
+            id: 11,
+            number: 1,
+            text: 'First question',
+            answers: ['A', 'B'],
+          ),
+          QuestionX(
+            slot: 2,
+            id: 12,
+            number: 2,
+            text: 'Second question',
+            answers: ['C', 'D'],
+          ),
+        ],
+        correctAnswers: 0,
+        wrongAnswers: 0,
+      );
+      await http.runWithClient(() async {
+        await h.mount(tester, RouteNameX.testResults);
+        await tester.pumpAndSettle();
+        final c = Get.find<TestResultsController>();
+        expect(c.hasConfirmedOutcome, isTrue);
+        expect(c.isSuccess, isFalse);
+        expect(find.text('Test result not confirmed yet'), findsNothing);
+        expect(find.text('Retake the test'), findsOneWidget);
+        expect(find.text('Go to next lesson'), findsNothing);
+        expect(c.correctAnswers, 1);
+        expect(c.wrongAnswers, 1);
+        Finder countOf(String label) => find.descendant(
+          of: find.ancestor(
+            of: find.text(label),
+            matching: find.byType(ContainerX),
+          ),
+          matching: find.text('1'),
+        );
+        expect(countOf('Correct answers'), findsWidgets);
+        expect(countOf('Wrong answers'), findsWidgets);
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('result-question-1')),
+            matching: find.text('Correct answer'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('result-question-2')),
+            matching: find.text('Incorrect answer'),
+          ),
+          findsOneWidget,
+        );
         await h.finish(tester);
       }, h.client);
     },

@@ -31,7 +31,52 @@ Map<String, dynamic> answerJson(
   NameX.selectedAnswerIndex: selected,
 };
 
+/// Real get_quiz_result body of a failed attempt (captured from the server);
+/// only the feedback HTML is shortened.
+Map<String, dynamic> capturedFailedResult() => {
+  'status': 'ok',
+  'message': 'Result fetched successfully.',
+  'grade': '5.00',
+  'maxgrade': '10.00',
+  'gradepass': '6.00',
+  'passed': 'Failed',
+  'feedback': '<p>Try again.</p>',
+  'answers': [
+    {
+      'slot': 1,
+      'questionname': 'First question',
+      'right': true,
+      'response_summary': 'First response\n\n',
+      'selected_answer_index': 1,
+    },
+    {
+      'slot': 2,
+      'questionname': 'Second question',
+      'right': false,
+      'response_summary': 'Second response\n\n',
+      'selected_answer_index': 0,
+    },
+  ],
+};
+
 void main() {
+  test('the real server body of a failed attempt parses as failed', () {
+    final result = QuizResultX.fromJson(capturedFailedResult());
+    expect(result.passed, 'Failed');
+    expect(result.isSuccess, isFalse);
+    expect(result.answers, hasLength(2));
+    expect(result.answerForSlot(1)?.right, isTrue);
+    expect(result.answerForSlot(2)?.right, isFalse);
+  });
+  test('backend labels Passed, Failed, empty and unknown map as documented', () {
+    bool? parse(Object? passed) =>
+        QuizResultX.fromJson(resultJson(passed: passed)).isSuccess;
+    expect(parse('Passed'), isTrue);
+    expect(parse('Failed'), isFalse);
+    expect(parse(' failed '), isFalse);
+    expect(parse(''), isNull);
+    expect(parse('Pending review'), isNull);
+  });
   test('explicit Passed remains a pass', () {
     expect(QuizResultX.fromJson(resultJson()).isSuccess, isTrue);
   });
