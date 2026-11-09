@@ -1,6 +1,41 @@
 # Mopa audit state
 
-Updated: 2026-10-23 (Asia/Damascus).
+Updated: 2026-11-09 (Asia/Damascus).
+
+## Course lesson counts and progress (2026-11-09)
+
+The owner reported 2/3 and 66% on the catalog card versus 2/13 and 21% on
+CourseDetails for an 11-lesson course. The catalog used Moodle's summary
+fields and details counted every topic with content. The Arabic regression
+failed on the old card's missing 2/11 value before implementation.
+
+`b4cd48b` derives lesson progress from the detailed activities and shares it
+between the Home and All Courses cards, Enrolled Courses and CourseDetails.
+Each topic with a lesson counts once. Locked named lesson modules still count
+when Moodle withholds the video URL. A lesson finishes when its videos and
+in-topic quizzes are complete. Standalone files and the final assessment stay
+in the course content and keep their own status. An assessment-only course
+shows test progress without a lesson count. Moodle owns official course
+completion and unlocks. Downloads do not change lesson progress.
+
+The mobile guide documents single-course details. Mounted open cards request
+those details with at most four concurrent reads, deduplicate same-course
+requests and reuse up to 64 recent, session- and locale-scoped summaries. An
+owned detail refresh replaces older catalog results. Locked cards and failed
+reads omit unverified counts. The guide provides no explicit type for an
+activity with all links and quiz ID withheld, so the established named-module
+rule still applies. A future backend contract could include an explicit module
+type and stable lesson totals plus completed lessons in the catalog response.
+The older request to count every topic in BACKEND-REQUESTS.md section 5 is
+superseded by the owner's lesson-count clarification.
+
+The Arabic widget flow shows 2/11 at 18% in the card and details, then 3/11 at
+27% in both. It still shows the final assessment and the file in the content.
+Focused verification passed 69 checks. The isolated Flutter 3.47.7 suite
+passed 1,019 checks with the committed lock. Analysis retains the existing
+warning in the quiz results controller. CI's Flutter 3.41.6 requests five SDK
+package changes when enforcing the current lock locally. Remote CI, native
+interactive checks and the live Moodle account remain unverified.
 
 ## Account deletion and version format (2026-11-09)
 
