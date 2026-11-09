@@ -44,6 +44,20 @@ Both Arabic stages were rendered locally in the light and dark themes.
 All 1,019 tests passed in the isolated checkout, with 14 focused checks passing
 again after test cleanup. Analysis retains the existing quiz result warning.
 
+The owner asked for the actual verification controls and less vertical space.
+`0c9b79f` shares the verification button and resend control between account
+verification and deletion. Deletion uses the standard secondary support button,
+reduces the consent spacing, and sets a smaller top inset in `AuthLayoutX`.
+The displayed code validity and resend countdowns now start when a successful
+response opens the code step. The server remains authoritative for the code's
+actual expiry. Failed requests retain a local resend cooldown without exposing
+an OTP countdown on the consent screen.
+`45887e1` adds a 12-second response-delay regression. It observes no countdown
+before the code step, then a full `05:00` for validity and `01:00` for resend.
+All 1,020 tests passed locally. All 15 focused tests passed again after the
+final timer formatting change. The Arabic layouts were rendered in both app
+themes. Analysis reports the existing quiz result warning.
+
 ## Account version footer follow-up (2026-11-09)
 
 The owner reported the footer missing and specified it must immediately follow
