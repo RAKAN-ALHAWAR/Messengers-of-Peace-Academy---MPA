@@ -2,6 +2,22 @@
 
 Updated: 2026-10-23 (Asia/Damascus).
 
+## Quiz attempt resume (2026-11-09)
+
+Owner reported recovery on re-entering unfinished exams, including attempts
+with no answer saved. The questions controller previously blocked all
+`inprogress` attempts before requesting their data. Implemented in `93466bd`
+on `main`: preflight an active attempt and its original start time, require a
+matching `existing` result, then reconcile the Moodle summary by question slot.
+The screen opens at the first unsaved question and never replays saved slots.
+Partial or ambiguous summaries, autosaved drafts, changed attempt IDs, elapsed
+local deadlines, and attempts with no unanswered slot remain recovery cases.
+The symptom reproduced before the fix and local widget checks cover blank and
+partially saved attempts, original timing, and fail-closed cases. Focused
+checks passed 43 tests, and the isolated suite passed all 1,005. Static
+analysis retains the existing warning in the quiz results controller. No live
+Moodle or native device verification was performed.
+
 ## Android build tool compatibility (2026-11-09)
 
 Owner approved applying the tested Android toolchain fix to local `main`.

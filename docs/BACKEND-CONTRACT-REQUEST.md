@@ -74,7 +74,8 @@ These are observations of app parsing, not a guarantee of backend responses.
 | mark_page_completed | userid/cmid | message, followed by course refetch |
 | get_quiz_info | userid/quizid | quiz_name/description/timelimit/attempts_allowed/last_attempt_status/can_start/total_questions/grade_total/grade_to_pass |
 | start_or_get_quiz_attempt | userid/quizid | attemptid/state/status/total_questions/questions |
-| mod_quiz_get_user_attempts | userid/quizid/status=all | attempts, state=inprogress, timestart Unix seconds |
+| mod_quiz_get_user_attempts | userid/quizid/status=all | attempts, id, state=inprogress, timestart Unix seconds |
+| mod_quiz_get_attempt_summary | attemptid | questions with slot, stateclass, and hasautosavedstep |
 | submit_quiz_question_answer | userid/quizid/attemptid/slot | answer[0][key]=answer; answer[0][value]=array-index string |
 | submit_quiz_attempt | userid/attemptid | Remote status/acknowledgement validation, optional message; authoritative success/error/idempotence contract still required |
 | get_quiz_result | userid/quizid | status/message/grade/maxgrade/gradepass/passed/feedback/answers |
@@ -122,8 +123,13 @@ The client now prevents concurrent answer save/finalization and enters locked
 recovery when delivery is uncertain; a timeout or late acknowledgement is not
 proof the server rejected the mutation. Supply a read-only reconciliation
 operation keyed by attempt/slot and an idempotency rule before automatic retry.
-Results preserve missing answer positions and reject ambiguous pass labels;
-resumed attempts without saved answers/current position remain recovery-only.
+Results preserve missing answer positions and reject ambiguous pass labels.
+As of 2026-11-09, a live attempt can resume when the core Moodle summary confirms
+a saved prefix followed by unanswered slots. Unknown question states and drafts
+remain recovery-only. The app also needs a resume-only question read keyed by
+attempt ID to eliminate the race where the existing start-or-get function could
+create a new attempt if the old one closes between requests. Verify both
+existing and answered payloads against the current mobile service.
 The existing five-second route-dwell completion trigger and120-second fallback
 for zero quiz time limit are retained pending confirmed policy, not endorsed as
 actual watched minutes or an authoritative server deadline.
