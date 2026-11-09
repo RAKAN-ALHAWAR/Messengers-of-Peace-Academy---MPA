@@ -79,29 +79,30 @@ class TestQuestionsView extends GetView<TestQuestionsController> {
                             fontWeight: FontWeight.w600,
                             color: Theme.of(context).colorScheme.primary,
                           ),
-                          ContainerX(
-                            radius: 100,
-                            color: ColorX.yellow.shade700,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
+                          if (controller.quiz.hasTimeLimit)
+                            ContainerX(
+                              radius: 100,
+                              color: ColorX.yellow.shade700,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    IconX.alarm,
+                                    color: Colors.black,
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 6),
+                                  TextX(
+                                    controller.timeRemaining.value,
+                                    style: TextStyleX.labelLarge,
+                                    color: Colors.black,
+                                  ),
+                                ],
+                              ),
                             ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  IconX.alarm,
-                                  color: Colors.black,
-                                  size: 20,
-                                ),
-                                SizedBox(width: 6),
-                                TextX(
-                                  controller.timeRemaining.value,
-                                  style: TextStyleX.labelLarge,
-                                  color: Colors.black,
-                                ),
-                              ],
-                            ),
-                          ),
                         ],
                       ).fadeAnimation150,
                       SizedBox(height: 15),
