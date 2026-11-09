@@ -29,10 +29,9 @@
 
 ### 2. حذف الحساب (شرط من App Store)
 
-- **المشكلة:** ما في أي دالة بين الـ 163 دالة المتاحة للتوكن بتحذف الحساب أو بتطلب حذفه.
-- **الحل المؤقت بالتطبيق:** زر «حذف الحساب» بيفتح صفحة طلب حذف البيانات بالموقع `admin/tool/dataprivacy/createdatarequest.php`.
-- **القرار (صاحب المشروع، 2026-10-28):** الحذف رح يكون عبر نقطة API، مش عبر فتح صفحة خارجية. فتح الصفحة حل مؤقت لحتى تجهز النقطة.
-- **المطلوب:** دالة ويب سيرفس (مثلاً `local_otp_registration_delete_account`) متاحة للتوكن، بتحذف حساب صاحب التوكن نفسه فقط، وترجع حالة واضحة (تم الحذف، أو تم تسجيل الطلب). لما تجهز، بدنا اسمها وشكل الطلب والرد ورموز الأخطاء، والتطبيق بيستبدل فتح الصفحة باستدعائها.
+- The supplied mobile account deletion guide reports these `mobapps` functions as enabled: `local_user_anonymizer_request_self_anonymisation` and `local_user_anonymizer_confirm_self_anonymisation`.
+- Flutter now requests an email code after explicit consent, then confirms with the code and the same session token. Local integration tests use synthetic Moodle responses.
+- Service acceptance still requires a separately authorized disposable account to verify email delivery, the deletion response, and token invalidation. The guide also requires moving session tokens to OS-protected storage, which is pending an owner decision on the separate migration.
 
 ### 3. اختبار القبول: الإكمال وإعادة المحاولة
 

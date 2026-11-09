@@ -2,6 +2,31 @@
 
 Updated: 2026-10-23 (Asia/Damascus).
 
+## Account deletion and version format (2026-11-09)
+
+The owner asked to use the `version + build` format below Delete account and
+to connect that button to the supplied mobile integration guide. `e3d3868`
+keeps dynamic version metadata and renders the Arabic build digits. All seven
+profile footer checks passed in the isolated checkout.
+
+`0928dab` opens the explanation and asks for consent before sending an email
+code. Only the final confirmation sends the deletion request. The two requests
+use a dedicated HTTPS POST transport with the session token in the body. A
+lost or unreadable confirmation is reported as uncertain and is never retried
+automatically. Confirmed success clears the account's local session and data
+and closes the protected routes. `7493391` separates new course downloads by
+account so deletion can cancel and remove the matching files. Legacy shared
+exports have no reliable ownership record and are retained.
+
+All 1,019 tests passed in the isolated checkout. The 11 deletion checks passed
+again after a lint-only fix. They cover both API steps, the signed-out route
+guard, owner-only cleanup, wrong and expired codes, duplicate presses, a
+changed session, and a narrow layout with larger system text and a keyboard.
+Analysis reports the pre-existing quiz result controller warning. Native
+device checks, screen-reader runs, email delivery and the live deletion API
+were not exercised. No real account was used. The guide's OS-protected token
+storage requirement is pending a separate session migration decision.
+
 ## Account version footer follow-up (2026-11-09)
 
 The owner reported the footer missing and specified it must immediately follow
