@@ -40,7 +40,7 @@ const Map<String, String> phBasic = {
   "OR": "OR",
   "or": "or",
   "Logout": "Logout",
-  "Version @version · Build @build": "Bersyon @version · Build @build",
+  "Version @release": "Bersyon @release",
   "Ok": "Ok",
   "Cancel": "Cancel",
   "Gender": "Gender",

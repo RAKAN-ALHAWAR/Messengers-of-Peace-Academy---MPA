@@ -28,6 +28,13 @@ class ProfileDetailsView extends GetView<ProfileDetailsController> {
         /// Data state
         child: (_) {
           final release = InfoUtilX.displayRelease;
+          final build = release?.buildNumber;
+          final displayBuild =
+              build == null || TranslationX.getLanguageCode != 'ar'
+              ? build
+              : build.replaceAllMapped(RegExp(r'[0-9]'), (digit) {
+                  return '٠١٢٣٤٥٦٧٨٩'[int.parse(digit[0]!)];
+                });
           return SingleChildScrollView(
             child: Column(
               children: [
@@ -198,9 +205,9 @@ class ProfileDetailsView extends GetView<ProfileDetailsController> {
                         Padding(
                           padding: const EdgeInsets.only(top: 12),
                           child: Text(
-                            'Version @version · Build @build'.trParams({
-                              'version': release.version,
-                              'build': release.buildNumber,
+                            'Version @release'.trParams({
+                              'release':
+                                  '\u2066${release.version} + $displayBuild\u2069',
                             }),
                             textAlign: TextAlign.center,
                             style: TextStyleX.bodySmall.copyWith(

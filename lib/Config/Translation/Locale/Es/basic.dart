@@ -40,7 +40,7 @@ const Map<String, String> esBasic = {
   "OR": "OR",
   "or": "or",
   "Logout": "Logout",
-  "Version @version · Build @build": "Versión @version · Compilación @build",
+  "Version @release": "Versión @release",
   "Ok": "Ok",
   "Cancel": "Cancel",
   "Gender": "Gender",

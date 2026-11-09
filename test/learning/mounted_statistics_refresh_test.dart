@@ -139,7 +139,9 @@ void main() {
           await tester.pumpAndSettle();
           final version = hasNativeMetadata ? '2.4.9' : bundledVersion[0];
           final build = hasNativeMetadata ? '73' : bundledVersion[1];
-          final footer = find.text('الإصدار $version · رقم البناء $build');
+          final arabicBuild = build.replaceAllMapped(RegExp(r'[0-9]'), (digit) =>
+              '٠١٢٣٤٥٦٧٨٩'[int.parse(digit[0]!)]);
+          final footer = find.text('الإصدار \u2066$version + $arabicBuild\u2069');
           final deleteAccount = find.text('حذف الحساب');
           expect(footer, findsOneWidget);
           expect(deleteAccount, findsOneWidget);

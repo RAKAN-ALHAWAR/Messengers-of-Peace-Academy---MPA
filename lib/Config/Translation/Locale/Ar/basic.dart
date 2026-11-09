@@ -40,7 +40,7 @@ const Map<String, String> arBasic = {
   'OR': 'أو',
   'or': 'أو',
   'Logout': 'تسجيل الخروج',
-  'Version @version · Build @build': 'الإصدار @version · رقم البناء @build',
+  'Version @release': 'الإصدار @release',
   'Ok': 'نعم',
   'Cancel': 'إلغاء',
   'Gender': 'الجنس',
