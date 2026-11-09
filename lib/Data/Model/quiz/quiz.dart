@@ -11,7 +11,8 @@ class QuizAttemptStatusX {
 class QuizX {
   final String name;
   final String description;
-  int timelimit;
+  final int timelimit;
+  bool get hasTimeLimit => timelimit > 0;
   final int attemptsAllowed;
   final String lastAttemptStatus;
   final bool canStart;
@@ -34,12 +35,10 @@ class QuizX {
     return ModelUtilX.checkFromJson(
       json,
       (json) {
-        int timelimit = json[NameX.timelimit].toIntX;
-        timelimit = timelimit == 0 ? 120 : timelimit;
         return QuizX(
           name: json[NameX.quizName].toStrX,
           description: json[NameX.quizDescription].toStrX,
-          timelimit: timelimit,
+          timelimit: json[NameX.timelimit].toIntX,
           attemptsAllowed: json[NameX.attemptsAllowed].toIntX,
           lastAttemptStatus: json[NameX.lastAttemptStatus].toStrX,
           canStart: json[NameX.canStart].toBoolX,

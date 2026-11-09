@@ -21,10 +21,11 @@ class TestQuestionsController extends GetxController {
   late QuizStartAttemptX quizStartAttempt;
   List<int?> selectedAnswers = [];
   int currentQuestionIndex = 0;
-  late RxString timeRemaining =
-      FunctionX.formatDuration(Duration(seconds: quiz.timelimit)).obs;
+  static const _secondsPerQuestion = 60;
+  final timeRemaining = ''.obs;
   final selectedAnswer = Rxn<int>();
-  late DateTime _endTime;
+  DateTime? _serverDeadline;
+  int _budgetSeconds = 0;
   Timer? _timer;
   int remainingTime = 0;
   final isLoading = false.obs;
@@ -61,8 +62,7 @@ class TestQuestionsController extends GetxController {
           : null;
       if (!lease.isCurrent) return;
       if (reportedInProgress &&
-          (previous == null ||
-              !_deadline(previous.startedAt).isAfter(DateTime.now()))) {
+          (previous == null || _hasExpired(previous.startedAt))) {
         _needsRecovery.value = true;
         return;
       }
@@ -77,12 +77,13 @@ class TestQuestionsController extends GetxController {
       if (attempt.state != QuizAttemptStatusX.inProgress ||
           questions.isEmpty ||
           attempt.totalQuestions != questions.length ||
+          (!quiz.hasTimeLimit && questions.length != quiz.totalQuestions) ||
           questions.any((q) => q.answers.isEmpty) ||
           questions.map((q) => q.slot).toSet().length != questions.length) {
         _needsRecovery.value = true;
         return;
       }
-      final DateTime started;
+      DateTime? started;
       if (reportedInProgress || attempt.status == 'existing') {
         previous ??= await DatabaseX.getQuizInProgressAttempt(quizId: quizId);
         if (!lease.isCurrent) return;
@@ -90,7 +91,7 @@ class TestQuestionsController extends GetxController {
             previous.id != attempt.attemptId ||
             attempt.status != 'existing' ||
             questions.length != quiz.totalQuestions ||
-            !_deadline(previous.startedAt).isAfter(DateTime.now())) {
+            _hasExpired(previous.startedAt)) {
           _needsRecovery.value = true;
           return;
         }
@@ -99,21 +100,29 @@ class TestQuestionsController extends GetxController {
         );
         if (!lease.isCurrent) return;
         final nextIndex = _nextUnansweredIndex(questions, states);
-        if (nextIndex == null ||
-            !_deadline(previous.startedAt).isAfter(DateTime.now())) {
+        if (nextIndex == null || _hasExpired(previous.startedAt)) {
           _needsRecovery.value = true;
           return;
         }
         currentQuestionIndex = nextIndex;
         started = previous.startedAt;
-      } else {
+      } else if (quiz.hasTimeLimit) {
         started = await _attemptStartTime();
         if (!lease.isCurrent) return;
       }
       selectedAnswers = List<int?>.filled(questions.length, null);
-      _endTime = _deadline(started);
+      final deadline = started == null ? null : _deadline(started);
+      _serverDeadline = deadline;
+      // Untimed Moodle quizzes get one shared budget for the questions left.
+      // Reopening starts a fresh local budget after server reconciliation.
+      _budgetSeconds = quiz.hasTimeLimit
+          ? quiz.timelimit
+          : (questions.length - currentQuestionIndex) * _secondsPerQuestion;
       _ready = true;
-      _updateRemaining(_endTime.difference(DateTime.now()));
+      _updateRemaining(
+        deadline?.difference(DateTime.now()) ??
+            Duration(seconds: _budgetSeconds),
+      );
       if (!_finishRequested) startTimer();
     } catch (error) {
       if (!lease.isCurrent) return;
@@ -128,8 +137,11 @@ class TestQuestionsController extends GetxController {
     }
   }
 
-  DateTime _deadline(DateTime started) =>
-      started.add(Duration(seconds: quiz.timelimit));
+  DateTime? _deadline(DateTime started) =>
+      quiz.hasTimeLimit ? started.add(Duration(seconds: quiz.timelimit)) : null;
+
+  bool _hasExpired(DateTime started) =>
+      _deadline(started)?.isAfter(DateTime.now()) == false;
 
   /// The quiz only advances forward. Do not replay a saved slot or guess
   /// selections when a server summary cannot establish that sequence.
@@ -240,8 +252,11 @@ class TestQuestionsController extends GetxController {
       _timer?.cancel();
       return;
     }
-    remainingTime = remaining.inSeconds;
-    if (remaining.isNegative) {
+    final usesLocalBudget = _serverDeadline == null;
+    remainingTime = usesLocalBudget
+        ? remaining.inSeconds.clamp(0, _budgetSeconds)
+        : remaining.inSeconds;
+    if (remaining.isNegative || (usesLocalBudget && remainingTime == 0)) {
       submitQuiz();
     } else {
       timeRemaining.value = FunctionX.formatDuration(remaining);
@@ -253,10 +268,14 @@ class TestQuestionsController extends GetxController {
       return;
     }
     _timer?.cancel();
-    _timer = Timer.periodic(
-      const Duration(seconds: 1),
-      (_) => _updateRemaining(_endTime.difference(DateTime.now())),
-    );
+    final deadline = _serverDeadline;
+    final secondsAtStart = remainingTime;
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _updateRemaining(
+        deadline?.difference(DateTime.now()) ??
+            Duration(seconds: secondsAtStart - timer.tick),
+      );
+    });
   }
 
   void submitQuiz() {
@@ -280,7 +299,7 @@ class TestQuestionsController extends GetxController {
         quizId,
         quizStartAttempt,
         List<int?>.of(selectedAnswers),
-        quiz.timelimit - remainingTime,
+        _budgetSeconds - remainingTime,
         courseId,
       ],
     );

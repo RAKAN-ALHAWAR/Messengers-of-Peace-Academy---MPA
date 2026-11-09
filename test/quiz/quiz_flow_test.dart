@@ -386,6 +386,79 @@ void main() {
     });
   }
 
+  for (final savedCount in <int?>[null, 0, 1]) {
+    testWidgets('fallback quiz has a shared budget, saved count: $savedCount', (
+      tester,
+    ) async {
+      final info = h.quiz.toJson()..[NameX.timelimit] = 0;
+      if (savedCount != null) {
+        info[NameX.lastAttemptStatus] = QuizAttemptStatusX.inProgress;
+        h.onStart = () async =>
+            h.jsonResponse(h.attempt.toJson()..[NameX.status] = 'existing');
+        h.savedQuestionStates = {
+          2: savedCount == 1 ? 'answersaved' : 'notyetanswered',
+          7: 'notyetanswered',
+        };
+      }
+      h.startedAt = DateTime.now().subtract(const Duration(hours: 1));
+      h.onInfo = () async => h.jsonResponse(info);
+      await http.runWithClient(() async {
+        await h.mount(tester, RouteNameX.testInfo);
+        await tester.pumpAndSettle();
+        Get.find<TestInfoController>().onStartTest();
+        await tester.pumpAndSettle();
+        final c = Get.find<TestQuestionsController>();
+        final budget = savedCount == 1 ? 60 : 120;
+        expect(c.needsRecovery, isFalse);
+        expect(c.currentQuestionIndex, savedCount ?? 0);
+        final remainingAtFirstFrame = c.remainingTime;
+        expect(remainingAtFirstFrame, inInclusiveRange(budget - 1, budget));
+        expect(find.byIcon(IconX.alarm), findsOneWidget);
+        expect(h.startTimeCalls, savedCount == null ? 0 : 1);
+        expect(h.finalizeCalls, 0);
+        await tester.pump(const Duration(seconds: 10));
+        expect(c.remainingTime, remainingAtFirstFrame - 10);
+        if (savedCount != 1) {
+          c.onChangeAnswer(0);
+          await c.onNextQuestion();
+          expect(c.currentQuestionIndex, 1);
+          expect(c.remainingTime, remainingAtFirstFrame - 10);
+        }
+        await tester.pump(Duration(seconds: remainingAtFirstFrame - 11));
+        expect(c.remainingTime, 1);
+        expect(h.finalizeCalls, 0);
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pumpAndSettle();
+        expect(h.finalizeCalls, 1);
+        expect(h.answerCalls, savedCount == 1 ? 0 : 1);
+        expect(Get.find<TestResultsController>().timeTaken, budget);
+        await h.finish(tester);
+      }, h.client);
+    });
+  }
+
+  testWidgets('fallback timing requires the complete question list', (
+    tester,
+  ) async {
+    final info = h.quiz.toJson()..[NameX.timelimit] = 0;
+    h.onInfo = () async => h.jsonResponse(info);
+    h.onStart = () async => h.jsonResponse(
+      h.attempt.toJson()
+        ..[NameX.questions] = [h.attempt.questions.first.toJson()]
+        ..[NameX.totalQuestions] = 1,
+    );
+    await http.runWithClient(() async {
+      await h.mount(tester, RouteNameX.testInfo);
+      await tester.pumpAndSettle();
+      Get.find<TestInfoController>().onStartTest();
+      await tester.pumpAndSettle();
+      expect(Get.find<TestQuestionsController>().needsRecovery, isTrue);
+      await tester.pump(const Duration(minutes: 2));
+      expect(h.finalizeCalls, 0);
+      await h.finish(tester);
+    }, h.client);
+  });
+
   testWidgets('an incomplete resume summary sends no answer or finalization', (
     tester,
   ) async {
