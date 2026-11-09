@@ -213,6 +213,7 @@ const Map<String, String> phGeneral = {
   "File saved to Downloads": "Na-save ang file sa Downloads",
   "File saved to Documents": "Na-save ang file sa Documents",
   "Certificate": "Certificate",
+  "No next points target": "Walang susunod na target na puntos",
   "My current points": "My current points",
   "Your courses at current level": "Your courses at current level",
   "View All": "View All",

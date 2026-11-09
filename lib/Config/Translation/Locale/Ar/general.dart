@@ -206,6 +206,7 @@ const Map<String, String> arGeneral = {
   "File saved to Downloads": "تم حفظ الملف في مجلد التحميلات",
   "File saved to Documents": "تم حفظ الملف في مجلد المستندات",
   "Certificate": "الشهادة",
+  "No next points target": "لا يوجد هدف نقاط تالٍ",
   "My current points": "نقاطي الحالية",
   "Your courses at current level": "دوراتك في المستوى الحالي",
   "View All": "عرض الكل",

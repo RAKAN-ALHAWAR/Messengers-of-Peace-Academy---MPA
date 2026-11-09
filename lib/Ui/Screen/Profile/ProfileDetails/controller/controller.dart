@@ -115,14 +115,7 @@ class ProfileDetailsController extends GetxController {
         _snapshotInitialized = true;
       }
       app.user.value = loadedUser;
-      currentBadge.value =
-          badges.isEmpty
-              ? null
-              : badges.firstWhere(
-                (badge) =>
-                    badge.requiredPoints > loadedUser.points && !badge.earned,
-                orElse: () => badges.last,
-              );
+      currentBadge.value = BadgeX.nextPointsTarget(badges, loadedUser.points);
       lastUpdate = DateTime.now();
       _loadedKey = key;
       isInit = true;

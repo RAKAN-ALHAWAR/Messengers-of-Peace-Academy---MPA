@@ -10,10 +10,15 @@ import 'gradient_progress_bar.dart';
 class PointsCardX extends StatelessWidget {
   const PointsCardX({super.key, required this.points, required this.badge});
   final int points;
-  final BadgeX badge;
+  final BadgeX? badge;
 
   @override
   Widget build(BuildContext context) {
+    final target = badge;
+    final hasTarget = target != null && target.hasPointsTarget;
+    final targetPoints = hasTarget ? target.requiredPoints : 0;
+    final progressPoints = points.clamp(0, targetPoints);
+
     return Container(
       decoration: BoxDecoration(
         gradient: ColorX.goldGradient,
@@ -34,7 +39,7 @@ class PointsCardX extends StatelessWidget {
           Container(
             // Keep the original compact geometry while allowing full scaled
             // translations and long badge names to determine the card height.
-            constraints: const BoxConstraints(minHeight: 160),
+            constraints: BoxConstraints(minHeight: hasTarget ? 160 : 0),
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Column(
@@ -51,29 +56,50 @@ class PointsCardX extends StatelessWidget {
                     ),
                     SizedBox(height: 6),
                     TextX(
-                      "${"You have".tr} ${FunctionX.formatLargeNumber(badge.requiredPoints - points)} ${"points left to get".tr} ${badge.name}",
+                      hasTarget
+                          ? "${"You have".tr} ${FunctionX.formatLargeNumber(targetPoints - progressPoints)} ${"points left to get".tr} ${target.name}"
+                          : "No next points target",
                       style: TextStyleX.labelMedium,
                       color: ColorX.yellow.shade900,
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
-                GlassX(
-                  isLight: true,
-                  opacity: 0.35,
-                  radius: BorderRadius.circular(100),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    child: GradientProgressBar(
-                      value: points / badge.requiredPoints,
+                if (hasTarget) ...[
+                  GlassX(
+                    isLight: true,
+                    opacity: 0.35,
+                    radius: BorderRadius.circular(100),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      child: GradientProgressBar(
+                        value: progressPoints / targetPoints,
+                      ),
                     ),
+                  ).marginSymmetric(vertical: 4),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 4,
+                    children: [
+                      TextX(
+                        '${FunctionX.formatLargeNumber(progressPoints)}/${FunctionX.formatLargeNumber(targetPoints)}',
+                        textDirection: TextDirection.ltr,
+                        style: TextStyleX.labelMedium,
+                        fontWeight: FontWeight.w600,
+                        color: ColorX.yellow.shade900,
+                      ),
+                      TextX(
+                        'points',
+                        style: TextStyleX.labelMedium,
+                        fontWeight: FontWeight.w600,
+                        color: ColorX.yellow.shade900,
+                      ),
+                    ],
                   ),
-                ).marginSymmetric(vertical: 4),
-                TextX(
-                  "${FunctionX.formatLargeNumber(badge.requiredPoints)}/${FunctionX.formatLargeNumber(points)} ${"points".tr}",
-                  style: TextStyleX.labelMedium,
-                  fontWeight: FontWeight.w600,
-                  color: ColorX.yellow.shade900,
-                ),
+                ],
               ],
             ),
           ),

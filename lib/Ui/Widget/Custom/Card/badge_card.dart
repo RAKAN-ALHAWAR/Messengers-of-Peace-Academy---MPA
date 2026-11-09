@@ -62,14 +62,16 @@ class BadgeCardX extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(height: 4),
-          FittedBox(
-            child: TextX(
-              "${"Required".tr} ${FunctionX.formatLargeNumber(badge.requiredPoints)} ${"points".tr}",
-              style: TextStyleX.labelMedium,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+          if (badge.hasPointsTarget) ...[
+            const SizedBox(height: 4),
+            FittedBox(
+              child: TextX(
+                "${"Required".tr} ${FunctionX.formatLargeNumber(badge.requiredPoints)} ${"points".tr}",
+                style: TextStyleX.labelMedium,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

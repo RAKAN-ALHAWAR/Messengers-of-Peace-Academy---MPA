@@ -369,22 +369,28 @@ void main() {
   );
 
   test(
-    'existing badge threshold and last-item fallback selection is unchanged',
+    'badge targets skip earned and unset thresholds without a last-item fallback',
     () async {
       final c = Get.put<MyAchievementsController>(MyAchievementsController());
+      app.user.value.points = -1;
       await http.runWithClient(
         () async {
           await c.getData();
           expect(c.currentBadge?.name, 'first');
           app.user.value.points = 100;
           await c.getData();
-          expect(c.currentBadge?.name, 'last');
+          expect(c.currentBadge, isNull);
         },
         () => MockClient(
           (request) async => response(
             request.url.queryParameters['wsfunction'] ==
                     function(DBEndPointX.postGetBadges)
-                ? [badge('first'), badge('last')]
+                ? [
+                    {...badge('unset'), NameX.requiredPoints: 0},
+                    {...badge('earned'), NameX.earned: true},
+                    badge('first'),
+                    badge('last'),
+                  ]
                 : [point('history')],
           ),
         ),

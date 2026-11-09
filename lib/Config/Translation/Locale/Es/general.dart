@@ -215,6 +215,7 @@ const Map<String, String> esGeneral = {
   "File saved to Downloads": "Archivo guardado en Descargas",
   "File saved to Documents": "Archivo guardado en Documentos",
   "Certificate": "Certificado",
+  "No next points target": "No hay un próximo objetivo de puntos",
   "My current points": "Mis puntos actuales",
   "Your courses at current level": "Tus cursos en el nivel actual",
   "View All": "Ver todo",

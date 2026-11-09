@@ -9,7 +9,7 @@ import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:messengersofpeace/Core/core.dart';
@@ -404,6 +404,63 @@ void main() {
     },
   );
 
+  for (final surface in ['profile', 'achievements']) {
+    testWidgets('$surface keeps the balance with no configured points goal', (
+      tester,
+    ) async {
+      viewport(tester);
+      final user = {
+        NameX.id: 'synthetic-A',
+        NameX.username: 'fixture',
+        NameX.email: 'test@example.invalid',
+        NameX.points: 7,
+      };
+      Get.find<AppControllerX>().user.value = UserX.fromJson(user);
+      await http.runWithClient(() async {
+        final Widget screen;
+        if (surface == 'profile') {
+          final controller = Get.put(ProfileDetailsController());
+          await controller.getData();
+          screen = const Scaffold(body: ProfileDetailsUnderAppbarSection());
+        } else {
+          screen = view('history');
+        }
+        await tester.pumpWidget(host(screen, locale: 'ar'));
+        await tester.pumpAndSettle();
+        expect(find.text('نقاطي الحالية 7'), findsOneWidget);
+        expect(find.text('لا يوجد هدف نقاط تالٍ'), findsOneWidget);
+        expect(find.textContaining('-7'), findsNothing);
+        expect(find.textContaining('0/7'), findsNothing);
+        expect(find.byType(GradientProgressBar), findsNothing);
+        expect(find.textContaining('مطلوب 0'), findsNothing);
+        await tester.pumpWidget(const SizedBox());
+      }, () => MockClient((request) async {
+        final method = request.url.queryParameters['wsfunction'];
+        if (method == function(DBEndPointX.postGetUser)) return response(user);
+        if (method == function(DBEndPointX.postGetUserStatistics)) {
+          return response({
+            NameX.points: 7,
+            NameX.completedCourses: 0,
+            NameX.minutes: 0,
+            NameX.certificates: 0,
+            NameX.quizzes: 0,
+          });
+        }
+        if (method == function(DBEndPointX.postGetBadges)) {
+          return response([
+            {
+              ...badge(0),
+              NameX.badgeName: 'قبعة التخرج',
+              NameX.requiredPoints: 0,
+              NameX.earned: false,
+            },
+          ]);
+        }
+        return response([]);
+      }));
+    });
+  }
+
   for (final locale in ['ar', 'en', 'es', 'fil']) {
     testWidgets('profile points counterpart fits $locale at320 and2x', (
       tester,
@@ -442,12 +499,12 @@ void main() {
     });
   }
   testWidgets(
-    'points card keeps normal height and existing clamped progress controls',
+    'points card gives a finite bar and ordered counter only for a valid goal',
     (tester) async {
       viewport(tester);
       final missingThreshold = {...badge(0)}..remove(NameX.requiredPoints);
       expect(() => BadgeX.fromJson(missingThreshold), throwsA(isNotNull));
-      for (final values in [(0, 0), (10, 0), (20, 10), (5, 10)]) {
+      for (final values in [(0, 0), (7, 0), (7, -1), (20, 10), (7, 10), (-3, 10)]) {
         final model = BadgeX.fromJson({
           ...badge(0),
           NameX.requiredPoints: values.$2,
@@ -459,22 +516,52 @@ void main() {
                 child: PointsCardX(points: values.$1, badge: model),
               ),
             ),
+            locale: 'ar',
           ),
         );
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
+        if (values.$2 <= 0) {
+          expect(find.byType(GradientProgressBar), findsNothing);
+          expect(find.text('لا يوجد هدف نقاط تالٍ'), findsOneWidget);
+          continue;
+        }
         expect(tester.getSize(find.byType(PointsCardX)).height, 160);
         final bar = find.descendant(
           of: find.byType(GradientProgressBar),
           matching: find.byType(FractionallySizedBox),
         );
-        final factor = tester.widget<FractionallySizedBox>(bar).widthFactor!;
-        expect(factor.isFinite, isTrue);
-        expect(factor, values.$2 == 0 || values.$1 > values.$2 ? 1 : 0.5);
+        final shownPoints = values.$1.clamp(0, values.$2);
+        final count = find.text('$shownPoints/${values.$2}');
+        expect(tester.widget<Text>(count).textDirection, TextDirection.ltr);
+        expect(
+          tester.widget<FractionallySizedBox>(bar).widthFactor,
+          shownPoints / values.$2,
+        );
       }
       await tester.pumpWidget(const SizedBox());
     },
   );
+  testWidgets('badge catalog shows the description without a zero target', (
+    tester,
+  ) async {
+    viewport(tester);
+    await http.runWithClient(() async {
+      await tester.pumpWidget(host(view('badges'), locale: 'ar'));
+      await tester.pumpAndSettle();
+      expect(find.text('قبعة التخرج'), findsOneWidget);
+      expect(find.text('وصف المكافأة'), findsOneWidget);
+      expect(find.textContaining('يُمنح عند الوصول إلى 0'), findsNothing);
+    }, () => MockClient((_) async => response([
+      {
+        ...badge(0),
+        NameX.badgeName: 'قبعة التخرج',
+        NameX.description: 'وصف المكافأة',
+        NameX.requiredPoints: 0,
+        NameX.earned: false,
+      },
+    ])));
+  });
   for (final kind in ['badges', 'catalog']) {
     for (final locale in ['ar', 'en', 'es', 'fil']) {
       testWidgets('$kind keeps full long text at320 and2x $locale', (

@@ -47,10 +47,10 @@ class MyAchievementsView extends GetView<MyAchievementsController> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (controller.currentBadge != null)
+                        if (controller.points case final points?)
                           PointsCardX(
-                            points: controller.app.user.value.points,
-                            badge: controller.currentBadge!,
+                            points: points,
+                            badge: controller.currentBadge,
                           ).fadeAnimation150.marginOnly(bottom: 24),
                         const MyAchievementsBadgesSection(),
                         const SizedBox(height: 16),

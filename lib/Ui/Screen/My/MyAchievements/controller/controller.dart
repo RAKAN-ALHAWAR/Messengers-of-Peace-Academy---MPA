@@ -21,6 +21,7 @@ class MyAchievementsController extends GetxController {
 
   /// Current badge
   BadgeX? currentBadge;
+  int? points;
 
   /// All badges
   List<BadgeX> badges = [];
@@ -62,18 +63,11 @@ class MyAchievementsController extends GetxController {
       final loadedPoints = await DatabaseX.getMyActivityPoints();
       if (!lease.isCurrent) return;
       /// Publish one coherent snapshot of the owner
-      final selectedBadge =
-          loadedBadges.isEmpty
-              ? null
-              : loadedBadges.firstWhere(
-                (badge) =>
-                    badge.requiredPoints > app.user.value.points &&
-                    !badge.earned,
-                orElse: () => loadedBadges.last,
-              );
+      final balance = app.user.value.points;
       badges = loadedBadges;
       myActivityPoints = loadedPoints;
-      currentBadge = selectedBadge;
+      currentBadge = BadgeX.nextPointsTarget(loadedBadges, balance);
+      points = balance;
     } catch (_) {
       /// Only a current failure reaches the FutureBuilder
       if (!lease.isCurrent) return;
@@ -86,6 +80,7 @@ class MyAchievementsController extends GetxController {
     badges = [];
     myActivityPoints = [];
     currentBadge = null;
+    points = null;
   }
 
   /// Group activity points by month

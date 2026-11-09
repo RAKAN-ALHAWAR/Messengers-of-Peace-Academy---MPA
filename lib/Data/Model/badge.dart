@@ -17,6 +17,20 @@ class BadgeX {
     required this.earned,
   });
 
+  /// Moodle uses zero when the catalog has no usable points threshold.
+  bool get hasPointsTarget => requiredPoints > 0;
+
+  static BadgeX? nextPointsTarget(List<BadgeX> badges, int points) {
+    for (final badge in badges) {
+      if (badge.hasPointsTarget &&
+          !badge.earned &&
+          badge.requiredPoints > points) {
+        return badge;
+      }
+    }
+    return null;
+  }
+
   factory BadgeX.fromJson(Map<String, dynamic> json) {
     return ModelUtilX.checkFromJson(
       json,

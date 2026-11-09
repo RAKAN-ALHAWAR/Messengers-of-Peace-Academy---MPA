@@ -210,6 +210,7 @@ const Map<String, String> enGeneral = {
   "File saved to Downloads": "File saved to Downloads",
   "File saved to Documents": "File saved to Documents",
   "Certificate": "Certificate",
+  "No next points target": "No next points target",
   "My current points": "My current points",
   "Your courses at current level": "Your courses at current level",
   "View All": "View All",

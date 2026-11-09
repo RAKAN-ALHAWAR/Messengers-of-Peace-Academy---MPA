@@ -68,11 +68,10 @@ class ProfileDetailsUnderAppbarSection
                     ),
                   ],
                 ),
-                if (controller.currentBadge.value != null)
-                  PointsCardX(
-                    points: controller.app.user.value.points,
-                    badge: controller.currentBadge.value!,
-                  ).marginOnly(top: 16),
+                PointsCardX(
+                  points: controller.app.user.value.points,
+                  badge: controller.currentBadge.value,
+                ).marginOnly(top: 16),
               ],
             ).fadeAnimation100,
       ),

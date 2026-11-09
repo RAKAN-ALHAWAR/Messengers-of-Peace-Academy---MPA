@@ -87,7 +87,9 @@ class BadgesView extends GetView<BadgesController> {
 
                             /// Badge description
                             TextX(
-                              "${"Awarded upon reaching".tr} ${FunctionX.formatLargeNumber(badge.requiredPoints)} ${"points".tr} - ${badge.description}",
+                              badge.hasPointsTarget
+                                  ? "${"Awarded upon reaching".tr} ${FunctionX.formatLargeNumber(badge.requiredPoints)} ${"points".tr} - ${badge.description}"
+                                  : badge.description,
                               style: TextStyleX.labelMedium,
                               color:
                                   Theme.of(
