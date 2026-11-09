@@ -36,7 +36,7 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
       children: [
         /// Grouped activities list
         for (var topicEntry in groupedActivities.entries)
-          if (_hasRenderableContent(topicEntry.value))
+          if (topicEntry.value.any((a) => a.hasContent || _hasNamedLesson(a)))
             AccordionX(
               height: 78,
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -126,7 +126,6 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
                   /// All activities in this topic group
                   for (int i = 0; i < topicEntry.value.length; i++)
                     ..._buildActivityItems(
-                      context,
                       topicEntry.value[i],
                       activityIndexMap[topicEntry.value[i]]!,
                     ),
@@ -137,13 +136,13 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
     );
   }
 
-  /// Whether a group has any renderable content (video, quiz, or summary file)
-  bool _hasRenderableContent(List<ActivityX> activities) {
-    return activities.any(
-      (a) =>
-          a.videoUrl.isNotEmpty || a.quizId != null || a.downloadUrl.isNotEmpty,
-    );
-  }
+  // Moodle can return a named module while withholding its link. The response
+  // has no activity type, so give modules without a quiz or file a lesson row.
+  bool _hasNamedLesson(ActivityX activity) =>
+      activity.videoUrl.isNotEmpty ||
+      (!activity.hasContent &&
+          activity.cmId.isNotEmpty &&
+          activity.name.isNotEmpty);
 
   /// Get count of videos in a group (shown under the lesson title)
   int _getLessonsCountInGroup(List<ActivityX> activities) {
@@ -164,22 +163,26 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
   }
 
   /// Build activity items (video, quiz, summary) for a single activity
-  List<Widget> _buildActivityItems(
-    BuildContext context,
-    ActivityX activity,
-    int originalIndex,
-  ) {
+  List<Widget> _buildActivityItems(ActivityX activity, int originalIndex) {
+    final canPlay = activity.isOpen && activity.videoUrl.isNotEmpty;
     return [
-      /// Lesson item video
-      if (activity.videoUrl.isNotEmpty)
-        LessonItemOnAccordion(
-          icon: IconX.play_arrow_filled,
-          name: activity.name,
-          videoDuration: activity.durationText,
-          isCompleted: activity.isServerDone,
-          onTap: () async {
-            await controller.onTapLessonVideo(originalIndex);
-          },
+      if (_hasNamedLesson(activity))
+        Semantics(
+          enabled: canPlay,
+          label: canPlay
+              ? null
+              : (activity.isOpen ? 'Lesson unavailable' : 'Lesson locked').tr,
+          child: LessonItemOnAccordion(
+            icon: canPlay
+                ? IconX.play_arrow_filled
+                : (activity.isOpen ? IconX.info : IconX.lock),
+            name: activity.name,
+            videoDuration: activity.durationText,
+            isCompleted: activity.isServerDone,
+            onTap: canPlay
+                ? () => controller.onTapLessonVideo(originalIndex)
+                : null,
+          ),
         ).fadeAnimation100,
 
       /// Lesson item quiz

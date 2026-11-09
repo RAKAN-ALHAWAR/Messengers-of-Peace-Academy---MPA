@@ -229,6 +229,8 @@ const Map<String, String> phGeneral = {
   "I have completed": "I have completed",
   "Level": "Level",
   "Stay": "Stay",
+  "Lesson locked": "Naka-lock ang aralin",
+  "Lesson unavailable": "Hindi available ang aralin",
   "Video is not available": "Hindi available ang video",
   "Video Player": "Video Player",
   "Back": "Bumalik",

@@ -231,6 +231,8 @@ const Map<String, String> esGeneral = {
   "I have completed": "He completado",
   "Level": "Nivel",
   "Stay": "Permanecer",
+  "Lesson locked": "Lección bloqueada",
+  "Lesson unavailable": "Lección no disponible",
   "Video is not available": "El video no está disponible",
   "Video Player": "Reproductor de video",
   "Back": "Atrás",

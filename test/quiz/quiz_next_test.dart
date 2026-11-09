@@ -17,6 +17,7 @@ import 'package:messengersofpeace/Ui/Screen/Course/CourseDetails/controller/cont
 import 'package:messengersofpeace/Ui/Screen/Course/CourseDetails/view/view.dart';
 import 'package:messengersofpeace/Ui/Screen/Test/TestResults/controller/controller.dart';
 import 'package:messengersofpeace/Ui/Screen/Test/TestResults/view/view.dart';
+import 'package:messengersofpeace/Ui/Widget/Custom/Other/lesson_item_on_accordion.dart';
 import '../learning/lesson_counts_test.dart' show activityJson;
 import 'quiz_flow_test.dart' show QuizHarness;
 
@@ -50,13 +51,26 @@ Map<String, Object?> course(
         completed: passed,
         percent: passed ? 100 : 0,
       ),
-      if (lastIsQuiz)
-        activityJson(
-          topicId: 2,
-          cmId: 'V2',
-          video: 'https://x.invalid/2',
-          open: passed && nextOpensAfterPass,
-        ),
+      if (lastIsQuiz) ...[
+        {
+          ...activityJson(
+            topicId: 2,
+            cmId: 'V2',
+            video: passed ? 'https://x.invalid/2' : '',
+            open: passed && nextOpensAfterPass,
+          ),
+          'Topic name': 'Second topic',
+        },
+        {
+          ...activityJson(
+            topicId: 2,
+            cmId: 'Q2',
+            quizId: 'second-quiz',
+            open: false,
+          ),
+          'Topic name': 'Second topic',
+        },
+      ],
     ],
   };
 }
@@ -138,6 +152,7 @@ void main() {
     WidgetTester tester, {
     bool detailsBelow = true,
     bool strayDetails = false,
+    Future<void> Function()? beforeResult,
   }) async {
     tester.view.physicalSize = const Size(1200, 2000);
     tester.view.devicePixelRatio = 1;
@@ -190,6 +205,7 @@ void main() {
       Get.toNamed('/stray', arguments: 'synthetic-course');
       await afterTap(tester);
     }
+    await beforeResult?.call();
     Get.toNamed(
       RouteNameX.testResults,
       arguments: [
@@ -209,7 +225,31 @@ void main() {
     'passing a quiz returns to the same course page, refetched, and opens next',
     (tester) async {
       await http.runWithClient(() async {
-        await mountResults(tester);
+        final lesson = find.text('activity V2');
+        final lessonRow = find.ancestor(
+          of: lesson,
+          matching: find.byType(LessonItemOnAccordion),
+        );
+        await mountResults(
+          tester,
+          beforeResult: () async {
+            await tester.pump(const Duration(seconds: 1));
+            await tester.pumpAndSettle();
+            await tester.tap(find.text('Second topic'));
+            await tester.pump();
+            await tester.pump(const Duration(milliseconds: 200));
+            await tester.pumpAndSettle();
+            expect(find.text('Second topic Test'), findsOneWidget);
+            expect(lesson, findsOneWidget);
+            expect(
+              find.descendant(of: lessonRow, matching: find.byIcon(IconX.lock)),
+              findsOneWidget,
+            );
+            await tester.tap(lesson, warnIfMissed: false);
+            await tester.pumpAndSettle();
+            expect(Get.currentRoute, RouteNameX.courseDetails);
+          },
+        );
         await afterTap(tester);
         final results = Get.find<TestResultsController>();
         expect(results.isSuccess, isTrue);
@@ -234,6 +274,17 @@ void main() {
         expect(details.course.value!.activities[1].isCompleted, isTrue);
         expect(details.lessonsDone, 1);
         expect(find.text('1/2'), findsOneWidget);
+        expect(
+          find.descendant(
+            of: lessonRow,
+            matching: find.byIcon(IconX.play_arrow_filled),
+          ),
+          findsOneWidget,
+        );
+        await tester.tap(lesson);
+        await afterTap(tester);
+        expect(Get.currentRoute, RouteNameX.videoPlayer);
+        expect(Get.arguments, 'https://x.invalid/2');
       }, client());
     },
   );

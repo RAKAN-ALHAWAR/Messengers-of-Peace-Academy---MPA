@@ -228,6 +228,8 @@ const Map<String, String> arGeneral = {
   "No Courses": "لا يوجد دورات",
   "One Course": "دورة واحدة",
   "Two Courses": "دورتين",
+  "Lesson locked": "الدرس مقفول",
+  "Lesson unavailable": "الدرس غير متاح",
   "Video is not available": "الفيديو غير متوفر",
   "Video Player": "مشغل الفيديو",
   "Back": "رجوع",

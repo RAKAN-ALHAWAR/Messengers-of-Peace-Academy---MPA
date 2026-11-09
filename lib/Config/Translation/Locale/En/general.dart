@@ -228,6 +228,8 @@ const Map<String, String> enGeneral = {
   "Level": "Level",
   "Stay": "Stay",
   "Are you sure you want to logout?": "Are you sure you want to logout?",
+  "Lesson locked": "Lesson locked",
+  "Lesson unavailable": "Lesson unavailable",
   "Video is not available": "Video is not available",
   "Video Player": "Video Player",
   "Back": "Back",
