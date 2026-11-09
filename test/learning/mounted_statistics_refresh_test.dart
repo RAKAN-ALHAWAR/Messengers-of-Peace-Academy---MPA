@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
@@ -8,6 +9,8 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:messengersofpeace/Core/core.dart';
 import 'package:messengersofpeace/Config/config.dart';
+import 'package:messengersofpeace/Config/Translation/translation.dart';
+import 'package:messengersofpeace/Core/Util/info.dart';
 import 'package:messengersofpeace/Core/Helper/http/http.dart';
 import 'package:messengersofpeace/Data/data.dart';
 import 'package:messengersofpeace/Data/Database/config/database_end_point.dart';
@@ -88,6 +91,70 @@ void main() {
       },
     );
   }
+
+  testWidgets('account footer uses installed version and build below Logout', (
+    tester,
+  ) async {
+    const channel = MethodChannel('mopa/package_info');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      expect(call.method, 'getVersion');
+      return {'version': '2.4.9', 'buildNumber': '73'};
+    });
+    addTearDown(() {
+      messenger.setMockMethodCallHandler(channel, null);
+      InfoUtilX.installedRelease = null;
+    });
+    Get.testMode = true;
+    Get.locale = const Locale('ar');
+    await tester.runAsync(() async {
+      await InfoUtilX.init();
+      await LocalDataX.put(LocalKeyX.userid, 'synthetic-A');
+      await LocalDataX.put(LocalKeyX.token, 'synthetic-token');
+    });
+    Get.put(
+      AppControllerX()..user = UserX.fromJson(userFixture('synthetic-A')).obs,
+    );
+    Get.put(ProfileDetailsController());
+    tester.view.physicalSize = const Size(1200, 1800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await http.runWithClient(
+      () async {
+        await tester.pumpWidget(
+          GetMaterialApp(
+            locale: const Locale('ar'),
+            translations: TranslationX(),
+            home: const ProfileDetailsView(),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final footer = find.text('الإصدار 2.4.9 · رقم البناء 73');
+        final logout = find.text('تسجيل الخروج');
+        expect(footer, findsOneWidget);
+        expect(logout, findsOneWidget);
+        expect(
+          tester.getTopLeft(footer).dy,
+          greaterThan(tester.getBottomLeft(logout).dy),
+        );
+        final text = tester.widget<Text>(footer);
+        expect(text.style?.fontSize, TextStyleX.bodySmall.fontSize);
+        expect(
+          text.style?.color,
+          Theme.of(tester.element(footer)).colorScheme.onSurfaceVariant,
+        );
+      },
+      () => MockClient((request) async {
+        final method = request.url.queryParameters['wsfunction']!;
+        if (method == functionOf(DBEndPointX.postGetBadges)) {
+          return fixtureResponse(<Object>[]);
+        }
+        return fixtureResponse(homeResponse(method, empty: true));
+      }),
+    );
+  });
 
   testWidgets('Profile course return updates mounted statistics immediately', (
     tester,

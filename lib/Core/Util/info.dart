@@ -6,6 +6,9 @@ class InfoUtilX {
   static String description = '';
   static String version = '';
   static String author = '';
+  static ({String version, String buildNumber})? installedRelease;
+
+  static const _packageChannel = MethodChannel('mopa/package_info');
 
   static Future<void> init() async {
     Map yaml = {};
@@ -16,5 +19,23 @@ class InfoUtilX {
     description = yaml["description"] ?? "";
     version = yaml["version"] ?? "";
     author = yaml["author"] ?? "";
+    installedRelease = null;
+    try {
+      final info = await _packageChannel.invokeMapMethod<String, String>(
+        'getVersion',
+      );
+      final version = info?['version']?.trim();
+      final build = info?['buildNumber']?.trim();
+      if (version != null &&
+          version.isNotEmpty &&
+          build != null &&
+          build.isNotEmpty) {
+        installedRelease = (version: version, buildNumber: build);
+      }
+    } on MissingPluginException {
+      // Only the Android and iOS runners provide installed package metadata.
+    } on PlatformException {
+      // Keep account access available if package metadata cannot be read.
+    }
   }
 }

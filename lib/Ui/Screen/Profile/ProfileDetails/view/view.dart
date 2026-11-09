@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Ui/Animation/fade/fade_animation.dart';
 import 'package:messengersofpeace/Ui/Widget/Basic/Utils/future_builder.dart';
+import 'package:messengersofpeace/Core/Util/info.dart';
 import '../../../../../Ui/Widget/widget.dart';
 import '../../../../Section/UserStat/user_statistics.dart';
 import '../../../../Widget/Basic/Other/label.dart';
@@ -26,6 +27,7 @@ class ProfileDetailsView extends GetView<ProfileDetailsController> {
 
         /// Data state
         child: (_) {
+          final release = InfoUtilX.installedRelease;
           return SingleChildScrollView(
             child: Column(
               children: [
@@ -192,6 +194,22 @@ class ProfileDetailsView extends GetView<ProfileDetailsController> {
                         iconData: IconX.delete,
                         onTap: controller.onDeleteAccount,
                       ).fadeAnimation400,
+                      if (release != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Text(
+                            'Version @version · Build @build'.trParams({
+                              'version': release.version,
+                              'build': release.buildNumber,
+                            }),
+                            textAlign: TextAlign.center,
+                            style: TextStyleX.bodySmall.copyWith(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
