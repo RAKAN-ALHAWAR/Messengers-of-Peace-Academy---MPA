@@ -3,6 +3,7 @@ import 'package:messengersofpeace/Core/Helper/model/model.dart';
 import 'package:messengersofpeace/Data/data.dart';
 
 import 'activity.dart';
+import 'course_progress.dart';
 
 class CourseX {
   final String id;
@@ -13,6 +14,7 @@ class CourseX {
   final int numCompletionActivities;
   final String image;
   final List<ActivityX> activities;
+  late final progress = CourseProgressX.fromActivities(activities);
 
   CourseX({
     required this.id,

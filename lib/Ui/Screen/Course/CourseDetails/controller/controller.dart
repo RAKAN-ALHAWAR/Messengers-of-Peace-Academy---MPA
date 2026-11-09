@@ -5,13 +5,15 @@ import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
 
-import '../../../../../Core/Service/controller_lease.dart';
 import '../../../../../Core/Service/account_course_files.dart';
+import '../../../../../Core/Service/controller_lease.dart';
+import '../../../../../Core/Service/course_progress.dart';
 import '../../../../../Core/core.dart';
 import '../../../../../Core/Error/error.dart';
 import '../../../../../Core/Service/session_lease.dart';
 import '../../../../../Data/Model/course/activity.dart';
 import '../../../../../Data/Model/course/course.dart';
+import '../../../../../Data/Model/course/course_progress.dart';
 import '../../../../../Data/Model/user/user_statistics.dart';
 import '../../../../../Data/data.dart';
 import '../../VideoPlayer /controller/controller.dart';
@@ -99,6 +101,7 @@ class CourseDetailsController extends GetxController {
     if (value.id != id) throw ErrorX.sessionChanged();
     _contentLease = _captureScope(id);
     _applyLocalProgress(value);
+    CourseProgressStoreX.record(value);
     course.value = value;
   }
 
@@ -161,11 +164,11 @@ class CourseDetailsController extends GetxController {
     isRefreshing.value = true;
     try {
       final value = await DatabaseX.getCourse(courseId: id);
-      if (!lease.isCurrent) return false;
+      if (!lease.isCurrent || refresh != _refreshGeneration) return false;
       _publishCourse(value, id);
       return true;
     } catch (e) {
-      if (!lease.isCurrent) return false;
+      if (!lease.isCurrent || refresh != _refreshGeneration) return false;
       ErrorX.console(e);
       ToastX.error(message: '${"Something wrong".tr}. ${"Try again".tr}');
       return false;
@@ -229,24 +232,11 @@ class CourseDetailsController extends GetxController {
     if (quiz != null) await openNextActivity(quiz.cmId);
   }
 
-  /// Lessons are the topics that have a video, quiz or file activity
-  Map<int, List<ActivityX>> get _lessonTopics {
-    final topics = <int, List<ActivityX>>{};
-    for (final activity in course.value?.activities ?? <ActivityX>[]) {
-      if (activity.hasContent) {
-        topics.putIfAbsent(activity.topicId, () => []).add(activity);
-      }
-    }
-    return topics;
-  }
+  CourseProgressX get progress =>
+      course.value?.progress ?? CourseProgressX.empty;
 
-  /// Total lessons of the course
-  int get lessonsTotal => _lessonTopics.length;
-
-  /// Lessons whose content activities are all done (is_completed or 100 percent)
-  int get lessonsDone => _lessonTopics.values
-      .where((topic) => topic.every((a) => a.isDone))
-      .length;
+  int get lessonsTotal => progress.lessonsTotal;
+  int get lessonsDone => progress.lessonsDone;
 
   /// Get activity count name
   String get getActivityCountName {

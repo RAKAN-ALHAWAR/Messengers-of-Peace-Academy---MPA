@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../Config/config.dart';
+import '../../../../Data/Model/course/course_progress.dart';
 import '../../../../Data/Model/course/mini_course.dart';
+import '../Other/course_progress_loader.dart';
+import '../Other/course_progress_bar.dart';
 import '../../widget.dart';
 
 class CourseCard extends StatelessWidget {
@@ -16,32 +19,21 @@ class CourseCard extends StatelessWidget {
   static const cardPadding = 16.0;
   static const imageHeight = 160.0;
   static const cardGap = 16.0;
-  static double progressHeight(BuildContext context) =>
-      ProgressIndicatorTheme.of(context).linearMinHeight ?? 4.0;
   final double width;
   final MiniCourseX course;
   final Function(MiniCourseX) onTap;
 
-  /// Lessons the user finished and the lessons the course has
-  ///
-  /// TEMP(backend): a quiz-only course (like the entry exam) comes with
-  /// numsections 0, so the card would read 0/0. Until the server counts the
-  /// quiz in numsections we show 1 lesson and done only when the course is
-  /// completed. Remove this once get_user_categories_summary counts quizzes.
-  ///
-  /// TEMP(backend): the server returns is_completed true with completion_percent
-  /// 0 and completed_topics_total 0, so a completed course shows 100% and N/N.
-  (int done, int total) get _lessons {
-    if (course.numSections == 0) return (course.isCompleted ? 1 : 0, 1);
-    if (course.isCompleted) return (course.numSections, course.numSections);
-    return (course.numCompletionSections, course.numSections);
-  }
-
-  double get _percent => course.isCompleted ? 100 : course.completionPercent;
-
   @override
   Widget build(BuildContext context) {
-    /// Build course card
+    if (!course.isOpen) return _buildCard(context, null);
+    return CourseProgressLoader(
+      courseId: course.id,
+      snapshot: course,
+      builder: (progress) => _buildCard(context, progress),
+    );
+  }
+
+  Widget _buildCard(BuildContext context, CourseProgressX? progress) {
     return GestureDetector(
       onTap: () async {
         if (course.isOpen) {
@@ -109,43 +101,10 @@ class CourseCard extends StatelessWidget {
             /// Spacer
             SizedBox(height: 16),
 
-            /// Course sections and completion percentage
-            if (course.isOpen)
-              Column(
-                children: [
-                  /// Course sections and completion percentage
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      /// Course sections
-                      TextX(
-                        "${_lessons.$1}/${_lessons.$2}",
-                        textDirection: TextDirection.ltr,
-                        style: TextStyleX.labelSmall,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-
-                      /// Completion percentage
-                      TextX(
-                        "${_percent.toInt()}%",
-                        style: TextStyleX.labelSmall,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ],
-                  ),
-
-                  /// Spacer
-                  SizedBox(height: 4, width: double.infinity),
-
-                  /// Completion percentage
-                  LinearProgressIndicator(
-                    minHeight: progressHeight(context),
-                    value: _percent / 100,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  SizedBox(height: 16),
-                ],
-              ),
+            if (course.isOpen) ...[
+              CourseProgressBar(progress: progress),
+              const SizedBox(height: 16),
+            ],
 
             /// Course name
             TextX(
@@ -157,12 +116,14 @@ class CourseCard extends StatelessWidget {
             /// Spacer
             SizedBox(height: 4),
 
-            /// Course lessons (hidden if no lessons)
-            if (course.numSections > 0)
+            if (progress != null && progress.total > 0)
               Row(
                 children: [
                   /// Lesson icon
-                  Icon(IconX.videocam, size: 16),
+                  Icon(
+                    progress.isAssessment ? IconX.quiz : IconX.videocam,
+                    size: 16,
+                  ),
 
                   /// Spacer
                   SizedBox(width: 4),
@@ -170,7 +131,7 @@ class CourseCard extends StatelessWidget {
                   /// Lesson text
                   Expanded(
                     child: TextX(
-                      "${course.numSections} ${"lesson".tr}",
+                      "${progress.total} ${(progress.isAssessment ? 'Test' : 'lesson').tr}",
                       style: TextStyleX.labelMedium,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),

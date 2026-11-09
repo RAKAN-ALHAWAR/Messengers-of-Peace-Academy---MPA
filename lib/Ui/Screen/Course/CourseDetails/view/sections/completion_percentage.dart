@@ -11,7 +11,9 @@ class CourseDetailsCompletionPercentageSection
 
   @override
   Widget build(BuildContext context) {
-    /// Course completion percentage section
+    final progress = controller.progress;
+    if (progress.total == 0) return const SizedBox.shrink();
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(16),
@@ -22,11 +24,21 @@ class CourseDetailsCompletionPercentageSection
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// Course completion percentage text
-          TextX(
-            "${"You have completed".tr} ${controller.course.value!.completionPercent.toInt()}% ${"of the course.".tr}",
-            style: TextStyleX.labelMedium,
-            color: ColorX.yellow.shade900,
+          Wrap(
+            spacing: 6,
+            children: [
+              TextX(
+                progress.isAssessment ? 'Test progress' : 'Lesson progress',
+                style: TextStyleX.labelMedium,
+                color: ColorX.yellow.shade900,
+              ),
+              TextX(
+                '${progress.percent}%',
+                textDirection: TextDirection.ltr,
+                style: TextStyleX.labelMedium,
+                color: ColorX.yellow.shade900,
+              ),
+            ],
           ),
 
           /// Spacer
@@ -43,9 +55,7 @@ class CourseDetailsCompletionPercentageSection
                 children: [
                   /// Course completion percentage progress bar
                   Flexible(
-                    child: GradientProgressBar(
-                      value: controller.course.value!.completionPercent / 100,
-                    ),
+                    child: GradientProgressBar(value: progress.fraction),
                   ),
 
                   /// Spacer
@@ -54,7 +64,7 @@ class CourseDetailsCompletionPercentageSection
                   /// Course completion percentage text
                   /// Done lessons out of all lessons (digits stay left to right)
                   TextX(
-                    "${controller.lessonsDone}/${controller.lessonsTotal}",
+                    "${progress.done}/${progress.total}",
                     textDirection: TextDirection.ltr,
                     style: TextStyleX.labelMedium,
                     color: ColorX.onSurfaceVariant,
@@ -65,7 +75,7 @@ class CourseDetailsCompletionPercentageSection
 
                   /// Lesson word
                   TextX(
-                    "lesson",
+                    progress.isAssessment ? "Test" : "lesson",
                     style: TextStyleX.labelMedium,
                     color: ColorX.onSurfaceVariant,
                   ),

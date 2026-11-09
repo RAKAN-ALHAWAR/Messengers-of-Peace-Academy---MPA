@@ -266,6 +266,8 @@ const Map<String, String> arGeneral = {
   "Event duration must not exceed 12 hours": "يجب ألا تتجاوز مدة الحدث 12 ساعة",
   "num-courses": "دورات",
   "Course Details": "تفاصيل الدورة",
+  "Lesson progress": "تقدّم الدروس",
+  "Test progress": "تقدّم الاختبار",
   "Course Content": "محتوى الدورة",
   "Content": "محتوى",
   "Test": "اختبار",

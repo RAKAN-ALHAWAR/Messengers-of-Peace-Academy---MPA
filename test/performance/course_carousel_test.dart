@@ -50,18 +50,14 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory directory;
   setUpAll(() async {
-    final fonts =
-        FontLoader('IBMPlexSansArabic')
-          ..addFont(
-            rootBundle.load('assets/fonts/IBMPlexSansArabic-Regular.ttf'),
-          )
-          ..addFont(
-            rootBundle.load('assets/fonts/IBMPlexSansArabic-SemiBold.ttf'),
-          )
-          ..addFont(rootBundle.load('assets/fonts/IBMPlexSansArabic-Bold.ttf'));
+    final fonts = FontLoader('IBMPlexSansArabic')
+      ..addFont(rootBundle.load('assets/fonts/IBMPlexSansArabic-Regular.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/IBMPlexSansArabic-SemiBold.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/IBMPlexSansArabic-Bold.ttf'));
     await fonts.load();
-    await (FontLoader('Icon_x')
-      ..addFont(rootBundle.load('assets/fonts/Icon_x.ttf'))).load();
+    await (FontLoader(
+      'Icon_x',
+    )..addFont(rootBundle.load('assets/fonts/Icon_x.ttf'))).load();
     directory = await Directory.systemTemp.createTemp('mopa-carousel-');
     Hive.init(directory.path);
     HiveX.box = await Hive.openBox('app');
@@ -89,42 +85,63 @@ void main() {
             horizontal ? 1 : count,
             (i) => level(i, horizontal ? count : 1).toJson(),
           );
-          await http.runWithClient(() async {
-            await tester.pumpWidget(host(const AllCoursesView()));
-            await tester.pumpAndSettle();
-            final mounted = find.byType(CourseCard).evaluate().length;
-            debugPrint(
-              'CAROUSEL axis=${horizontal ? 'horizontal' : 'vertical'} records=$count mounted=$mounted',
-            );
-            expect(mounted, lessThanOrEqualTo(12));
-            expect(mounted, count == 0 ? 0 : greaterThan(0));
-            if (count >= 100) {
-              final scrolls = tester.stateList<ScrollableState>(
-                find.byType(Scrollable),
+          var progressRequests = 0;
+          await http.runWithClient(
+            () async {
+              await tester.pumpWidget(host(const AllCoursesView()));
+              await tester.pumpAndSettle();
+              final mounted = find.byType(CourseCard).evaluate().length;
+              debugPrint(
+                'CAROUSEL axis=${horizontal ? 'horizontal' : 'vertical'} records=$count mounted=$mounted',
               );
-              final scroll = scrolls.firstWhere(
-                (s) =>
-                    horizontal
-                        ? axisDirectionToAxis(s.position.axisDirection) ==
+              expect(mounted, lessThanOrEqualTo(12));
+              expect(mounted, count == 0 ? 0 : greaterThan(0));
+              expect(progressRequests, lessThanOrEqualTo(mounted));
+              if (count > 0) expect(progressRequests, greaterThan(0));
+              if (count >= 100) {
+                final scrolls = tester.stateList<ScrollableState>(
+                  find.byType(Scrollable),
+                );
+                final scroll = scrolls.firstWhere(
+                  (s) => horizontal
+                      ? axisDirectionToAxis(s.position.axisDirection) ==
                             Axis.horizontal
-                        : axisDirectionToAxis(s.position.axisDirection) ==
+                      : axisDirectionToAxis(s.position.axisDirection) ==
                             Axis.vertical,
-              );
-              for (var i = 0; i < 6; i++) {
-                scroll.position.jumpTo(scroll.position.maxScrollExtent);
-                await tester.pumpAndSettle();
+                );
+                for (var i = 0; i < 6; i++) {
+                  scroll.position.jumpTo(scroll.position.maxScrollExtent);
+                  await tester.pumpAndSettle();
+                }
+                expect(
+                  find.text('${horizontal ? 'Course' : 'Level'} ${count - 1}'),
+                  findsOneWidget,
+                );
+                expect(
+                  find.byType(CourseCard).evaluate().length,
+                  lessThanOrEqualTo(12),
+                );
               }
-              expect(
-                find.text('${horizontal ? 'Course' : 'Level'} ${count - 1}'),
-                findsOneWidget,
-              );
-              expect(
-                find.byType(CourseCard).evaluate().length,
-                lessThanOrEqualTo(12),
-              );
-            }
-            await tester.pumpWidget(const SizedBox());
-          }, () => MockClient((_) async => fixtureResponse(data)));
+              await tester.pumpWidget(const SizedBox());
+            },
+            () => MockClient((request) async {
+              if (request.url.queryParameters['wsfunction']!.endsWith(
+                'get_course_details',
+              )) {
+                progressRequests++;
+                return fixtureResponse({
+                  'courseid': request.bodyFields['courseid'],
+                  'coursename': 'Course',
+                  'levelid': 1,
+                  'levelname': 'Level',
+                  'completion_percent': 0,
+                  'completed_topics_total': 0,
+                  'activities': [],
+                });
+              }
+              return fixtureResponse(data);
+            }),
+          );
         },
       );
     }
@@ -143,8 +160,8 @@ void main() {
               host(const AllCoursesView(), locale: locale, scale: 2),
             );
             await tester.pumpAndSettle();
-              await tester.pump(const Duration(seconds: 1));
-              await tester.pumpAndSettle();
+            await tester.pump(const Duration(seconds: 1));
+            await tester.pumpAndSettle();
             expect(tester.takeException(), isNull);
             expect(find.text(title), findsWidgets);
             for (final paragraph in tester.renderObjectList<RenderParagraph>(

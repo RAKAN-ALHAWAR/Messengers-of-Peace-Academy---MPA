@@ -278,6 +278,8 @@ const Map<String, String> esGeneral = {
   "num-courses": "Cursos",
   "Course (session)": "Curso (sesión)",
   "Course Details": "Detalles del curso",
+  "Lesson progress": "Progreso de las lecciones",
+  "Test progress": "Progreso de la prueba",
   "Course Content": "Contenido del curso",
   "Content": "Contenido",
   "Test": "Prueba",

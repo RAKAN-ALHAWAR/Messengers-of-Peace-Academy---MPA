@@ -35,8 +35,8 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
     return Column(
       children: [
         /// Grouped activities list
-        for (var topicEntry in groupedActivities.entries)
-          if (topicEntry.value.any((a) => a.hasContent || _hasNamedLesson(a)))
+        for (final topicEntry in groupedActivities.entries)
+          if (topicEntry.value.any((a) => a.hasContent || a.isLesson))
             AccordionX(
               height: 78,
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -61,7 +61,7 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
                       ),
                     )
                   else
-                    /// Section ring: average of the activities, a downloaded file counts 100
+                    /// Progress for the section’s learning activities or standalone files
                     Center(
                       child: CircularPercentIndicator(
                         radius: 24.0,
@@ -101,7 +101,9 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
                       else
                         /// Lesson item name (if no topic name)
                         TextX(
-                          "${"Lesson".tr} ${topicEntry.value.first.activityNumber}",
+                          topicEntry.value.any((activity) => activity.isLesson)
+                              ? "${"Lesson".tr} ${topicEntry.value.first.activityNumber}"
+                              : topicEntry.value.first.name,
                           style: TextStyleX.labelLarge,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -110,7 +112,7 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
                       if (_getLessonsCountInGroup(topicEntry.value) > 0)
                         SizedBox(height: 4),
 
-                      /// Video count (only videos, not quizzes)
+                      /// Lesson videos, including locked ones
                       if (_getLessonsCountInGroup(topicEntry.value) > 0)
                         TextX(
                           "${_getLessonsCountInGroup(topicEntry.value)} ${"Lessons".tr}",
@@ -136,37 +138,14 @@ class CourseDetailsActivitiesSection extends GetView<CourseDetailsController> {
     );
   }
 
-  // Moodle can return a named module while withholding its link. The response
-  // has no activity type, so give modules without a quiz or file a lesson row.
-  bool _hasNamedLesson(ActivityX activity) =>
-      activity.videoUrl.isNotEmpty ||
-      (!activity.hasContent &&
-          activity.cmId.isNotEmpty &&
-          activity.name.isNotEmpty);
-
-  /// Get count of videos in a group (shown under the lesson title)
-  int _getLessonsCountInGroup(List<ActivityX> activities) {
-    // Count videos (excluding quizzes)
-    final videoCount = activities
-        .where(
-          (activity) => activity.videoUrl.isNotEmpty && activity.quizId == null,
-        )
-        .length;
-
-    // If there are videos, return video count
-    if (videoCount > 0) {
-      return videoCount;
-    }
-
-    // Otherwise, no videos (only quizzes, files or empty)
-    return 0;
-  }
+  int _getLessonsCountInGroup(List<ActivityX> activities) =>
+      activities.where((activity) => activity.isLesson).length;
 
   /// Build activity items (video, quiz, summary) for a single activity
   List<Widget> _buildActivityItems(ActivityX activity, int originalIndex) {
     final canPlay = activity.isOpen && activity.videoUrl.isNotEmpty;
     return [
-      if (_hasNamedLesson(activity))
+      if (activity.isLesson)
         Semantics(
           enabled: canPlay,
           label: canPlay

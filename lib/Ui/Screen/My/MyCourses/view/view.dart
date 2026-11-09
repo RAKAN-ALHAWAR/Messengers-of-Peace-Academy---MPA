@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Ui/Animation/fade/fade_animation.dart';
 import 'package:messengersofpeace/Ui/Widget/Basic/Utils/future_builder.dart';
+import 'package:messengersofpeace/Ui/Widget/Custom/Other/course_progress_bar.dart';
+import 'package:messengersofpeace/Ui/Widget/Custom/Other/course_progress_loader.dart';
 import 'package:messengersofpeace/Ui/Widget/Custom/Other/empty_message.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
 import '../controller/controller.dart';
@@ -81,39 +83,10 @@ class MyCoursesView extends GetView<MyCoursesController> {
                     /// Spacer
                     SizedBox(height: 12),
 
-                    /// Progress
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        /// Total sections
-                        TextX(
-                          "${course.totalSections}/${course.completedSections}",
-                          style: TextStyleX.labelSmall,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-
-                        /// Completion percent
-                        TextX(
-                          "${course.completionPercent}%",
-                          style: TextStyleX.labelSmall,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ],
-                    ),
-
-                    /// Spacer
-                    SizedBox(height: 4, width: double.infinity),
-
-                    /// Progress indicator
-                    Row(
-                      children: [
-                        Expanded(
-                          child: LinearProgressIndicator(
-                            value: course.completionPercent / 100,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ],
+                    CourseProgressLoader(
+                      courseId: course.id,
+                      snapshot: course,
+                      builder: (progress) => CourseProgressBar(progress: progress),
                     ),
                   ],
                 ),

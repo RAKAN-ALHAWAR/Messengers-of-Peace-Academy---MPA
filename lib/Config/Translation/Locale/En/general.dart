@@ -270,6 +270,8 @@ const Map<String, String> enGeneral = {
   "Two Courses": "Two Courses",
   "num-courses": "Courses",
   "Course Details": "Course Details",
+  "Lesson progress": "Lesson progress",
+  "Test progress": "Test progress",
   "Course Content": "Course Content",
   "Content": "Content",
   "Test": "Test",

@@ -224,6 +224,7 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(find.text('Course 1'), findsOneWidget);
+        expect(find.text('1/2'), findsOneWidget);
         await tester.tap(find.text('Course 1'));
         await tester.pumpAndSettle();
         expect(find.text('Course details'), findsOneWidget);
@@ -231,10 +232,34 @@ void main() {
         await tester.pumpAndSettle();
         expect(calls, 2);
         expect(find.text('Course 2'), findsOneWidget);
+        expect(find.text('0/2'), findsOneWidget);
         expect(c.myCourses.single.id, '2');
         await tester.pumpWidget(const SizedBox());
       },
-      () => MockClient((_) async {
+      () => MockClient((request) async {
+        if (request.url.queryParameters['wsfunction']!.endsWith('get_course_details')) {
+          final id = request.bodyFields['courseid'];
+          return http.Response(jsonEncode({
+            'courseid': id,
+            'coursename': 'Course $id',
+            'levelid': 1,
+            'levelname': 'Level',
+            'completion_percent': 66,
+            'completed_topics_total': 0,
+            'activities': [
+              for (var topic = 1; topic <= 2; topic++)
+                {
+                  'topicid': topic,
+                  'cmid': topic,
+                  'Activity name': 'Lesson $topic',
+                  'video_url': 'https://x.invalid/lesson',
+                  'is_open': true,
+                  'is_completed': id == '1' && topic == 1,
+                  'completion_percent': 0,
+                },
+            ],
+          }), 200);
+        }
         calls++;
         return http.Response(jsonEncode([fixture(calls).toJson()]), 200);
       }),

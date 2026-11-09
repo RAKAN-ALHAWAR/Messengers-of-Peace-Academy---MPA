@@ -40,18 +40,15 @@ void main() {
       expect(ActivityX.topicPercent([file]), 100);
     });
 
-    test(
-      'a downloaded file counts as one finished activity in the average',
-      () {
-        final file = _activity(
-          cmId: 'f',
-          file: 'https://x.invalid/f',
-          downloaded: true,
-        );
-        final video = _activity(cmId: 'v', video: 'https://x.invalid/v');
-        expect(ActivityX.topicPercent([file, video]), 50);
-      },
-    );
+    test('a downloaded file does not contribute to a lesson ring', () {
+      final file = _activity(
+        cmId: 'f',
+        file: 'https://x.invalid/f',
+        downloaded: true,
+      );
+      final video = _activity(cmId: 'v', video: 'https://x.invalid/v');
+      expect(ActivityX.topicPercent([file, video]), 0);
+    });
 
     test('the server percent is used when nothing was downloaded', () {
       final video = _activity(
@@ -63,49 +60,64 @@ void main() {
       expect(ActivityX.topicPercent([video]), 40);
     });
 
+    test('an acknowledged lesson fills the ring even with a stale percent', () {
+      final video = _activity(
+        cmId: 'v',
+        video: 'https://x.invalid/v',
+        completed: true,
+      );
+      expect(ActivityX.topicPercent([video]), 100);
+    });
+
     test('an empty section reads 0, never divides by zero', () {
       expect(ActivityX.topicPercent(const []), 0);
     });
   });
 
-  group('a file download never turns the video or quiz of its activity done', () {
-    ActivityX combined({bool downloaded = false, bool completed = false}) =>
-        _activity(
-          cmId: 'c',
-          video: 'https://x.invalid/v',
-          quizId: '7',
-          file: 'https://x.invalid/f',
-          completed: completed,
-          percent: completed ? 100 : 0,
-          downloaded: downloaded,
-        );
+  group(
+    'a file download never turns the video or quiz of its activity done',
+    () {
+      ActivityX combined({bool downloaded = false, bool completed = false}) =>
+          _activity(
+            cmId: 'c',
+            video: 'https://x.invalid/v',
+            quizId: '7',
+            file: 'https://x.invalid/f',
+            completed: completed,
+            percent: completed ? 100 : 0,
+            downloaded: downloaded,
+          );
 
-    test('video and quiz rows keep the server state, the file row its own', () {
-      final a = combined(downloaded: true);
-      expect(a.isServerDone, isFalse);
-      expect(a.isFileDone, isTrue);
-      expect(a.progressPercent, 0);
-      expect(ActivityX.topicPercent([a]), 0);
-      expect(a.isDone, isFalse);
-    });
-
-    test('a finished video does not turn the not downloaded file done', () {
-      final a = combined(completed: true);
-      expect(a.isServerDone, isTrue);
-      expect(a.isFileDone, isFalse);
-      expect(a.isDone, isTrue);
-      expect(ActivityX.topicPercent([a]), 100);
-    });
-
-    test('a file only activity is done by the local flag, as before', () {
-      final f = _activity(
-        cmId: 'f',
-        file: 'https://x.invalid/f',
-        downloaded: true,
+      test(
+        'video and quiz rows keep the server state, the file row its own',
+        () {
+          final a = combined(downloaded: true);
+          expect(a.isServerDone, isFalse);
+          expect(a.isFileDone, isTrue);
+          expect(a.progressPercent, 0);
+          expect(ActivityX.topicPercent([a]), 0);
+          expect(a.isDone, isFalse);
+        },
       );
-      expect(f.isFileDone, isTrue);
-      expect(f.isDone, isTrue);
-      expect(f.isServerDone, isFalse);
-    });
-  });
+
+      test('a finished video does not turn the not downloaded file done', () {
+        final a = combined(completed: true);
+        expect(a.isServerDone, isTrue);
+        expect(a.isFileDone, isFalse);
+        expect(a.isDone, isTrue);
+        expect(ActivityX.topicPercent([a]), 100);
+      });
+
+      test('a file only activity is done by the local flag, as before', () {
+        final f = _activity(
+          cmId: 'f',
+          file: 'https://x.invalid/f',
+          downloaded: true,
+        );
+        expect(f.isFileDone, isTrue);
+        expect(f.isDone, isTrue);
+        expect(f.isServerDone, isFalse);
+      });
+    },
+  );
 }

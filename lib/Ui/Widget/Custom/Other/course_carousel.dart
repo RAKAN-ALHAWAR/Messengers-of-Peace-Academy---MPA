@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import '../../../../Config/config.dart';
 import '../../../../Data/Model/course/mini_course.dart';
 import '../Card/course_card.dart';
+import 'course_progress_bar.dart';
 
 /// A bounded lazy viewport whose equal card height follows the full translated
 /// text. Measuring the snapshot is O(N); mounting cards is viewport-bounded.
@@ -22,7 +23,7 @@ class CourseCarousel extends StatefulWidget {
 class _CourseCarouselState extends State<CourseCarousel> {
   Object? _metricsKey;
   double _height = 0;
-  List<(String, int, int, double, bool)>? _content;
+  List<(String, bool)>? _content;
   final _measurements = <(String, TextStyle, double), double>{};
 
   @override
@@ -76,35 +77,37 @@ class _CourseCarouselState extends State<CourseCarousel> {
 
   double _cardHeight(MiniCourseX course, double width) {
     final contentWidth = width - CourseCard.cardPadding * 2;
-    final progress =
-        course.isOpen
-            ? math.max(
-                  _textHeight(
-                    '${course.numSections}/${course.numCompletionSections}',
-                    TextStyleX.labelSmall,
-                    contentWidth,
-                  ),
-                  _textHeight(
-                    '${course.completionPercent.toInt()}%',
-                    TextStyleX.labelSmall,
-                    contentWidth,
-                  ),
-                ) +
-                4 +
-                CourseCard.progressHeight(context) +
-                16
-            : 0;
-    final lessons =
-        course.numSections > 0
-            ? math.max(
-              16.0,
+    // Reserve room for verified progress when the mounted card's data arrives.
+    final progress = course.isOpen
+        ? math.max(
+                _textHeight(
+                  '8888/8888',
+                  TextStyleX.labelSmall,
+                  contentWidth / 2,
+                ),
+                _textHeight('100%', TextStyleX.labelSmall, contentWidth / 2),
+              ) +
+              4 +
+              CourseProgressBar.barHeight(context) +
+              16
+        : 0.0;
+    final lessons = course.isOpen
+        ? math.max(
+            16.0,
+            math.max(
               _textHeight(
-                '${course.numSections} ${'lesson'.tr}',
+                '8888 ${'lesson'.tr}',
                 TextStyleX.labelMedium,
                 contentWidth - 20,
               ),
-            )
-            : 0;
+              _textHeight(
+                '8888 ${'Test'.tr}',
+                TextStyleX.labelMedium,
+                contentWidth - 20,
+              ),
+            ),
+          )
+        : 0.0;
     return (CourseCard.cardPadding * 2 +
             CourseCard.imageHeight +
             16 +
@@ -124,21 +127,12 @@ class _CourseCarouselState extends State<CourseCarousel> {
             constraints.maxWidth - StyleX.hPaddingApp - CourseCard.cardGap;
         // On extremely narrow hosts keep the original card scrollable rather
         // than hiding its content or giving text a negative layout width.
-        final width =
-            available > CourseCard.cardPadding * 2 + 20
-                ? math.min(CourseCard.preferredWidth, available)
-                : CourseCard.preferredWidth;
+        final width = available > CourseCard.cardPadding * 2 + 20
+            ? math.min(CourseCard.preferredWidth, available)
+            : CourseCard.preferredWidth;
         // Include value changes as MiniCourseX retains a mutable isOpen field.
         final content = widget.courses
-            .map(
-              (c) => (
-                c.name.tr,
-                c.numSections,
-                c.numCompletionSections,
-                c.completionPercent,
-                c.isOpen,
-              ),
-            )
+            .map((course) => (course.name.tr, course.isOpen))
             .toList(growable: false);
         final key = (
           width,
@@ -172,12 +166,11 @@ class _CourseCarouselState extends State<CourseCarousel> {
               ),
               itemExtent: width + CourseCard.cardGap,
               itemCount: widget.courses.length,
-              itemBuilder:
-                  (_, index) => CourseCard(
-                    width: width,
-                    course: widget.courses[index],
-                    onTap: widget.onTap,
-                  ),
+              itemBuilder: (_, index) => CourseCard(
+                width: width,
+                course: widget.courses[index],
+                onTap: widget.onTap,
+              ),
             ),
           ),
         );

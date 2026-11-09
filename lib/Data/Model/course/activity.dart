@@ -47,6 +47,13 @@ class ActivityX {
   bool get hasContent =>
       videoUrl.isNotEmpty || quizId != null || downloadUrl.isNotEmpty;
 
+  /// Moodle can withhold a lesson URL until the previous activity is passed.
+  /// The current contract identifies linkless lessons by their named module
+  /// when neither a quiz ID nor a file URL identifies another activity type.
+  bool get isLesson =>
+      videoUrl.isNotEmpty ||
+      (!hasContent && cmId.isNotEmpty && name.isNotEmpty);
+
   /// The server state of the video and quiz rows: is_completed or 100 percent.
   /// A downloaded file never counts here, one activity can feed a video, a
   /// quiz and a file row.
@@ -55,28 +62,33 @@ class ActivityX {
   /// The state of the file row only: the local TEMP(backend) flag of a
   /// downloaded file. A file only activity also follows the server flags, in
   /// case the server starts to send is_completed for files.
-  bool get isFileDone =>
-      isFileDownloaded || (!_hasVideoOrQuiz && isServerDone);
+  bool get isFileDone => isFileDownloaded || (!_hasVideoOrQuiz && isServerDone);
 
   bool get _hasVideoOrQuiz => videoUrl.isNotEmpty || quizId != null;
 
-  /// Whether the activity is done for the lesson counter: the server state,
-  /// and for a file only activity the downloaded flag as well. A file next to
-  /// a video or quiz never decides it.
-  bool get isDone => _hasVideoOrQuiz ? isServerDone : isFileDone;
+  /// The completion state of this activity's primary content.
+  bool get isDone => isLesson || quizId != null ? isServerDone : isFileDone;
 
-  /// The percent the section ring counts for this activity: the server percent
-  /// of its video or quiz, and for a file only activity 100 once downloaded
-  /// (the server never sends a percent for a file).
-  double get progressPercent =>
-      !_hasVideoOrQuiz && isFileDownloaded ? 100 : completionPercent;
+  /// A confirmed checkmark fills the ring even if the server percent lags.
+  double get progressPercent {
+    if (isDone) return 100;
+    return completionPercent.isFinite ? completionPercent.clamp(0, 100) : 0;
+  }
 
-  /// The section ring percent: the average of [progressPercent] over the
-  /// section's activities, 0 for an empty section
+  /// A resource tracks its download in a resource-only section. In lessons
+  /// and quizzes it keeps its own row checkmark and does not affect the ring.
   static double topicPercent(List<ActivityX> activities) {
-    if (activities.isEmpty) return 0;
-    final sum = activities.fold<double>(0, (s, a) => s + a.progressPercent);
-    return sum / activities.length;
+    final learning = activities.where((a) => a.isLesson || a.quizId != null);
+    final tracked = learning.isEmpty
+        ? activities.where((a) => a.downloadUrl.isNotEmpty)
+        : learning;
+    var sum = 0.0;
+    var count = 0;
+    for (final activity in tracked) {
+      sum += activity.progressPercent;
+      count++;
+    }
+    return count == 0 ? 0 : sum / count;
   }
 
   /// The duration text for the lesson row, or null when there is nothing to

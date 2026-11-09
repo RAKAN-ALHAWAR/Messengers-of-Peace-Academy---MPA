@@ -272,6 +272,8 @@ const Map<String, String> phGeneral = {
   "Two Courses": "Two Courses",
   "num-courses": "Courses",
   "Course Details": "Course Details",
+  "Lesson progress": "Progreso ng mga aralin",
+  "Test progress": "Progreso ng pagsusulit",
   "Course Content": "Course Content",
   "Content": "Content",
   "Test": "Test",

@@ -91,26 +91,27 @@ void main() {
       });
     });
 
-    testWidgets('a successful download marks the file done and its topic', (
-      tester,
-    ) async {
-      await inCourse(tester, (controller) async {
-        controller.downloadFile = (url, name, {onProgress}) async => true;
-        final file = controller.course.value!.activities[1];
-        expect(file.isDone, isFalse);
-        expect(controller.lessonsDone, 0);
-        var refreshes = 0;
-        final sub = controller.course.listen((_) => refreshes++);
-        // Hive writes to disk, which needs real async
-        await tester.runAsync(() => controller.onTapLessonSummary(file));
-        await sub.cancel();
-        expect(file.isDone, isTrue);
-        expect(controller.lessonsDone, 1, reason: 'the file topic is done');
-        expect(controller.lessonsTotal, 2);
-        expect(refreshes, greaterThan(0), reason: 'the checkmark rebuilds');
-        expect(controller.fileProgress, isEmpty);
-      });
-    });
+    testWidgets(
+      'a successful download marks the file without changing lesson progress',
+      (tester) async {
+        await inCourse(tester, (controller) async {
+          controller.downloadFile = (url, name, {onProgress}) async => true;
+          final file = controller.course.value!.activities[1];
+          expect(file.isDone, isFalse);
+          expect(controller.lessonsDone, 0);
+          var refreshes = 0;
+          final sub = controller.course.listen((_) => refreshes++);
+          // Hive writes to disk, which needs real async
+          await tester.runAsync(() => controller.onTapLessonSummary(file));
+          await sub.cancel();
+          expect(file.isDone, isTrue);
+          expect(controller.lessonsDone, 0);
+          expect(controller.lessonsTotal, 1);
+          expect(refreshes, greaterThan(0), reason: 'the checkmark rebuilds');
+          expect(controller.fileProgress, isEmpty);
+        });
+      },
+    );
 
     testWidgets('a failed download does not mark anything', (tester) async {
       await inCourse(tester, (controller) async {

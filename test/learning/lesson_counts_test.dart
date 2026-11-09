@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,12 +8,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:messengersofpeace/Config/config.dart';
+import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:messengersofpeace/Core/core.dart';
+import 'package:messengersofpeace/Core/Service/course_progress.dart';
 import 'package:messengersofpeace/Core/Helper/http/http.dart';
 import 'package:messengersofpeace/Data/data.dart';
 import 'package:messengersofpeace/Data/Model/course/course.dart';
 import 'package:messengersofpeace/Data/Model/course/mini_course.dart';
 import 'package:messengersofpeace/Data/Model/user/user.dart';
+import 'package:messengersofpeace/Ui/Screen/Course/AllCourses/controller/controller.dart';
+import 'package:messengersofpeace/Ui/Screen/Course/AllCourses/view/view.dart';
 import 'package:messengersofpeace/Ui/Screen/Course/CourseDetails/controller/controller.dart';
 import 'package:messengersofpeace/Ui/Widget/Custom/Card/course_card.dart';
 import 'package:http/http.dart' as http;
@@ -112,18 +117,215 @@ void main() {
     await directory.delete(recursive: true);
   });
 
-  /// Course details: a lesson is every activity that has content
-  group('course details counts every activity with content', () {
-    testWidgets('quiz-only entry exam counts as 1 lesson, 0 done', (
+  testWidgets('catalog and details keep 11 lessons as progress advances', (
+    tester,
+  ) async {
+    Get.put(AllCoursesController());
+    var done = 2;
+    var detailsRequests = 0;
+    Map<String, Object?> details() => {
+      'courseid': 130,
+      'coursename': 'Course 130',
+      'levelid': 1,
+      'levelname': 'Level',
+      'completion_percent': 21,
+      'completed_topics_total': done,
+      'activities': [
+        for (var topic = 1; topic <= 11; topic++) ...[
+          activityJson(
+            topicId: topic,
+            cmId: 'v$topic',
+            video: topic <= 3 ? 'https://x.invalid/lesson' : '',
+            completed: topic <= done || topic == 3,
+            open: topic <= 3,
+          ),
+          activityJson(
+            topicId: topic,
+            cmId: 'q$topic',
+            quizId: topic,
+            completed: topic <= done,
+            open: topic <= 3,
+          ),
+        ],
+        activityJson(topicId: 12, cmId: 'final', quizId: 99),
+        activityJson(topicId: 13, cmId: 'file', file: 'https://x.invalid/f'),
+      ],
+    };
+
+    await http.runWithClient(
+      () async {
+        await tester.pumpWidget(
+          GetMaterialApp(
+            locale: const Locale('ar'),
+            translations: TranslationX(),
+            initialRoute: '/entry',
+            getPages: [
+              GetPage(
+                name: '/entry',
+                page: () => const Scaffold(body: AllCoursesView()),
+              ),
+              GetPage(
+                name: RouteNameX.courseDetails,
+                page: () => const CourseDetailsView(),
+                binding: BindingsBuilder(() {
+                  Get.lazyPut(() => CourseDetailsController());
+                }),
+              ),
+            ],
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('2/11'), findsOneWidget);
+        expect(find.text('18%'), findsOneWidget);
+        expect(find.text('11 درس'), findsOneWidget);
+        expect(
+          tester.widget<Text>(find.text('2/11')).textDirection,
+          TextDirection.ltr,
+        );
+        expect(detailsRequests, 1);
+
+        await tester.tap(find.text('Course 130'));
+        await tester.pumpAndSettle();
+        expect(find.text('2/11'), findsOneWidget);
+        expect(find.text('18%'), findsOneWidget);
+        expect(find.text('(11 درس)'), findsOneWidget);
+        expect(find.text('activity final'), findsOneWidget);
+        expect(find.text('activity file'), findsOneWidget);
+
+        done = 3;
+        await Get.find<CourseDetailsController>().getData();
+        await tester.pumpAndSettle();
+        expect(find.text('3/11'), findsOneWidget);
+        expect(find.text('27%'), findsOneWidget);
+        Get.back();
+        await tester.pumpAndSettle();
+        expect(find.text('3/11'), findsOneWidget);
+        expect(find.text('27%'), findsOneWidget);
+        expect(find.text('11 درس'), findsOneWidget);
+        expect(detailsRequests, 3);
+      },
+      () => MockClient((request) async {
+        final function = request.url.queryParameters['wsfunction'];
+        if (function!.endsWith('get_course_details')) {
+          detailsRequests++;
+          return utf8Response(details());
+        }
+        return utf8Response([
+          {
+            'levelid': 1,
+            'levelname': 'Level',
+            'totalcourses': 1,
+            'completedcourses': 0,
+            'completion_percent': 0,
+            'is_open': true,
+            'is_completed': false,
+            'courses': [
+              {
+                ...cardCourse(
+                  numSections: done + 1,
+                  completed: done,
+                  percent: 66,
+                ).toJson(),
+                'courseid': 130,
+                'coursename': 'Course 130',
+              },
+            ],
+          },
+        ]);
+      }),
+    );
+  });
+
+  test(
+    'cards share the fetch and an older reply cannot undo detail progress',
+    () async {
+      final response = Completer<http.Response>();
+      var requests = 0;
+      await http.runWithClient(
+        () async {
+          final firstCard = CourseProgressStoreX.load('19');
+          final secondCard = CourseProgressStoreX.load('19');
+          await Future<void>.delayed(Duration.zero);
+          expect(requests, 1);
+          CourseProgressStoreX.record(
+            courseOf([
+              activityJson(
+                topicId: 1,
+                cmId: 'v',
+                video: 'video',
+                completed: true,
+              ),
+            ]),
+          );
+          response.complete(
+            utf8Response(
+              courseOf([
+                activityJson(topicId: 1, cmId: 'v', video: 'video'),
+              ]).toJson(),
+            ),
+          );
+          expect((await firstCard)?.done, 1);
+          expect((await secondCard)?.done, 1);
+          expect((await CourseProgressStoreX.load('19'))?.done, 1);
+          expect(requests, 1);
+        },
+        () => MockClient((_) {
+          requests++;
+          return response.future;
+        }),
+      );
+    },
+  );
+
+  test('a late response cannot enter a newer account cache', () async {
+    final response = Completer<http.Response>();
+    final unfinished = courseOf([
+      activityJson(topicId: 1, cmId: 'v', video: 'video'),
+    ]);
+    await http.runWithClient(
+      () async {
+        final oldAccount = CourseProgressStoreX.load('19');
+        await Future<void>.delayed(Duration.zero);
+        await LocalDataX.put(LocalKeyX.userid, 'synthetic-B');
+        await LocalDataX.put(LocalKeyX.token, 'token-B');
+        expect((await CourseProgressStoreX.load('19'))?.done, 0);
+        response.complete(
+          utf8Response(
+            courseOf([
+              activityJson(
+                topicId: 1,
+                cmId: 'v',
+                video: 'video',
+                completed: true,
+              ),
+            ]).toJson(),
+          ),
+        );
+        expect(await oldAccount, isNull);
+        expect((await CourseProgressStoreX.load('19'))?.done, 0);
+      },
+      () => MockClient((request) async {
+        if (request.url.queryParameters['wstoken'] == 'token-B') {
+          return utf8Response(unfinished.toJson());
+        }
+        return response.future;
+      }),
+    );
+  });
+
+  group('lesson topics and assessment-only courses', () {
+    testWidgets('quiz-only entry exam shows test progress and has no lessons', (
       tester,
     ) async {
       final controller = await mountCourse(tester);
       controller.course.value = courseOf([
         activityJson(topicId: 89, cmId: '99', quizId: 2),
       ]);
-      expect(controller.lessonsTotal, 1);
+      expect(controller.lessonsTotal, 0);
       expect(controller.lessonsDone, 0);
-      expect(controller.getActivityCountName, 'One Lesson');
+      expect(controller.progress.isAssessment, isTrue);
+      expect(controller.progress.total, 1);
+      expect(controller.progress.done, 0);
     });
 
     testWidgets('a passed quiz makes it 1/1', (tester) async {
@@ -137,8 +339,10 @@ void main() {
           percent: 100,
         ),
       ]);
-      expect(controller.lessonsDone, 1);
-      expect(controller.lessonsTotal, 1);
+      expect(controller.lessonsDone, 0);
+      expect(controller.lessonsTotal, 0);
+      expect(controller.progress.done, 1);
+      expect(controller.progress.total, 1);
     });
 
     testWidgets('a lesson is a topic: video + quiz in one topic is 1 lesson', (
@@ -151,30 +355,36 @@ void main() {
         activityJson(topicId: 2, cmId: 'v2', video: 'https://x.invalid/2'),
         activityJson(topicId: 2, cmId: 'q2', quizId: 5),
         activityJson(topicId: 3, cmId: 'f3', file: 'https://x.invalid/f'),
-        activityJson(topicId: 4, cmId: 'empty'),
+        activityJson(topicId: 4, cmId: ''),
       ]);
       expect(
         controller.lessonsTotal,
-        3,
-        reason: 'two topics plus a file topic',
+        2,
+        reason: 'only the two lesson topics count',
       );
-      expect(controller.getActivityCountName, '3 Lessons');
+      expect(controller.getActivityCountName, 'Two Lessons');
     });
 
-    testWidgets('course 130 shape: 11 video+quiz topics and a summary file', (
-      tester,
-    ) async {
-      final controller = await mountCourse(tester);
-      controller.course.value = courseOf([
-        for (var t = 1; t <= 11; t++) ...[
-          activityJson(topicId: t, cmId: 'v$t', video: 'https://x.invalid/$t'),
-          activityJson(topicId: t, cmId: 'q$t', quizId: t),
-        ],
-        activityJson(topicId: 12, cmId: 'f', file: 'https://x.invalid/f'),
-      ]);
-      expect(controller.lessonsTotal, 12);
-      expect(controller.lessonsDone, 0);
-    });
+    testWidgets(
+      'course 130 shape: 11 video+quiz topics and standalone resources',
+      (tester) async {
+        final controller = await mountCourse(tester);
+        controller.course.value = courseOf([
+          for (var t = 1; t <= 11; t++) ...[
+            activityJson(
+              topicId: t,
+              cmId: 'v$t',
+              video: 'https://x.invalid/$t',
+            ),
+            activityJson(topicId: t, cmId: 'q$t', quizId: t),
+          ],
+          activityJson(topicId: 12, cmId: 'f', file: 'https://x.invalid/f'),
+          activityJson(topicId: 13, cmId: 'final', quizId: 99, completed: true),
+        ]);
+        expect(controller.lessonsTotal, 11);
+        expect(controller.lessonsDone, 0);
+      },
+    );
 
     testWidgets('a topic is done only when all its content is done', (
       tester,
@@ -236,7 +446,8 @@ void main() {
           Get.toNamed(RouteNameX.courseDetails, arguments: '19');
           await tester.pumpAndSettle();
           expect(find.text('0/1'), findsOneWidget);
-          expect(find.text('(One Lesson)'), findsOneWidget);
+          expect(find.text('Test progress'), findsOneWidget);
+          expect(find.text('(One Lesson)'), findsNothing);
           expect(find.text('(No Lesson)'), findsNothing);
         },
         () => MockClient(
@@ -254,10 +465,13 @@ void main() {
     });
   });
 
-  /// Course card: completed first, then total, digits in an LTR isolate
-  group('course card shows completed/total', () {
-    Future<void> pumpCard(WidgetTester tester, MiniCourseX course) =>
-        tester.pumpWidget(
+  testWidgets('unavailable details do not show the misleading summary', (
+    tester,
+  ) async {
+    final course = cardCourse(numSections: 3, completed: 2, percent: 66);
+    await http.runWithClient(
+      () async {
+        await tester.pumpWidget(
           GetMaterialApp(
             locale: const Locale('ar'),
             home: Directionality(
@@ -268,60 +482,12 @@ void main() {
             ),
           ),
         );
-
-    testWidgets('normal course: 3 done of 12', (tester) async {
-      await pumpCard(tester, cardCourse(numSections: 12, completed: 3));
-      expect(find.text('3/12'), findsOneWidget);
-    });
-
-    testWidgets('quiz-only course (numsections 0) shows 0/1', (tester) async {
-      await pumpCard(tester, cardCourse(numSections: 0, completed: 0));
-      expect(find.text('0/1'), findsOneWidget);
-    });
-
-    testWidgets('completed quiz-only course shows 1/1', (tester) async {
-      await pumpCard(
-        tester,
-        cardCourse(numSections: 0, completed: 0, isCompleted: true),
-      );
-      expect(find.text('1/1'), findsOneWidget);
-    });
-
-    testWidgets('completed with percent 0 shows 100 percent and N/N', (
-      tester,
-    ) async {
-      await pumpCard(
-        tester,
-        cardCourse(numSections: 5, completed: 0, isCompleted: true),
-      );
-      expect(find.text('5/5'), findsOneWidget);
-      expect(find.text('100%'), findsOneWidget);
-      expect(find.text('0%'), findsNothing);
-      final bar = tester.widget<LinearProgressIndicator>(
-        find.byType(LinearProgressIndicator),
-      );
-      expect(bar.value, 1.0);
-    });
-
-    testWidgets('not completed keeps the server percent and counter', (
-      tester,
-    ) async {
-      await pumpCard(
-        tester,
-        cardCourse(numSections: 5, completed: 2, percent: 40),
-      );
-      expect(find.text('2/5'), findsOneWidget);
-      expect(find.text('40%'), findsOneWidget);
-      final bar = tester.widget<LinearProgressIndicator>(
-        find.byType(LinearProgressIndicator),
-      );
-      expect(bar.value, 0.4);
-    });
-
-    testWidgets('the counter is laid out left to right', (tester) async {
-      await pumpCard(tester, cardCourse(numSections: 12, completed: 3));
-      final text = tester.widget<Text>(find.text('3/12'));
-      expect(text.textDirection, TextDirection.ltr);
-    });
+        await tester.pumpAndSettle();
+        expect(find.text(course.name), findsOneWidget);
+        expect(find.text('2/3'), findsNothing);
+        expect(find.text('66%'), findsNothing);
+      },
+      () => MockClient((_) async => utf8Response({'errorcode': 'unavailable'})),
+    );
   });
 }

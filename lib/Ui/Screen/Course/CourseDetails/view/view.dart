@@ -100,11 +100,10 @@ class CourseDetailsView extends GetView<CourseDetailsController> {
           /// Spacer
           SizedBox(height: 24),
 
-          /// Course completion percentage
-          CourseDetailsCompletionPercentageSection().fadeAnimation200,
-
-          /// Spacer
-          SizedBox(height: 24),
+          if (controller.progress.total > 0) ...[
+            CourseDetailsCompletionPercentageSection().fadeAnimation200,
+            const SizedBox(height: 24),
+          ],
 
           /// Course content
           Row(
@@ -112,14 +111,13 @@ class CourseDetailsView extends GetView<CourseDetailsController> {
               /// Course content title
               TextX("Course Content", style: TextStyleX.titleMedium),
 
-              /// Spacer
-              SizedBox(width: 4),
-
-              /// Course content count
-              TextX(
-                "(${controller.getActivityCountName.tr})",
-                style: TextStyleX.labelLarge,
-              ),
+              if (controller.lessonsTotal > 0) ...[
+                const SizedBox(width: 4),
+                TextX(
+                  "(${controller.getActivityCountName.tr})",
+                  style: TextStyleX.labelLarge,
+                ),
+              ],
             ],
           ).fadeAnimation200,
 
