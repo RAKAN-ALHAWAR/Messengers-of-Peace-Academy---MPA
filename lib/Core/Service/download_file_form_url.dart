@@ -27,6 +27,7 @@ class DownloadFileFormUrl {
     Dio? dio,
     Future<(Directory, bool)> Function()? getDirectory,
     void Function(int received, int total)? onProgress,
+    CancelToken? cancelToken,
   }) async {
     String? tempPath;
     try {
@@ -54,7 +55,12 @@ class DownloadFileFormUrl {
         url,
         partPath,
         onReceiveProgress: onProgress,
+        cancelToken: cancelToken,
       );
+      if (cancelToken?.isCancelled == true) {
+        await _deleteQuietly(partPath);
+        return false;
+      }
 
       // An HTML login page or a JSON error answers 200 as well, never save it
       if (!_isFile(response.headers)) {
@@ -64,19 +70,20 @@ class DownloadFileFormUrl {
       }
 
       final extension = _getExtension(response.headers, url);
-      final filePath =
-          extension.isEmpty
-              ? '${downloadDir.path}/$fileName'
-              : '${downloadDir.path}/$fileName.$extension';
+      final filePath = extension.isEmpty
+          ? '${downloadDir.path}/$fileName'
+          : '${downloadDir.path}/$fileName.$extension';
       await File(partPath).rename(filePath);
+      if (cancelToken?.isCancelled == true) return false;
 
       // Show success message telling where the file actually landed
-      String locationMessage =
-          Platform.isIOS
-              ? "File saved to Documents".tr
-              : isPublicDownloads
-              ? "File saved to Downloads".tr
-              : "File saved to the app folder".tr;
+      String locationMessage = getDirectory != null
+          ? "File saved to the app folder".tr
+          : Platform.isIOS
+          ? "File saved to Documents".tr
+          : isPublicDownloads
+          ? "File saved to Downloads".tr
+          : "File saved to the app folder".tr;
       ToastX.success(
         title: "Success",
         message: "${"File downloaded successfully".tr}\n$locationMessage",
@@ -89,6 +96,7 @@ class DownloadFileFormUrl {
       return true;
     } catch (e) {
       await _deleteQuietly(tempPath);
+      if (cancelToken?.isCancelled == true) return false;
       String errorMessage = "Download failed".tr;
 
       if (e is DioException) {
@@ -136,7 +144,8 @@ class DownloadFileFormUrl {
     Future<(Directory, bool)> Function()? getDirectory,
   }) async {
     try {
-      final (Directory dir, _) = await (getDirectory ?? _getDownloadDirectory)();
+      final (Directory dir, _) =
+          await (getDirectory ?? _getDownloadDirectory)();
       final name = _safeName(fileName);
       await for (final entity in dir.list(followLinks: false)) {
         if (entity is! File) continue;
@@ -191,8 +200,9 @@ class DownloadFileFormUrl {
     }
     try {
       final view = PlatformDispatcher.instance.implicitView;
-      final size =
-          view == null ? const Size(1, 1) : view.physicalSize / view.devicePixelRatio;
+      final size = view == null
+          ? const Size(1, 1)
+          : view.physicalSize / view.devicePixelRatio;
       await SharePlus.instance.share(shareParamsFor(filePath, size));
     } catch (e) {
       // Nothing more to try, the file stays saved where the toast said

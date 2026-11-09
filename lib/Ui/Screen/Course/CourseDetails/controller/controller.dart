@@ -6,7 +6,7 @@ import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
 
 import '../../../../../Core/Service/controller_lease.dart';
-import '../../../../../Core/Service/download_file_form_url.dart';
+import '../../../../../Core/Service/account_course_files.dart';
 import '../../../../../Core/core.dart';
 import '../../../../../Core/Error/error.dart';
 import '../../../../../Core/Service/session_lease.dart';
@@ -32,12 +32,17 @@ class CourseDetailsController extends GetxController {
     String fileName, {
     void Function(int received, int total)? onProgress,
   })
-  downloadFile = DownloadFileFormUrl.download;
+  downloadFile = (url, fileName, {onProgress}) => AccountCourseFilesX.download(
+    LocalDataX.userid,
+    url,
+    fileName,
+    onProgress: onProgress,
+  );
 
   /// Opens the copy saved by an earlier download, false when it is gone.
   /// Replaceable so tests need no files or viewer.
   Future<bool> Function(String fileName) openSavedFile =
-      DownloadFileFormUrl.openSaved;
+      (fileName) => AccountCourseFilesX.open(LocalDataX.userid, fileName);
 
   /// Summary files being downloaded now, by cmId. The value is the fraction
   /// 0..1, or null while the total size is unknown (indeterminate spinner).
@@ -392,6 +397,7 @@ class CourseDetailsController extends GetxController {
           _opening.remove(cmId);
         }
       }
+      if (!lease.isCurrent) return;
       // null: running, the size is not known yet
       fileProgress[cmId] = null;
       final saved = await downloadFile(
