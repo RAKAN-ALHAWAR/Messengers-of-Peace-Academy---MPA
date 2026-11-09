@@ -6,7 +6,7 @@ Updated: 2026-10-23. Current local execution: EXECUTION-2026-10-20.md.
 | --- | --- | --- |
 | Shared Flutter code | Local remediation in progress | Session/async isolation, transport, profile, quiz, progress, calendars and list repairs have synthetic regressions. Native and backend acceptance remain separate. |
 | iOS | Declared iOS15 simulator build succeeds | Owner approved15 minimum;17140ac builds without target override, produced plist/Mach-O min15. Earlier boot/sign-in was iPhone17Pro/iOS26.5; scenario navigation deferred after denied Device Hub access. Actual iOS15 device acceptance remains open. |
-| Android | Debug build succeeds locally | Build at17140ac, exit0 with actual APK summary32.5s; no runtime/emulator/native download/media result. Existing SDK XML/Kotlin warnings remain. |
+| Android | Debug build succeeds locally | Commit `a02d253` builds an arm64 Debug APK on Flutter 3.47.7 and the CI-pinned Flutter 3.41.6. Device launch and remote CI remain unverified. This Android build tool change has no iOS equivalent. |
 | Moodle backend | Not verified | No backend source/schema in the app repository. Account testing was authorized, server administration was not. |
 | Web counterpart | Not located | No web implementation is present in this repository. |
 | Course lesson visibility (2026-11-09) | Shared Flutter UI verified locally | The widget regression covers a locked lesson with no URL and the same row after quiz unlock. Native iOS/Android acceptance and the Moodle web equivalent were not exercised. |

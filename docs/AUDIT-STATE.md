@@ -2,6 +2,19 @@
 
 Updated: 2026-10-23 (Asia/Damascus).
 
+## Android build tool compatibility (2026-11-09)
+
+Owner approved applying the tested Android toolchain fix to local `main`.
+Commit `a02d253` updates AGP to 8.11.1 and the Kotlin Gradle plugin to 2.2.20
+in `android/settings.gradle.kts`, using the existing Gradle 8.14 wrapper.
+Flutter 3.47.7 reproduced the AGP minimum failure before the fix. The
+integrated source built an arm64 Debug APK on Flutter 3.47.7 in the primary
+checkout and on the CI-pinned Flutter 3.41.6 in an isolated checkout with the
+committed lock. Both used `flutter build apk --debug --no-pub --target-platform android-arm64`.
+The primary APK signature was verified. Kotlin daemon fallback occurred during
+the builds and Flutter 3.47.7 reported future minimum-version warnings.
+Emulator launch and remote CI remain unverified.
+
 ## Course lesson visibility (2026-11-09)
 
 Owner approved displaying the lesson when its video link is unavailable.
