@@ -2,6 +2,19 @@
 
 Updated: 2026-10-23 (Asia/Damascus).
 
+## Account version footer (2026-11-09)
+
+The owner requested a small, muted version and build line below the account
+controls. Implemented in `f2a08b7`. The line uses the installed package values
+on Android and iOS, including Flutter build overrides. It is localized in all
+four app languages. The Arabic account widget test verifies the placement,
+small muted style, and runtime metadata. Isolated Android and iOS simulator
+builds carried the custom version `2.4.9` and build `73`. The iOS retry exited
+successfully with local Swift build overrides after diagnostics from existing
+plugins. All 1,010 tests passed in the isolated checkout; static analysis
+reports the existing quiz results warning. No native app was installed or
+launched for this change.
+
 ## Quiz fallback timing policy (2026-11-09)
 
 The owner specified one shared exam countdown when Moodle has no time limit:
