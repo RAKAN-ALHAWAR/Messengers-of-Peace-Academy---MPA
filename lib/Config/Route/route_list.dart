@@ -1,3 +1,5 @@
+import 'package:flutter/widgets.dart' show RouteSettings;
+import '../../Data/data.dart';
 import 'package:get/get.dart';
 import '../../Ui/Screen/Auth/Login/controller/controller.dart';
 import '../../Ui/Screen/Auth/Login/view/view.dart';
@@ -68,11 +70,13 @@ import '../config.dart';
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class RouteListX {
+  static final _authenticated = _AuthenticatedRoute();
   /// List Routes
   static final List<GetPage<dynamic>> routes = [
     /// Root
     GetPage(
       name: RouteNameX.root,
+      middlewares: [_authenticated],
       page: () => const RootView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => RootController(), fenix: true);
@@ -130,6 +134,7 @@ class RouteListX {
     ),
     GetPage(
       name: RouteNameX.completeAccountInfo,
+      middlewares: [_authenticated],
       page: () => const CompleteAccountInfoView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => CompleteAccountInfoController());
@@ -139,6 +144,7 @@ class RouteListX {
     /// Profile
     GetPage(
       name: RouteNameX.editProfile,
+      middlewares: [_authenticated],
       page: () => const EditProfileView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => EditProfileController());
@@ -146,6 +152,7 @@ class RouteListX {
     ),
     GetPage(
       name: RouteNameX.changePassword,
+      middlewares: [_authenticated],
       page: () => const ChangePasswordView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => ChangePasswordController());
@@ -155,6 +162,7 @@ class RouteListX {
     /// Notifications
     GetPage(
       name: RouteNameX.notifications,
+      middlewares: [_authenticated],
       page: () => const NotificationsView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => NotificationsController());
@@ -164,6 +172,7 @@ class RouteListX {
     /// Meeting
     GetPage(
       name: RouteNameX.allMeetings,
+      middlewares: [_authenticated],
       page: () => const AllMeetingsView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => AllMeetingsController());
@@ -171,6 +180,7 @@ class RouteListX {
     ),
     GetPage(
       name: RouteNameX.meetingDetails,
+      middlewares: [_authenticated],
       page: () => const MeetingDetailsView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => MeetingDetailsController());
@@ -180,6 +190,7 @@ class RouteListX {
     /// Course
     GetPage(
       name: RouteNameX.courseDetails,
+      middlewares: [_authenticated],
       page: () => const CourseDetailsView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => CourseDetailsController());
@@ -187,6 +198,7 @@ class RouteListX {
     ),
     GetPage(
       name: RouteNameX.videoPlayer,
+      middlewares: [_authenticated],
       page: () => const VideoPlayerView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => VideoPlayerController());
@@ -197,6 +209,7 @@ class RouteListX {
     /// Test
     GetPage(
       name: RouteNameX.testInfo,
+      middlewares: [_authenticated],
       page: () => const TestInfoView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => TestInfoController());
@@ -204,6 +217,7 @@ class RouteListX {
     ),
     GetPage(
       name: RouteNameX.testQuestions,
+      middlewares: [_authenticated],
       page: () => const TestQuestionsView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => TestQuestionsController());
@@ -211,6 +225,7 @@ class RouteListX {
     ),
     GetPage(
       name: RouteNameX.testResults,
+      middlewares: [_authenticated],
       page: () => const TestResultsView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => TestResultsController());
@@ -220,6 +235,7 @@ class RouteListX {
     /// Event
     GetPage(
       name: RouteNameX.eventDetails,
+      middlewares: [_authenticated],
       page: () => const EventDetailsView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => EventDetailsController());
@@ -227,6 +243,7 @@ class RouteListX {
     ),
     GetPage(
       name: RouteNameX.addEvent,
+      middlewares: [_authenticated],
       page: () => const AddEventView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => AddEventController());
@@ -234,6 +251,7 @@ class RouteListX {
     ),
     GetPage(
       name: RouteNameX.editEvent,
+      middlewares: [_authenticated],
       page: () => const EditEventView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => EditEventController());
@@ -243,6 +261,7 @@ class RouteListX {
     /// Blog
     GetPage(
       name: RouteNameX.blog,
+      middlewares: [_authenticated],
       page: () => const BlogView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => BlogController());
@@ -250,6 +269,7 @@ class RouteListX {
     ),
     GetPage(
       name: RouteNameX.articleDetails,
+      middlewares: [_authenticated],
       page: () => const ArticleDetailsView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => ArticleDetailsController());
@@ -259,6 +279,7 @@ class RouteListX {
     /// My
     GetPage(
       name: RouteNameX.myCourses,
+      middlewares: [_authenticated],
       page: () => const MyCoursesView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => MyCoursesController());
@@ -266,6 +287,7 @@ class RouteListX {
     ),
     GetPage(
       name: RouteNameX.myCertificates,
+      middlewares: [_authenticated],
       page: () => const MyCertificatesView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => MyCertificatesController());
@@ -273,6 +295,7 @@ class RouteListX {
     ),
     GetPage(
       name: RouteNameX.myAchievements,
+      middlewares: [_authenticated],
       page: () => const MyAchievementsView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => MyAchievementsController());
@@ -280,6 +303,7 @@ class RouteListX {
     ),
     GetPage(
       name: RouteNameX.badges,
+      middlewares: [_authenticated],
       page: () => const BadgesView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => BadgesController());
@@ -289,6 +313,7 @@ class RouteListX {
     /// Activity Points
     GetPage(
       name: RouteNameX.activityPoints,
+      middlewares: [_authenticated],
       page: () => const ActivityPiontsView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => ActivityPiontsController());
@@ -298,6 +323,7 @@ class RouteListX {
     /// Leaderboard
     GetPage(
       name: RouteNameX.leaderboard,
+      middlewares: [_authenticated],
       page: () => const LeaderboardView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => LeaderboardController());
@@ -313,4 +339,12 @@ class RouteListX {
     //              () => Controller());
     //    })),
   ];
+}
+
+class _AuthenticatedRoute extends GetMiddleware {
+  @override
+  RouteSettings? redirect(String? route) =>
+      LocalDataX.userid.isEmpty || LocalDataX.token.isEmpty
+      ? const RouteSettings(name: RouteNameX.login)
+      : null;
 }

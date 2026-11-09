@@ -60,9 +60,6 @@ const Map<String, String> phBasic = {
   "No results found": "Walang nahanap na resulta",
   "Delete account":
       "Burahin ang account",
-  "We will open the website page where you can send a request to delete your account and data. The team reviews the request and then deletes the account.":
-      "Bubuksan namin ang pahina ng website kung saan maaari kang magpadala ng kahilingan na burahin ang iyong account at data. Susuriin ng team ang kahilingan at saka buburahin ang account.",
-  "Open page": "Buksan ang pahina",
   "Could not open the page, please try again":
       "Hindi mabuksan ang pahina, subukang muli",
   "You have used all the attempts allowed for this test, so it cannot be taken again. Contact the academy if you need a new attempt.":

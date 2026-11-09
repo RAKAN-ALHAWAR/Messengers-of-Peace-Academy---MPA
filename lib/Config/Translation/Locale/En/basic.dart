@@ -60,9 +60,6 @@ const Map<String, String> enBasic = {
   "No results found": "No results found",
   "Delete account":
       "Delete account",
-  "We will open the website page where you can send a request to delete your account and data. The team reviews the request and then deletes the account.":
-      "We will open the website page where you can send a request to delete your account and data. The team reviews the request and then deletes the account.",
-  "Open page": "Open page",
   "Could not open the page, please try again":
       "Could not open the page, please try again",
   "You have used all the attempts allowed for this test, so it cannot be taken again. Contact the academy if you need a new attempt.":

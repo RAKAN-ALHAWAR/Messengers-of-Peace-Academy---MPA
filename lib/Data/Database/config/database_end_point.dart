@@ -11,6 +11,8 @@ class DBEndPointX {
   static const String _baseUrl =
       'https://mopacademy.org/webservice/rest/server.php';
 
+  static Uri get accountDeletionUri => Uri.parse(_baseUrl);
+
   /// Shared service token.
   ///
   /// Used **only** for the public endpoints that are called before the user

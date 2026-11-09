@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Core/core.dart';
+import 'package:messengersofpeace/Core/Service/academy_support.dart';
+import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Ui/Animation/fade/fade_animation.dart';
 import '../../../../Widget/widget.dart';
 import '../controller/controller.dart';
@@ -23,6 +25,27 @@ class LoginView extends GetView<LoginController> {
           absorbing: controller.isLoading.value,
           child: Column(
             children: [
+              if (controller.sessionNotice case final notice?) ...[
+                Semantics(
+                  liveRegion: true,
+                  child: TextX(notice, style: TextStyleX.bodyMedium),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    if (!await openAcademySupport() && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Could not open the page, please try again'.tr,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: Text('delete.support'.tr),
+                ).marginOnly(bottom: 12),
+              ],
+
               /// Google login button
               // ButtonStateX.gray(
               //   state: controller.buttonStateGoogle.value,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:messengersofpeace/Core/core.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../Config/config.dart';
 import '../../../../../Core/Service/controller_lease.dart';
@@ -16,6 +15,7 @@ import '../../../../../Data/data.dart';
 import '../../../../ScreenSheet/Language/language_sheet.dart';
 import '../../../../ScreenSheet/submit_complaint_or_suggestion_sheet.dart';
 import '../../../../Widget/widget.dart';
+import '../../AccountDeletion/view.dart';
 
 class ProfileDetailsController extends GetxController {
   //============================================================================
@@ -188,37 +188,13 @@ class ProfileDetailsController extends GetxController {
   /// Log out
   onLogout() async => await app.logOut();
 
-  /// The site's data-deletion request page (Moodle data privacy tool)
-  static const dataDeletionRequestUrl =
-      'https://mopacademy.org/admin/tool/dataprivacy/createdatarequest.php';
-
-  /// Opens a link in the external browser. A field so tests can fake it.
-  Future<bool> Function(Uri url) launcher =
-      (url) => launchUrl(url, mode: LaunchMode.externalApplication);
-
-  /// Ask the user to confirm before leaving for the deletion request page
-  onDeleteAccount() => AlertDialogX.okAndCancel(
-    title: 'Delete account',
-    message:
-        'We will open the website page where you can send a request to delete your account and data. The team reviews the request and then deletes the account.',
-    textOK: 'Open page'.tr,
-    colorTextOk: ColorX.danger,
-    onOk: onConfirmDeleteAccount,
-  );
-
-  /// Hand the deletion request over to the website
-  Future<void> onConfirmDeleteAccount() async {
-    // TEMP(backend): the app has no account-deletion endpoint yet (none among
-    // the 163 web service functions), so it hands off to the site's data
-    // request page until the backend adds one. The session is left as is.
-    Get.back();
-    var opened = false;
-    try {
-      opened = await launcher(Uri.parse(dataDeletionRequestUrl));
-    } catch (_) {}
-    if (!opened) {
-      ToastX.error(message: 'Could not open the page, please try again');
+  void onDeleteAccount() {
+    final session = SessionLeaseX.capture();
+    if (!session.hasAuthenticatedIdentity || !session.isCurrent ||
+        !ControllerLeaseX.owns(this, app: app) || !app.isLogin.value) {
+      return;
     }
+    Get.to(() => AccountDeletionView(session: session, app: app));
   }
 
   /// Change dark mode

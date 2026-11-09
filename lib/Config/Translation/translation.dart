@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../Data/data.dart';
+import 'account_deletion.dart';
 import 'Locale/Ar/ar.dart';
 import 'Locale/En/en.dart';
 import 'Locale/Es/es.dart';
@@ -39,7 +40,12 @@ class TranslationX extends Translations {
   /// Link the language code with its translation file
   @override
   Map<String, Map<String, String>> get keys {
-    return {'en': en, 'ar': ar, 'es': es, 'fil': ph};
+    return {
+      'en': {...en, ...accountDeletionTranslations['en']!},
+      'ar': {...ar, ...accountDeletionTranslations['ar']!},
+      'es': {...es, ...accountDeletionTranslations['es']!},
+      'fil': {...ph, ...accountDeletionTranslations['fil']!},
+    };
   }
 
   //============================================================================

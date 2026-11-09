@@ -24,6 +24,7 @@ class LoginController extends GetxController {
   // Variables
 
   final isLoading = false.obs;
+  String? sessionNotice;
   final buttonStateGoogle = ButtonStateEX.normal.obs;
   final buttonStateLogin = ButtonStateEX.normal.obs;
   final GoogleSignIn googleSignIn = GoogleSignIn(
@@ -297,6 +298,10 @@ class LoginController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    final argument = Get.arguments;
+    if (argument is String && argument.startsWith('delete.')) {
+      sessionNotice = argument;
+    }
     formKey = GlobalKey<FormState>();
   }
 

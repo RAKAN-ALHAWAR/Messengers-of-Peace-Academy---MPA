@@ -60,9 +60,6 @@ const Map<String, String> esBasic = {
   "No results found": "No se encontraron resultados",
   "Delete account":
       "Eliminar cuenta",
-  "We will open the website page where you can send a request to delete your account and data. The team reviews the request and then deletes the account.":
-      "Abriremos la página del sitio web donde puedes enviar una solicitud para eliminar tu cuenta y tus datos. El equipo revisa la solicitud y luego elimina la cuenta.",
-  "Open page": "Abrir página",
   "Could not open the page, please try again":
       "No se pudo abrir la página, inténtalo de nuevo",
   "You have used all the attempts allowed for this test, so it cannot be taken again. Contact the academy if you need a new attempt.":

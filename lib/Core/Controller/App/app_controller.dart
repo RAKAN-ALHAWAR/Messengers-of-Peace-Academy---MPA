@@ -77,24 +77,62 @@ class AppControllerX extends GetxController {
   );
 
   /// Credentials go before the first await, so a second expiry cannot reuse them.
-  Future<void> clearLocalSession(
+  Future<void> clearLocalSession(SessionLeaseX lease, {bool navigate = true}) =>
+      _clearSession(lease, navigate: navigate);
+
+  Future<void> returnToSignIn(SessionLeaseX lease, String notice) =>
+      _clearSession(lease, loginNotice: notice);
+
+  Future<void> _clearSession(
     SessionLeaseX lease, {
     bool navigate = true,
+    String? loginNotice,
+    bool accountDeleted = false,
   }) async {
     if (!lease.isCurrent || !ControllerLeaseX.owns(this)) return;
+    final accountId = LocalDataX.userid;
     isLogin.value = false;
+    if (accountDeleted) user = unfinishedUser('').obs;
     final writes = [
       LocalDataX.remove(LocalKeyX.userid),
       LocalDataX.remove(LocalKeyX.token),
       LocalDataX.put(LocalKeyX.route, RouteNameX.login),
     ];
     final cleared = ControllerLeaseX.capture(this, registered: true);
-    await Future.wait(writes);
+    var notice = loginNotice;
+    try {
+      await Future.wait(writes);
+    } catch (_) {
+      if (!accountDeleted) rethrow;
+      notice = 'delete.cleanupIncomplete';
+    }
+    if (accountDeleted) {
+      try {
+        await AccountCourseFilesX.purge(accountId);
+      } catch (_) {
+        notice = 'delete.cleanupIncomplete';
+      }
+      try {
+        // A download that already finished can write its flag while purge drains.
+        final keys = HiveX.box.keys
+            .whereType<String>()
+            .where((key) => key.startsWith('$accountId:'))
+            .toList();
+        await HiveX.box.deleteAll(keys);
+      } catch (_) {
+        notice = 'delete.cleanupIncomplete';
+      }
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+    }
     if (!cleared.isCurrent) return;
     if (navigate && Get.currentRoute != RouteNameX.login) {
-      Get.offAllNamed(RouteNameX.login);
+      Get.offAllNamed(RouteNameX.login, arguments: notice);
     }
   }
+
+  Future<void> finishAccountDeletion(SessionLeaseX lease) =>
+      _clearSession(lease, loginNotice: 'delete.success', accountDeleted: true);
 
   Future<void> logOut() async {
     final token = LocalDataX.token;
