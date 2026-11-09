@@ -21,6 +21,7 @@ class OtpPinField extends StatefulWidget {
   final TextInputAction textInputAction;
   final bool autoFocus;
   final bool? autoFillEnable;
+  final bool keyboardAutofill;
   final bool? phoneNumbersHint;
   final String? smsRegex;
   final bool highlightBorder;
@@ -56,6 +57,7 @@ class OtpPinField extends StatefulWidget {
     this.keyboardType = TextInputType.number,
     this.autoFocus = true,
     this.autoFillEnable = false,
+    this.keyboardAutofill = false,
     this.phoneNumbersHint = false,
     this.highlightBorder = true,
     this.showCursor = true,

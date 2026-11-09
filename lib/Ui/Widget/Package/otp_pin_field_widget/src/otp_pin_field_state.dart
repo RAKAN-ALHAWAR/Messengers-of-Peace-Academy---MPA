@@ -11,6 +11,21 @@ import 'gradient_outline_input_border.dart';
 
 class OtpPinFieldState extends State<OtpPinField>
     with TickerProviderStateMixin, OtpPinAutoFill {
+  static final _localizedDigit = RegExp(r'[٠-٩۰-۹]');
+  static final _numericCode = RegExp(r'^[0-9]+$');
+  static final _numericFormatters = [
+    TextInputFormatter.withFunction(
+      (_, value) => value.copyWith(text: _normalizeDigits(value.text)),
+    ),
+    FilteringTextInputFormatter.digitsOnly,
+  ];
+
+  static String _normalizeDigits(String text) =>
+      text.replaceAllMapped(_localizedDigit, (match) {
+        final digit = match[0]!.codeUnitAt(0);
+        return (digit >= 0x06f0 ? digit - 0x06f0 : digit - 0x0660).toString();
+      });
+
   late FocusNode _focusNode;
   late List<String> pinsInputed;
   late AnimationController _cursorController;
@@ -94,10 +109,11 @@ class OtpPinFieldState extends State<OtpPinField>
                 AbsorbPointer(
                   child: Opacity(
                     opacity: 0.0,
+                    alwaysIncludeSemantics: true,
                     child: TextField(
                       controller: controller,
                       maxLength: widget.maxLength,
-                      autofillHints: (widget.autoFillEnable ?? false)
+                      autofillHints: widget.keyboardAutofill || widget.autoFillEnable == true
                           ? const [AutofillHints.oneTimeCode]
                           : null,
                       readOnly: widget.showCustomKeyboard ?? true,
@@ -105,9 +121,7 @@ class OtpPinFieldState extends State<OtpPinField>
                       enableInteractiveSelection: false,
                       inputFormatters:
                           widget.keyboardType == TextInputType.number
-                              ? <TextInputFormatter>[
-                                  FilteringTextInputFormatter.digitsOnly
-                                ]
+                              ? _numericFormatters
                               : null,
                       focusNode: _focusNode,
                       keyboardType: widget.keyboardType,
@@ -115,9 +129,6 @@ class OtpPinFieldState extends State<OtpPinField>
                         FocusManager.instance.primaryFocus?.unfocus();
                       },
                       onChanged: (text) {
-                        if (ending && text.length == widget.maxLength) {
-                          return;
-                        }
                         _bindTextIntoWidget(text);
                         setState(() {});
                         widget.onChange(text);
@@ -196,19 +207,18 @@ class OtpPinFieldState extends State<OtpPinField>
             absorbing: true,
             child: Opacity(
               opacity: 0.0,
+              alwaysIncludeSemantics: true,
               child: TextField(
                 controller: controller,
                 maxLength: widget.maxLength,
-                autofillHints: (widget.autoFillEnable ?? false)
+                autofillHints: widget.keyboardAutofill || widget.autoFillEnable == true
                     ? const [AutofillHints.oneTimeCode]
                     : null,
                 readOnly: !(widget.showDefaultKeyboard ?? true),
                 autofocus: widget.autoFocus,
                 enableInteractiveSelection: false,
                 inputFormatters: widget.keyboardType == TextInputType.number
-                    ? <TextInputFormatter>[
-                        FilteringTextInputFormatter.digitsOnly
-                      ]
+                    ? _numericFormatters
                     : null,
                 focusNode: _focusNode,
                 textInputAction: widget.textInputAction,
@@ -217,9 +227,6 @@ class OtpPinFieldState extends State<OtpPinField>
                   FocusManager.instance.primaryFocus?.unfocus();
                 },
                 onChanged: (text) {
-                  if (ending && text.length == widget.maxLength) {
-                    return;
-                  }
                   _bindTextIntoWidget(text);
                   setState(() {});
                   widget.onChange(text);
@@ -510,40 +517,13 @@ class OtpPinFieldState extends State<OtpPinField>
   }
 
   void _pasteCopyCode(ClipboardData? data) {
-    try {
-      int.parse(data?.text ?? '');
-    } catch (e) {
-      return log(
-          name: 'OTP Pin Field',
-          'Copied content error ',
-          error: 'The content that is copied should be a number.');
-    }
+    final text = _normalizeDigits(data?.text?.trim() ?? '');
+    if (!_numericCode.hasMatch(text) || text.length < widget.maxLength) return;
 
-    if ((data?.text ?? '').length < widget.maxLength) {
-      return log(
-          name: 'OTP Pin Field',
-          'Copied content error',
-          error: "The copied content doesn't seem to be the correct OTP.");
-    }
-
-    if (controller.text != data?.text && (data?.text ?? '').isNotEmpty) {
-      if ((data?.text ?? '').length < widget.maxLength) {
-        return log(
-            name: 'OTP Pin Field',
-            'Copied content error',
-            error: "The copied content doesn't seem to be the correct OTP.");
-      }
-
-      controller.value = TextEditingValue(
-          text: (data?.text ?? '').substring(0, widget.maxLength));
-
-      if ((data?.text ?? '').substring(0, widget.maxLength).isNotEmpty ==
-          true) {
-        for (var i = 0; i < widget.maxLength; i++) {
-          pinsInputed[i] = (data?.text ?? '')[i];
-        }
-      }
-      controller.text = (data?.text ?? '').substring(0, widget.maxLength);
+    final pin = text.substring(0, widget.maxLength);
+    if (controller.text != pin) {
+      controller.value = TextEditingValue(text: pin);
+      _bindTextIntoWidget(pin);
       setState(() {});
 
       widget.onChange(controller.text.trim());
@@ -559,7 +539,12 @@ class OtpPinFieldState extends State<OtpPinField>
   }
 
   void pasteCode() async {
-    var data = await Clipboard.getData(Clipboard.kTextPlain);
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (!mounted ||
+        (widget.showDefaultKeyboard == false &&
+            widget.showCustomKeyboard != true)) {
+      return;
+    }
     if (data?.text?.isNotEmpty ?? false) {
       if (widget.beforeTextPaste != null) {
         if (widget.beforeTextPaste?.call(data!.text) ?? false) {
