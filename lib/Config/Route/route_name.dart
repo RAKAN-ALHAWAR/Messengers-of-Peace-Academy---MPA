@@ -52,6 +52,7 @@ class RouteNameX {
 
   /// Profile
   static const String editProfile = '/editProfile';
+  static const String accountDeletion = '/accountDeletion';
   static const String changePassword = '/changePassword';
 
   /// My

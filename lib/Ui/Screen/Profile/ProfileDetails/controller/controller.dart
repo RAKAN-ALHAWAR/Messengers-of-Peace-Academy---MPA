@@ -15,7 +15,6 @@ import '../../../../../Data/data.dart';
 import '../../../../ScreenSheet/Language/language_sheet.dart';
 import '../../../../ScreenSheet/submit_complaint_or_suggestion_sheet.dart';
 import '../../../../Widget/widget.dart';
-import '../../AccountDeletion/view.dart';
 
 class ProfileDetailsController extends GetxController {
   //============================================================================
@@ -194,7 +193,7 @@ class ProfileDetailsController extends GetxController {
         !ControllerLeaseX.owns(this, app: app) || !app.isLogin.value) {
       return;
     }
-    Get.to(() => AccountDeletionView(session: session, app: app));
+    Get.toNamed(RouteNameX.accountDeletion);
   }
 
   /// Change dark mode

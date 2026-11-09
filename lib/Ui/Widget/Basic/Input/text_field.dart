@@ -23,8 +23,6 @@ class TextFieldX extends StatefulWidget {
   final BorderSide? borderError;
   final BorderRadiusGeometry? borderErrorRadius;
   final bool isPassword;
-  final bool isOneTimeCode;
-  final String? errorText;
   final bool? isRequired;
   late int maxLines;
   late int minLines;
@@ -53,8 +51,6 @@ class TextFieldX extends StatefulWidget {
     this.textInputType,
     this.textInputAction,
     this.isPassword = false,
-    this.isOneTimeCode = false,
-    this.errorText,
     this.onlyRead = false,
     this.onlyReadNotChangeColor = false,
     this.margin = const EdgeInsets.symmetric(vertical: 5),
@@ -188,15 +184,13 @@ class _TextFieldXState extends State<TextFieldX> {
     /// Email fields accept ASCII only as typed: Arabic letters never enter the
     /// field, and Arabic-Indic digits are converted to Latin ones.
     final isEmail = widget.textInputType == TextInputType.emailAddress;
-    final isCode = widget.isOneTimeCode;
     return Padding(
       padding: widget.margin,
       child: TextFormField(
         textAlign: widget.textAlign ?? TextAlign.start,
-        textDirection: isEmail || isCode ? TextDirection.ltr : null,
-        autocorrect: !isEmail && !isCode,
-        enableSuggestions: !isEmail && !isCode,
-        autofillHints: isCode ? const [AutofillHints.oneTimeCode] : null,
+        textDirection: isEmail ? TextDirection.ltr : null,
+        autocorrect: !isEmail,
+        enableSuggestions: !isEmail,
         maxLength: widget.maxLength,
         minLines: widget.minLines,
         style: TextStyleX.titleSmall.copyWith(
@@ -219,7 +213,7 @@ class _TextFieldXState extends State<TextFieldX> {
           }
         },
         onChanged: (text) {
-          if (widget.textInputType == TextInputType.number && !isCode) {
+          if (widget.textInputType == TextInputType.number) {
             String convertedText = text.arabicToEnglishNumbers;
             widget.controller.text = convertedText;
             widget.controller.selection = TextSelection.fromPosition(
@@ -237,7 +231,6 @@ class _TextFieldXState extends State<TextFieldX> {
           });
         },
         validator: widget.validate,
-        forceErrorText: widget.errorText?.tr,
         readOnly: widget.onlyRead || widget.disabled,
         obscureText: passwordVisible,
         keyboardType: widget.textInputType,

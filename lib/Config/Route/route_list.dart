@@ -52,6 +52,8 @@ import '../../Ui/Screen/Notifications/controller/controller.dart';
 import '../../Ui/Screen/Notifications/view/view.dart';
 import '../../Ui/Screen/Profile/ChangePassword/controller/controller.dart';
 import '../../Ui/Screen/Profile/ChangePassword/view/view.dart';
+import '../../Ui/Screen/Profile/AccountDeletion/controller/controller.dart';
+import '../../Ui/Screen/Profile/AccountDeletion/view/view.dart';
 import '../../Ui/Screen/Profile/EditProfile/controller/controller.dart';
 import '../../Ui/Screen/Profile/EditProfile/view/view.dart';
 import '../../Ui/Screen/Profile/ProfileDetails/controller/controller.dart';
@@ -142,6 +144,14 @@ class RouteListX {
     ),
     //========================================================
     /// Profile
+    GetPage(
+      name: RouteNameX.accountDeletion,
+      middlewares: [_authenticated],
+      page: () => const AccountDeletionView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => AccountDeletionController());
+      }),
+    ),
     GetPage(
       name: RouteNameX.editProfile,
       middlewares: [_authenticated],

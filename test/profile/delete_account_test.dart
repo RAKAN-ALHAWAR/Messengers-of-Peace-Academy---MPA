@@ -16,8 +16,11 @@ import 'package:messengersofpeace/Core/Service/session_lease.dart';
 import 'package:messengersofpeace/Core/core.dart';
 import 'package:messengersofpeace/Data/Database/account_deletion.dart';
 import 'package:messengersofpeace/Data/data.dart';
-import 'package:messengersofpeace/Ui/Screen/Profile/AccountDeletion/view.dart';
+import 'package:messengersofpeace/Ui/Screen/Profile/AccountDeletion/controller/controller.dart';
+import 'package:messengersofpeace/Ui/Screen/Profile/AccountDeletion/view/view.dart';
 import 'package:messengersofpeace/Ui/Screen/Profile/ProfileDetails/controller/controller.dart';
+import 'package:messengersofpeace/Ui/Section/AuthLayout/auth_layout.dart';
+import 'package:messengersofpeace/Ui/Widget/Package/otp_pin_field_widget/otp_pin_field.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
 
 const requestFunction = 'local_user_anonymizer_request_self_anonymisation';
@@ -30,7 +33,6 @@ http.Response jsonResponse(Object value, [int status = 200]) =>
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory directory;
-  late AppControllerX app;
   late ProfileDetailsController profile;
   late DateTime now;
   late List<String> calls;
@@ -53,7 +55,7 @@ void main() {
     await HiveX.box.put('user-A:offline-course', 'private');
     await HiveX.box.put('user-B:offline-course', 'keep');
     await HiveX.box.put('themeIsDark', true);
-    app = Get.put(AppControllerX(), permanent: true);
+    Get.put(AppControllerX(), permanent: true);
     profile = Get.put(ProfileDetailsController());
     now = DateTime(2026, 11, 9);
     calls = [];
@@ -103,7 +105,16 @@ void main() {
         jsonResponse({'status': 'anonymised', 'logoutrequired': true});
   });
 
-  Future<void> open(WidgetTester tester, {bool profileButton = false}) async {
+  Future<void> pumpPage(WidgetTester tester) async {
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+  }
+
+  Future<void> open(
+    WidgetTester tester, {
+    bool useProductionBinding = false,
+  }) async {
     await tester.pumpWidget(
       GetMaterialApp(
         locale: const Locale('en'),
@@ -115,19 +126,25 @@ void main() {
             name: '/account',
             page: () => Scaffold(
               body: TextButton(
-                onPressed: profileButton
-                    ? profile.onDeleteAccount
-                    : () => Get.to(
-                        () => AccountDeletionView(
-                          session: SessionLeaseX.capture(),
-                          app: app,
-                          now: () => now,
-                        ),
-                      ),
+                onPressed: profile.onDeleteAccount,
                 child: const Text('Open deletion'),
               ),
             ),
           ),
+          if (useProductionBinding)
+            RouteListX.routes.singleWhere(
+              (page) => page.name == RouteNameX.accountDeletion,
+            )
+          else
+            GetPage(
+              name: RouteNameX.accountDeletion,
+              page: () => const AccountDeletionView(),
+              binding: BindingsBuilder(
+                () => Get.lazyPut(
+                  () => AccountDeletionController(now: () => now),
+                ),
+              ),
+            ),
           GetPage(
             name: RouteNameX.login,
             page: () =>
@@ -136,22 +153,27 @@ void main() {
         ],
       ),
     );
-    await tester.pumpAndSettle();
+    await pumpPage(tester);
     await tester.tap(find.text('Open deletion'));
-    await tester.pumpAndSettle();
+    await pumpPage(tester);
   }
 
   Future<void> send(WidgetTester tester) async {
-    await tester.tap(find.byType(CheckboxListTile));
+    await tester.tap(find.byType(Checkbox));
     await tester.pump();
     await tester.ensureVisible(find.text('Send confirmation code'));
     await tester.tap(find.text('Send confirmation code'));
-    await tester.pumpAndSettle();
+    await pumpPage(tester);
   }
 
   Future<void> enter(WidgetTester tester, String code) async {
-    await tester.enterText(find.byType(TextFieldX), code);
-    await tester.pumpAndSettle();
+    final input = find.byType(OtpPinField);
+    await tester.ensureVisible(input);
+    await tester.enterText(
+      find.descendant(of: input, matching: find.byType(TextField)),
+      code,
+    );
+    await pumpPage(tester);
   }
 
   Future<void> pressConfirm(WidgetTester tester) async {
@@ -165,7 +187,7 @@ void main() {
     tester,
   ) async {
     await http.runWithClient(() async {
-      await open(tester, profileButton: true);
+      await open(tester, useProductionBinding: true);
       expect(find.textContaining('encrypted recovery copy'), findsOneWidget);
       expect(find.widgetWithText(AppBarX, 'Delete account'), findsOneWidget);
       final sendButton = tester.widget<ButtonStateX>(
@@ -173,7 +195,7 @@ void main() {
       );
       expect(sendButton.disabled, isTrue);
       await tester.tap(find.byType(BackButtonX));
-      await tester.pumpAndSettle();
+      await pumpPage(tester);
       expect(calls, isEmpty);
       expect(LocalDataX.userid, 'user-A');
     }, client);
@@ -201,6 +223,12 @@ void main() {
       await http.runWithClient(() async {
         await open(tester);
         await send(tester);
+        expect(find.byType(AuthLayoutX), findsOneWidget);
+        expect(
+          tester.widget<OtpPinField>(find.byType(OtpPinField)).maxLength,
+          6,
+        );
+        await enter(tester, '999999');
         await enter(tester, '٠١٢٣٤٥');
         expect(calls, [requestFunction]);
         expect(LocalDataX.userid, 'user-A');
@@ -211,7 +239,7 @@ void main() {
             await tester.pump();
           }
         });
-        await tester.pumpAndSettle();
+        await pumpPage(tester);
         expect(calls, [requestFunction, confirmFunction]);
         expect(LocalDataX.userid, isEmpty);
         expect(LocalDataX.token, isEmpty);
@@ -239,7 +267,7 @@ void main() {
       requestCode = (_) => pending.future;
       await http.runWithClient(() async {
         await open(tester);
-        await tester.tap(find.byType(CheckboxListTile));
+        await tester.tap(find.byType(Checkbox));
         await tester.pump();
         final button = find.text('Send confirmation code');
         await tester.ensureVisible(button);
@@ -250,12 +278,17 @@ void main() {
         }
         expect(calls, [requestFunction]);
         Get.back();
-        await tester.pumpAndSettle();
+        await pumpPage(tester);
+        expect(Get.isRegistered<AccountDeletionController>(), isFalse);
+        await tester.tap(find.text('Open deletion'));
+        await pumpPage(tester);
         pending.complete(
           jsonResponse({'requestid': challengeId, 'expiresin': 300}),
         );
-        await tester.pumpAndSettle();
+        await pumpPage(tester);
         expect(calls, [requestFunction]);
+        expect(find.byType(OtpPinField), findsNothing);
+        expect(find.text('Send confirmation code'), findsOneWidget);
         expect(LocalDataX.userid, 'user-A');
       }, client);
     },
@@ -278,7 +311,7 @@ void main() {
         for (var attempt = 0; attempt < 5; attempt++) {
           await enter(tester, '012345');
           await pressConfirm(tester);
-          await tester.pumpAndSettle();
+          await pumpPage(tester);
           if (attempt == 0) {
             expect(
               find.text('The code is invalid. Check it and try again.'),
@@ -286,7 +319,7 @@ void main() {
             );
           }
         }
-        expect(find.byType(TextFieldX), findsNothing);
+        expect(find.byType(OtpPinField), findsNothing);
         expect(
           find.textContaining('The code expired or reached'),
           findsOneWidget,
@@ -320,9 +353,11 @@ void main() {
         );
         now = now.add(const Duration(minutes: 5, seconds: 1));
         await tester.pump(const Duration(seconds: 1));
-        expect(find.byType(TextFieldX), findsNothing);
-        await tester.tap(find.text('Send a new code'));
-        await tester.pumpAndSettle();
+        expect(find.byType(OtpPinField), findsNothing);
+        final resend = find.text('Send a new code');
+        await tester.ensureVisible(resend);
+        await tester.tap(resend);
+        await pumpPage(tester);
         expect(calls, [requestFunction, requestFunction]);
         expect(
           find.textContaining('The send limit was reached'),
@@ -351,7 +386,7 @@ void main() {
         () => LocalDataX.put(LocalKeyX.token, 'synthetic-B-token'),
       );
       await pressConfirm(tester);
-      await tester.pumpAndSettle();
+      await pumpPage(tester);
       expect(find.textContaining('Your session changed'), findsOneWidget);
       expect(calls, [requestFunction]);
     }, client);
@@ -366,7 +401,7 @@ void main() {
       await send(tester);
       await enter(tester, '012345');
       await pressConfirm(tester);
-      await tester.pumpAndSettle();
+      await pumpPage(tester);
       expect(
         find.textContaining('We could not confirm whether'),
         findsOneWidget,
@@ -398,7 +433,7 @@ void main() {
         );
         expect(find.byType(BackButtonX), findsNothing);
         await tester.pump(const Duration(seconds: 21));
-        await tester.pumpAndSettle();
+        await pumpPage(tester);
         expect(calls, [requestFunction, confirmFunction]);
         expect(
           find.textContaining('We could not confirm whether'),
@@ -408,7 +443,7 @@ void main() {
         pending.complete(
           jsonResponse({'status': 'anonymised', 'logoutrequired': true}),
         );
-        await tester.pumpAndSettle();
+        await pumpPage(tester);
         expect(LocalDataX.userid, 'user-A');
       }, client);
     },
@@ -426,14 +461,14 @@ void main() {
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       await http.runWithClient(() async {
         await open(tester);
-        await tester.ensureVisible(find.byType(CheckboxListTile));
+        await tester.ensureVisible(find.byType(Checkbox));
         await send(tester);
-        await tester.ensureVisible(find.byType(TextFieldX));
+        await tester.ensureVisible(find.byType(OtpPinField));
         await enter(tester, '012345');
         tester.view.viewInsets = const FakeViewPadding(bottom: 260);
-        await tester.pumpAndSettle();
+        await pumpPage(tester);
         await tester.ensureVisible(find.text('Confirm account deletion'));
-        await tester.pumpAndSettle();
+        await pumpPage(tester);
         expect(tester.takeException(), isNull);
         expect(
           find.text('Confirm account deletion').hitTestable(),
@@ -496,6 +531,7 @@ void main() {
       RouteNameX.root,
       RouteNameX.courseDetails,
       RouteNameX.notifications,
+      RouteNameX.accountDeletion,
     ]) {
       final page = RouteListX.routes.singleWhere((page) => page.name == route);
       expect(page.middlewares!.single.redirect(route)?.name, RouteNameX.login);

@@ -1,0 +1,193 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../../../../../Config/config.dart';
+import '../../../../Section/AuthLayout/auth_layout.dart';
+import '../../../../Widget/Basic/Input/otp_fields.dart';
+import '../../../../Widget/widget.dart';
+import '../controller/controller.dart';
+
+class AccountDeletionView extends GetView<AccountDeletionController> {
+  const AccountDeletionView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final systemScale = MediaQueryData.fromView(View.of(context)).textScaler;
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: systemScale),
+      child: GetBuilder<AccountDeletionController>(
+        builder: (controller) => PopScope(
+          canPop: controller.canGoBack,
+          child: controller.hasChallenge
+              ? _Verification(controller: controller)
+              : _Consent(controller: controller),
+        ),
+      ),
+    );
+  }
+}
+
+class _Consent extends StatelessWidget {
+  const _Consent({required this.controller});
+
+  final AccountDeletionController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBarX(
+        title: 'Delete account',
+        isBack: controller.canGoBack,
+        leading: controller.canGoBack ? null : const SizedBox.shrink(),
+        leadingWidth: controller.canGoBack ? null : 0,
+        onBack: () => Navigator.of(context).maybePop(),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: StyleX.paddingApp,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextX('delete.explanation', style: TextStyleX.titleMedium),
+              if (controller.showConsent) ...[
+                const SizedBox(height: 16),
+                AbsorbPointer(
+                  absorbing: controller.busy,
+                  child: CheckBoxX(
+                    value: controller.consent,
+                    onChanged: controller.onConsentChanged,
+                    label: 'delete.consent',
+                    textStyle: TextStyleX.bodyMedium,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              if (controller.showSend)
+                ButtonStateX(
+                  text: 'delete.send',
+                  onTap: controller.onRequestCode,
+                  disabled: !controller.canRequestCode,
+                ),
+              if (controller.uncertain)
+                ButtonStateX(
+                  text: 'delete.returnToSignIn',
+                  onTap: controller.onReturnToSignIn,
+                ),
+              _Actions(controller: controller),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Verification extends StatelessWidget {
+  const _Verification({required this.controller});
+
+  final AccountDeletionController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final error = controller.codeError;
+    return AuthLayoutX(
+      title: 'Delete account',
+      subtitle: 'delete.sent',
+      isBackIcon: controller.canGoBack,
+      child: Column(
+        children: [
+          Semantics(
+            label: 'delete.code'.tr,
+            child: OtpFieldsX(
+              pinKey: ValueKey(controller.otpInputVersion),
+              enabled: !controller.busy,
+              keyboardAutofill: true,
+              onChanged: controller.onCodeChanged,
+            ),
+          ),
+          if (error != null)
+            Semantics(
+              liveRegion: true,
+              child: TextX(
+                error,
+                style: TextStyleX.bodySmall,
+                color: theme.colorScheme.error,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          const SizedBox(height: 8),
+          TextX(
+            'delete.expires'.trParams({
+              'seconds': '${controller.expirySeconds}',
+            }),
+            style: TextStyleX.bodySmall,
+          ),
+          const SizedBox(height: 16),
+          ButtonStateX(
+            text: 'delete.confirm',
+            onTap: controller.onConfirmDeletion,
+            disabled: controller.busy,
+            colorButton: Colors.transparent,
+            borderColor: theme.colorScheme.error,
+            colorText: theme.colorScheme.error,
+          ),
+          const SizedBox(height: 16),
+          _Actions(controller: controller),
+        ],
+      ),
+    );
+  }
+}
+
+class _Actions extends StatelessWidget {
+  const _Actions({required this.controller});
+
+  final AccountDeletionController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final message = controller.message;
+    final resend = controller.resendSeconds;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (controller.showResend)
+          TextButton(
+            onPressed: controller.canRequestCode
+                ? controller.onRequestCode
+                : null,
+            child: TextX(
+              resend > 0
+                  ? 'delete.resendIn'.trParams({'seconds': '$resend'})
+                  : 'delete.resend',
+              style: TextStyleX.bodySmall,
+              color: resend > 0 ? theme.colorScheme.onSurfaceVariant : null,
+            ),
+          ),
+        if (controller.busy)
+          Semantics(
+            label: 'Loading'.tr,
+            child: const LinearProgressIndicator(),
+          ),
+        if (message != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Semantics(
+              liveRegion: true,
+              child: TextX(
+                message,
+                style: TextStyleX.bodyMedium,
+                color: theme.colorScheme.error,
+              ),
+            ),
+          ),
+        TextButton(
+          onPressed: controller.onOpenSupport,
+          child: TextX('delete.support', style: TextStyleX.bodySmall),
+        ),
+      ],
+    );
+  }
+}
