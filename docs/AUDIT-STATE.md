@@ -2,6 +2,22 @@
 
 Updated: 2026-10-23 (Asia/Damascus).
 
+## Untimed quiz attempt follow-up (2026-11-09)
+
+The owner reported the recovery screen persisted and supplied `timelimit: 0`
+plus an `existing`, `inprogress` attempt with both questions. Authorized
+checks on the academy service confirmed the same attempt was still in progress
+after more than an hour, without a scheduled deadline. Both question slots
+were `notyetanswered` with `hasautosavedstep: false`. The prior app substituted
+a 120-second deadline, which reproduced the recovery screen in a widget test.
+`129a93b` preserves Moodle's zero duration as untimed. It omits the countdown
+and automatic timeout for these attempts, while result elapsed time still uses
+the original start. The regression covers fresh and resumed untimed attempts
+and explicit submission. All 1,007 tests passed in the isolated checkout.
+Analysis reported only the prior quiz results warning. The patched build was
+not driven against the academy service. The service probe did not create,
+answer, or submit a quiz attempt.
+
 ## Quiz attempt resume (2026-11-09)
 
 Owner reported recovery on re-entering unfinished exams, including attempts

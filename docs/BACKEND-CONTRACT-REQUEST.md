@@ -101,7 +101,7 @@ duplicate answer labels and partially correct answer.
   and unlocking rules; idempotent replay.
 - Answers: stable answer IDs or index basis, shuffle stability, supported question
   types, duplicate labels, scoring/partial credit and selected-answer nullability.
-- Attempts: deadline authority, timelimit=0, saved selections/position on resume,
+- Attempts: effective server deadline and close date, saved selections/position on resume,
   status vocabulary, authoritative passed value, finalization acknowledgement,
   race handling and which attempt get_quiz_result selects.
 - Download: public/signed/token/cookie authentication, redirects and token
@@ -130,6 +130,8 @@ remain recovery-only. The app also needs a resume-only question read keyed by
 attempt ID to eliminate the race where the existing start-or-get function could
 create a new attempt if the old one closes between requests. Verify both
 existing and answered payloads against the current mobile service.
-The existing five-second route-dwell completion trigger and120-second fallback
-for zero quiz time limit are retained pending confirmed policy, not endorsed as
-actual watched minutes or an authoritative server deadline.
+Moodle `timelimit: 0` means the quiz has no per-attempt time limit. The app
+preserves zero and leaves separately scheduled close dates to Moodle. This was
+confirmed against a live, unscheduled attempt that stayed in progress after
+more than an hour. The five-second route-dwell completion trigger remains
+pending the watched-time contract.
