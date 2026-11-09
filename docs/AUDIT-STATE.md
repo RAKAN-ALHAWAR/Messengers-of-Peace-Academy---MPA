@@ -2,6 +2,17 @@
 
 Updated: 2026-10-23 (Asia/Damascus).
 
+## Account version footer follow-up (2026-11-09)
+
+The owner reported the footer missing and specified it must immediately follow
+Delete account. The booted simulator had an older native binary without the
+package metadata channel. `c6e3fa6` keeps installed metadata first and falls
+back to the bundled pubspec version and build when the channel is absent.
+A phone-size Arabic test reproduced the missing line before the fix and
+verified placement immediately below Delete account after it. All 10 focused
+checks passed. A synthetic phone-size render confirmed the visible footer.
+The installed simulator app was not replaced.
+
 ## Account version footer (2026-11-09)
 
 The owner requested a small, muted version and build line below the account
