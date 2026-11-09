@@ -31,6 +31,8 @@ class HttpDebugCaptureX {
     try {
       final function =
           Uri.parse(url).queryParameters['wsfunction'] ?? 'unknown';
+      // The quiz summary renders the student's saved choices in its HTML.
+      if (function == 'mod_quiz_get_attempt_summary') return;
       final directory = await getApplicationDocumentsDirectory();
       final folder = Directory('${directory.path}/api-capture');
       await folder.create(recursive: true);

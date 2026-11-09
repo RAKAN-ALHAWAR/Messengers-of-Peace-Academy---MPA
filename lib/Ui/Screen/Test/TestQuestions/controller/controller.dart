@@ -7,6 +7,7 @@ import '../../../../../Core/core.dart';
 import '../../../../../Core/Error/error.dart';
 import '../../../../../Core/Service/controller_lease.dart';
 import '../../../../../Core/Service/session_lease.dart';
+import '../../../../../Data/Model/quiz/question.dart';
 import '../../../../../Data/Model/quiz/quiz.dart';
 import '../../../../../Data/Model/quiz/quiz_start_attempt.dart';
 
@@ -52,33 +53,68 @@ class TestQuestionsController extends GetxController {
   Future<void> _loadData() async {
     final lease = ControllerLeaseX.capture(this, owner: _ownerLease);
     if (!lease.isCurrent || _ready || needsRecovery) return;
-    // A resumed attempt has no saved selections here; replaying it could overwrite them.
-    if (quiz.lastAttemptStatus == QuizAttemptStatusX.inProgress) {
-      _needsRecovery.value = true;
-      return;
-    }
+    final reportedInProgress =
+        quiz.lastAttemptStatus == QuizAttemptStatusX.inProgress;
     try {
+      var previous = reportedInProgress
+          ? await DatabaseX.getQuizInProgressAttempt(quizId: quizId)
+          : null;
+      if (!lease.isCurrent) return;
+      if (reportedInProgress &&
+          (previous == null ||
+              !_deadline(previous.startedAt).isAfter(DateTime.now()))) {
+        _needsRecovery.value = true;
+        return;
+      }
       if (!_hasAttempt) {
         final attempt = await DatabaseX.getQuizStartAttempt(quizId: quizId);
         if (!lease.isCurrent) return;
         quizStartAttempt = attempt;
         _hasAttempt = true;
-        selectedAnswers = List<int?>.filled(attempt.questions.length, null);
       }
-      final questions = quizStartAttempt.questions;
-      if (questions.isEmpty ||
-          quizStartAttempt.totalQuestions != questions.length ||
+      final attempt = quizStartAttempt;
+      final questions = attempt.questions;
+      if (attempt.state != QuizAttemptStatusX.inProgress ||
+          questions.isEmpty ||
+          attempt.totalQuestions != questions.length ||
           questions.any((q) => q.answers.isEmpty) ||
           questions.map((q) => q.slot).toSet().length != questions.length) {
         _needsRecovery.value = true;
         return;
       }
-      final started = await _attemptStartTime();
-      if (!lease.isCurrent) return;
-      _endTime = started.add(Duration(seconds: quiz.timelimit));
+      final DateTime started;
+      if (reportedInProgress || attempt.status == 'existing') {
+        previous ??= await DatabaseX.getQuizInProgressAttempt(quizId: quizId);
+        if (!lease.isCurrent) return;
+        if (previous == null ||
+            previous.id != attempt.attemptId ||
+            attempt.status != 'existing' ||
+            questions.length != quiz.totalQuestions ||
+            !_deadline(previous.startedAt).isAfter(DateTime.now())) {
+          _needsRecovery.value = true;
+          return;
+        }
+        final states = await DatabaseX.getQuizAttemptSavedSlots(
+          attemptId: previous.id,
+        );
+        if (!lease.isCurrent) return;
+        final nextIndex = _nextUnansweredIndex(questions, states);
+        if (nextIndex == null ||
+            !_deadline(previous.startedAt).isAfter(DateTime.now())) {
+          _needsRecovery.value = true;
+          return;
+        }
+        currentQuestionIndex = nextIndex;
+        started = previous.startedAt;
+      } else {
+        started = await _attemptStartTime();
+        if (!lease.isCurrent) return;
+      }
+      selectedAnswers = List<int?>.filled(questions.length, null);
+      _endTime = _deadline(started);
       _ready = true;
       _updateRemaining(_endTime.difference(DateTime.now()));
-      if (remainingTime > 0 && !_finishRequested) startTimer();
+      if (!_finishRequested) startTimer();
     } catch (error) {
       if (!lease.isCurrent) return;
       ErrorX.console(error);
@@ -90,6 +126,25 @@ class TestQuestionsController extends GetxController {
       }
       rethrow;
     }
+  }
+
+  DateTime _deadline(DateTime started) =>
+      started.add(Duration(seconds: quiz.timelimit));
+
+  /// The quiz only advances forward. Do not replay a saved slot or guess
+  /// selections when a server summary cannot establish that sequence.
+  static int? _nextUnansweredIndex(
+    List<QuestionX> questions,
+    Map<int, bool>? states,
+  ) {
+    if (states == null || states.length != questions.length) return null;
+    int? firstUnanswered;
+    for (var index = 0; index < questions.length; index++) {
+      final saved = states[questions[index].slot];
+      if (saved == null || (saved && firstUnanswered != null)) return null;
+      if (!saved) firstUnanswered ??= index;
+    }
+    return firstUnanswered;
   }
 
   Future<DateTime> _attemptStartTime() async {

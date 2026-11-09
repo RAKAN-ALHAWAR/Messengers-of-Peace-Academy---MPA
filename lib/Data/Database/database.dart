@@ -607,20 +607,7 @@ class DatabaseX {
   static Future<DateTime?> getQuizAttemptStartTime({
     required String quizId,
   }) async {
-    var data = await RemoteDataSourceX.post(
-      DBEndPointX.postGetQuizUserAttempts,
-      body: {
-        NameX.quizId: quizId,
-        NameX.userId: LocalDataX.userid,
-        NameX.status: 'all',
-      },
-      isSkeepStatus: true,
-    );
-    if (data.$1 is! Map) return null;
-
-    var attempts = data.$1[NameX.attempts];
-    if (attempts is! List) return null;
-
+    final attempts = await _quizUserAttempts(quizId);
     for (var attempt in attempts.reversed) {
       if (attempt is Map &&
           attempt[NameX.state] == QuizAttemptStatusX.inProgress) {
@@ -631,6 +618,63 @@ class DatabaseX {
       }
     }
     return null;
+  }
+
+  static Future<List<dynamic>> _quizUserAttempts(String quizId) async {
+    final (data, _) = await RemoteDataSourceX.post(
+      DBEndPointX.postGetQuizUserAttempts,
+      body: {
+        NameX.quizId: quizId,
+        NameX.userId: LocalDataX.userid,
+        NameX.status: 'all',
+      },
+      isSkeepStatus: true,
+    );
+    return data is Map && data[NameX.attempts] is List
+        ? data[NameX.attempts] as List
+        : const [];
+  }
+
+  /// An existing attempt must be identified before opening it for resumption.
+  static Future<({String id, DateTime startedAt})?> getQuizInProgressAttempt({
+    required String quizId,
+  }) async {
+    final active = (await _quizUserAttempts(quizId)).whereType<Map>().where(
+      (attempt) => attempt[NameX.state] == QuizAttemptStatusX.inProgress,
+    );
+    if (active.length != 1) return null;
+    final attempt = active.single;
+    final id = attempt[NameX.id]?.toString();
+    final time = attempt[NameX.timeStart];
+    if (id == null || id.isEmpty || time is! int || time <= 0) return null;
+    return (
+      id: id,
+      startedAt: DateTime.fromMillisecondsSinceEpoch(time * 1000),
+    );
+  }
+
+  /// Saved/blank state by Moodle slot. Unknown or draft states cannot be replayed.
+  static Future<Map<int, bool>?> getQuizAttemptSavedSlots({
+    required String attemptId,
+  }) async {
+    final (data, _) = await RemoteDataSourceX.post(
+      DBEndPointX.postGetQuizAttemptSummary,
+      body: {NameX.attemptId: attemptId},
+    );
+    if (data is! Map || data[NameX.questions] is! List) return null;
+    final states = <int, bool>{};
+    for (final question in data[NameX.questions] as List) {
+      if (question is! Map || question['hasautosavedstep'] == true) return null;
+      final slot = question[NameX.slot];
+      final state = question['stateclass'];
+      if (slot is! int ||
+          states.containsKey(slot) ||
+          (state != 'answersaved' && state != 'notyetanswered')) {
+        return null;
+      }
+      states[slot] = state == 'answersaved';
+    }
+    return states;
   }
 
   static Future<QuizResultX> getQuizResult({required String quizId}) async {

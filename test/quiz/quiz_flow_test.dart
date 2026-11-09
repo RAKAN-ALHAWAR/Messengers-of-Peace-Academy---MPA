@@ -45,7 +45,10 @@ class QuizHarness {
       finalizeCalls = 0,
       resultCalls = 0,
       infoCalls = 0,
-      startTimeCalls = 0;
+      startTimeCalls = 0,
+      summaryCalls = 0;
+  DateTime? startedAt;
+  Map<int, String>? savedQuestionStates;
   Map<String, String>? answerBody;
   Future<http.Response> Function()? onStart,
       onAnswer,
@@ -97,9 +100,21 @@ class QuizHarness {
       return jsonResponse({
         NameX.attempts: [
           {
+            NameX.id: attempt.attemptId,
             NameX.state: 'inprogress',
-            NameX.timeStart: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+            NameX.timeStart:
+                (startedAt ?? DateTime.now()).millisecondsSinceEpoch ~/ 1000,
           },
+        ],
+      });
+    }
+    if (stage == 'mod_quiz_get_attempt_summary') {
+      summaryCalls++;
+      expect(request.bodyFields[NameX.attemptId], attempt.attemptId);
+      return jsonResponse({
+        NameX.questions: [
+          for (final entry in (savedQuestionStates ?? <int, String>{}).entries)
+            {NameX.slot: entry.key, 'stateclass': entry.value},
         ],
       });
     }
@@ -325,30 +340,119 @@ void main() {
       }, h.client);
     },
   );
-  testWidgets(
-    'known resumed attempt shows recovery and makes no guessed answer/start',
-    (tester) async {
+  for (final answered in [false, true]) {
+    testWidgets('resumes the same attempt with saved answers: $answered', (
+      tester,
+    ) async {
       final resumed = QuizX.fromJson(
         h.quiz.toJson()
-          ..[NameX.lastAttemptStatus] = QuizAttemptStatusX.inProgress,
+          ..[NameX.lastAttemptStatus] = QuizAttemptStatusX.inProgress
+          ..[NameX.canStart] = false,
       );
+      h.startedAt = DateTime.now().subtract(const Duration(minutes: 5));
+      h.onInfo = () async => h.jsonResponse(resumed.toJson());
+      h.onStart = () async =>
+          h.jsonResponse(h.attempt.toJson()..[NameX.status] = 'existing');
+      h.savedQuestionStates = {
+        7: 'notyetanswered',
+        2: answered ? 'answersaved' : 'notyetanswered',
+      };
       await http.runWithClient(() async {
-        await h.mount(tester, RouteNameX.testQuestions, overrideQuiz: resumed);
+        await h.mount(tester, RouteNameX.testInfo);
         await tester.pumpAndSettle();
+        Get.find<TestInfoController>().onStartTest();
+        await tester.pumpAndSettle();
+        final c = Get.find<TestQuestionsController>();
+        expect(c.needsRecovery, isFalse);
+        expect(c.quizStartAttempt.attemptId, h.attempt.attemptId);
+        expect(c.currentQuestionIndex, answered ? 1 : 0);
         expect(
-          find.text(
-            'Your existing test attempt needs recovery. Return to test information.',
-          ),
+          find.byKey(ValueKey('question_card_${answered ? 1 : 0}')),
           findsOneWidget,
         );
-        expect(find.text('Return to test information'), findsOneWidget);
-        expect(h.startCalls, 0);
+        expect(c.remainingTime, inInclusiveRange(3290, 3300));
+        expect(h.startCalls, 1);
+        expect(h.summaryCalls, 1);
         expect(h.answerCalls, 0);
         expect(h.finalizeCalls, 0);
+        if (!answered) {
+          c.onChangeAnswer(1);
+          await c.onNextQuestion();
+          expect(h.answerBody?[NameX.slot], '2');
+          expect(h.answerBody?[NameX.attemptId], h.attempt.attemptId);
+        }
         await h.finish(tester);
       }, h.client);
-    },
-  );
+    });
+  }
+
+  testWidgets('an incomplete resume summary sends no answer or finalization', (
+    tester,
+  ) async {
+    final resumed = QuizX.fromJson(
+      h.quiz.toJson()
+        ..[NameX.lastAttemptStatus] = QuizAttemptStatusX.inProgress,
+    );
+    h.onStart = () async =>
+        h.jsonResponse(h.attempt.toJson()..[NameX.status] = 'existing');
+    h.savedQuestionStates = {7: 'notyetanswered'};
+    await http.runWithClient(() async {
+      await h.mount(tester, RouteNameX.testQuestions, overrideQuiz: resumed);
+      await tester.pumpAndSettle();
+      expect(find.text('Return to test information'), findsOneWidget);
+      expect(h.summaryCalls, 1);
+      expect(h.answerCalls, 0);
+      expect(h.finalizeCalls, 0);
+      await h.finish(tester);
+    }, h.client);
+  });
+
+  testWidgets('expired resume never calls start, answer or finalize', (
+    tester,
+  ) async {
+    final resumed = QuizX.fromJson(
+      h.quiz.toJson()
+        ..[NameX.lastAttemptStatus] = QuizAttemptStatusX.inProgress,
+    );
+    h.startedAt = DateTime.now().subtract(const Duration(hours: 2));
+    await http.runWithClient(() async {
+      await h.mount(tester, RouteNameX.testQuestions, overrideQuiz: resumed);
+      await tester.pumpAndSettle();
+      expect(Get.find<TestQuestionsController>().needsRecovery, isTrue);
+      expect(h.startCalls, 0);
+      expect(h.summaryCalls, 0);
+      expect(h.answerCalls, 0);
+      expect(h.finalizeCalls, 0);
+      await h.finish(tester);
+    }, h.client);
+  });
+
+  testWidgets('changed attempt is never used to answer or finalize', (
+    tester,
+  ) async {
+    final resumed = QuizX.fromJson(
+      h.quiz.toJson()..[NameX.lastAttemptStatus] = QuizAttemptStatusX.inProgress,
+    );
+    h.onStart = () async => h.jsonResponse(
+      h.attempt.toJson()
+        ..[NameX.attemptId] = 'different-attempt'
+        ..[NameX.status] = 'existing',
+    );
+    await http.runWithClient(() async {
+      await h.mount(tester, RouteNameX.testQuestions, overrideQuiz: resumed);
+      await tester.pumpAndSettle();
+      final c = Get.find<TestQuestionsController>();
+      expect(c.needsRecovery, isTrue);
+      c.onChangeAnswer(0);
+      await c.onNextQuestion();
+      c.submitQuiz();
+      expect(h.summaryCalls, 0);
+      expect(h.answerCalls, 0);
+      expect(h.finalizeCalls, 0);
+      await h.finish(tester);
+    }, h.client);
+  });
+
   testWidgets(
     'late start response after session ABA cannot populate or continue',
     (tester) async {

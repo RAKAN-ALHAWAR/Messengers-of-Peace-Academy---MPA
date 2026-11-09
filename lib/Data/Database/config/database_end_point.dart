@@ -191,4 +191,6 @@ class DBEndPointX {
   /// attempt so a resumed attempt keeps its original deadline
   static String get postGetQuizUserAttempts =>
       '${mainAPI}mod_quiz_get_user_attempts';
+  static String get postGetQuizAttemptSummary =>
+      '${mainAPI}mod_quiz_get_attempt_summary';
 }
