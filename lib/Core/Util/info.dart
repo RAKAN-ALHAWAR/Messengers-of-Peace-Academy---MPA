@@ -8,6 +8,16 @@ class InfoUtilX {
   static String author = '';
   static ({String version, String buildNumber})? installedRelease;
 
+  static ({String version, String buildNumber})? get displayRelease {
+    final installed = installedRelease;
+    if (installed != null) return installed;
+
+    // Older native binaries can run updated Dart code during development.
+    final bundled = version.trim().split('+');
+    if (bundled.length != 2 || bundled.any((part) => part.isEmpty)) return null;
+    return (version: bundled[0], buildNumber: bundled[1]);
+  }
+
   static const _packageChannel = MethodChannel('mopa/package_info');
 
   static Future<void> init() async {

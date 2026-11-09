@@ -27,7 +27,7 @@ class ProfileDetailsView extends GetView<ProfileDetailsController> {
 
         /// Data state
         child: (_) {
-          final release = InfoUtilX.installedRelease;
+          final release = InfoUtilX.displayRelease;
           return SingleChildScrollView(
             child: Column(
               children: [
