@@ -51,10 +51,13 @@ class TestQuestionsView extends GetView<TestQuestionsController> {
                 return Padding(
                   padding: StyleX.paddingApp,
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       TextX(
                         controller.answerError.value ??
                             'Your existing test attempt needs recovery. Return to test information.',
+                        style: TextStyleX.headlineSmall,
+                        textAlign: TextAlign.center,
                       ),
                       ButtonX(
                         text: 'Return to test information',
@@ -109,10 +112,9 @@ class TestQuestionsView extends GetView<TestQuestionsController> {
                         key: Key(
                           "question_card_${controller.currentQuestionIndex}",
                         ),
-                        color:
-                            Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerLowest,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerLowest,
                         padding: EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,12 +123,10 @@ class TestQuestionsView extends GetView<TestQuestionsController> {
                               key: Key(
                                 "question_text_${controller.currentQuestionIndex}",
                               ),
-                              html:
-                                  controller
-                                      .quizStartAttempt
-                                      .questions[controller
-                                          .currentQuestionIndex]
-                                      .text,
+                              html: controller
+                                  .quizStartAttempt
+                                  .questions[controller.currentQuestionIndex]
+                                  .text,
                               textStyle: TextStyleX.titleMedium,
                             ).fadeAnimation200,
                             SizedBox(height: 16),
@@ -147,12 +147,11 @@ class TestQuestionsView extends GetView<TestQuestionsController> {
                                 ),
                                 value: optionIndex,
                                 groupValue: controller.selectedAnswer.value,
-                                color:
-                                    Theme.of(
-                                      context,
-                                    ).colorScheme.onInverseSurface,
-                                onChanged:
-                                    (value) => controller.onChangeAnswer(value),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onInverseSurface,
+                                onChanged: (value) =>
+                                    controller.onChangeAnswer(value),
                                 child: Padding(
                                   padding: EdgeInsetsDirectional.only(
                                     bottom: 12,
@@ -160,12 +159,11 @@ class TestQuestionsView extends GetView<TestQuestionsController> {
                                     end: 12,
                                   ),
                                   child: HtmlWidgetX(
-                                    html:
-                                        controller
-                                            .quizStartAttempt
-                                            .questions[controller
-                                                .currentQuestionIndex]
-                                            .answers[optionIndex],
+                                    html: controller
+                                        .quizStartAttempt
+                                        .questions[controller
+                                            .currentQuestionIndex]
+                                        .answers[optionIndex],
                                     textStyle: TextStyleX.bodyMedium,
                                   ),
                                 ),
@@ -184,13 +182,9 @@ class TestQuestionsView extends GetView<TestQuestionsController> {
                         state: controller.buttonState.value,
                         text:
                             controller.currentQuestionIndex ==
-                                    controller
-                                            .quizStartAttempt
-                                            .questions
-                                            .length -
-                                        1
-                                ? "Submitting answers"
-                                : "Next question",
+                                controller.quizStartAttempt.questions.length - 1
+                            ? "Submitting answers"
+                            : "Next question",
                         onTap: controller.onNextQuestion,
                       ).marginOnly(bottom: 16).fadeAnimation200,
                     ],
