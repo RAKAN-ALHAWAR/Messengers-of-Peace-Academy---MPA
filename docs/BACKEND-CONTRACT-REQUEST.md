@@ -94,6 +94,18 @@ duplicate answer labels and partially correct answer.
 
 - Counts: definition of level/course/topic/lesson/activity; explain the reported
   2 versus11 and quiz-only progress0/1 versus1/1 after passing.
+- Activity classification follow-up (2026-11-09, proposed): Can
+  `get_course_details` return a stable activity type for every activity it
+  already lists, even when its URL is withheld? The sanitized observed shape
+  has 11 lesson sections, one standalone file, and a final section with a quiz
+  and a linkless certificate. Please identify video lessons, quizzes, resources
+  and certificates explicitly, preserve the current access checks, and supply
+  a fixture covering a locked lesson and a locked certificate. The count must
+  stay 11 before and after they unlock.
+- Home aggregates: The owner confirmed the admission exam is an official
+  course and belongs in both course counters. Confirm how the level percentage
+  is calculated independently of these counters. A saved response showed one
+  completed course out of two and zero percent after passing the exam.
 - Minutes: measured content/runtime/watch time, collection endpoint, units,
   rounding, replays, background time and update latency. Define video_duration.
 - Completion: accepted video completion criterion; file completion on download,

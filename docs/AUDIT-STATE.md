@@ -37,6 +37,33 @@ warning in the quiz results controller. CI's Flutter 3.41.6 requests five SDK
 package changes when enforcing the current lock locally. Remote CI, native
 interactive checks and the live Moodle account remain unverified.
 
+## Captured lesson count and Home progress follow-up (2026-11-09)
+
+A saved simulator response for Foundations of Da'wah supplies 11 video lesson
+sections. The final section contains a quiz with `quizid` and a separate level
+certificate with a name and `cmid`, but without a URL or an activity type.
+The app's fallback classifies that linkless certificate as a locked video.
+A local replay of the sanitized response reproduces 12 lessons where 11 are
+expected. The earlier synthetic test omitted the co-located certificate.
+Moodle's custom course-details response needs a stable activity classification
+for entries it already returns, independent of access to their URLs. No
+fallback based on an activity title was approved or implemented.
+
+A saved Home snapshot shows `completedcourses: 1`, `totalcourses: 2`, and
+`completion_percent: 0` at the selected level. The admission exam is the only
+completed course in the returned levels. `get_user_statistics` independently
+returns `completedcourses: 1` as an aggregate without course IDs. A widget
+probe using these captured values verifies 1/2 and 0% in the gold level card
+and 1 in the completed-courses statistics card. The owner confirmed that the
+admission exam counts as an official course in both Home cards. The server's
+formula for the separate level percentage remains unconfirmed.
+
+The installed simulator binary predates `b4cd48b`. A simulator build of
+`b4cd48b` succeeded, and local replay established the same 12-count defect
+in that source before installing it. No live service calls were made. Next:
+confirm a stable lesson/type field with the backend owner, then replay the
+captured activity shape through the course card and details after the fix.
+
 ## Account deletion and version format (2026-11-09)
 
 The owner asked to use the `version + build` format below Delete account and
