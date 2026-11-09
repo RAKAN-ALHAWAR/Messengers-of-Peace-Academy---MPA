@@ -53,9 +53,17 @@ class _Consent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const SizedBox(height: 24),
+              Icon(
+                Icons.person_remove_rounded,
+                size: 80,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(height: 16),
               TextX(
                 'delete.explanation',
                 style: TextStyleX.titleMedium,
+                textAlign: TextAlign.center,
               ),
               if (controller.showConsent) ...[
                 const SizedBox(height: 16),
