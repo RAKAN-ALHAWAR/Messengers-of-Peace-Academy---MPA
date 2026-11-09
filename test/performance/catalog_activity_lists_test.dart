@@ -9,7 +9,7 @@ import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/intl.dart' hide TextDirection;
+import 'package:intl/intl.dart';
 import 'package:messengersofpeace/Config/config.dart';
 import 'package:messengersofpeace/Config/Translation/translation.dart';
 import 'package:messengersofpeace/Core/core.dart';
@@ -431,7 +431,12 @@ void main() {
         expect(find.text('لا يوجد هدف نقاط تالٍ'), findsOneWidget);
         expect(find.textContaining('-7'), findsNothing);
         expect(find.textContaining('0/7'), findsNothing);
-        expect(find.byType(GradientProgressBar), findsNothing);
+        expect(tester.getSize(find.byType(PointsCardX)).height, 160);
+        final track = tester.widget<GradientProgressBar>(
+          find.byType(GradientProgressBar),
+        );
+        expect(track.value, 0);
+        expect(find.text('–'), findsOneWidget);
         expect(find.textContaining('مطلوب 0'), findsNothing);
         await tester.pumpWidget(const SizedBox());
       }, () => MockClient((request) async {
@@ -499,14 +504,16 @@ void main() {
     });
   }
   testWidgets(
-    'points card gives a finite bar and ordered counter only for a valid goal',
+    'points card preserves its layout with or without a valid goal',
     (tester) async {
       viewport(tester);
       final missingThreshold = {...badge(0)}..remove(NameX.requiredPoints);
       expect(() => BadgeX.fromJson(missingThreshold), throwsA(isNotNull));
+      Rect? trackRect;
       for (final values in [(0, 0), (7, 0), (7, -1), (20, 10), (7, 10), (-3, 10)]) {
         final model = BadgeX.fromJson({
           ...badge(0),
+          NameX.badgeName: 'A',
           NameX.requiredPoints: values.$2,
         });
         await tester.pumpWidget(
@@ -521,23 +528,27 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
-        if (values.$2 <= 0) {
-          expect(find.byType(GradientProgressBar), findsNothing);
-          expect(find.text('لا يوجد هدف نقاط تالٍ'), findsOneWidget);
-          continue;
-        }
         expect(tester.getSize(find.byType(PointsCardX)).height, 160);
+        final track = find.byType(GradientProgressBar);
+        trackRect ??= tester.getRect(track);
+        expect(tester.getRect(track), trackRect);
         final bar = find.descendant(
-          of: find.byType(GradientProgressBar),
+          of: track,
           matching: find.byType(FractionallySizedBox),
         );
+        final factor = tester.widget<FractionallySizedBox>(bar).widthFactor;
+        if (values.$2 <= 0) {
+          expect(factor, 0);
+          expect(find.text('لا يوجد هدف نقاط تالٍ'), findsOneWidget);
+          expect(find.text('–'), findsOneWidget);
+          continue;
+        }
         final shownPoints = values.$1.clamp(0, values.$2);
-        final count = find.text('$shownPoints/${values.$2}');
-        expect(tester.widget<Text>(count).textDirection, TextDirection.ltr);
         expect(
-          tester.widget<FractionallySizedBox>(bar).widthFactor,
-          shownPoints / values.$2,
+          find.text('\u2066$shownPoints/${values.$2}\u2069 نقطة'),
+          findsOneWidget,
         );
+        expect(factor, shownPoints / values.$2);
       }
       await tester.pumpWidget(const SizedBox());
     },
