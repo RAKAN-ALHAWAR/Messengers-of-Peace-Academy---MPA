@@ -24,8 +24,7 @@ class TestQuestionsController extends GetxController {
   late RxString timeRemaining =
       FunctionX.formatDuration(Duration(seconds: quiz.timelimit)).obs;
   final selectedAnswer = Rxn<int>();
-  late DateTime _startedAt;
-  DateTime? _endTime;
+  late DateTime _endTime;
   Timer? _timer;
   int remainingTime = 0;
   final isLoading = false.obs;
@@ -63,7 +62,7 @@ class TestQuestionsController extends GetxController {
       if (!lease.isCurrent) return;
       if (reportedInProgress &&
           (previous == null ||
-              _hasExpired(previous.startedAt))) {
+              !_deadline(previous.startedAt).isAfter(DateTime.now()))) {
         _needsRecovery.value = true;
         return;
       }
@@ -91,7 +90,7 @@ class TestQuestionsController extends GetxController {
             previous.id != attempt.attemptId ||
             attempt.status != 'existing' ||
             questions.length != quiz.totalQuestions ||
-            _hasExpired(previous.startedAt)) {
+            !_deadline(previous.startedAt).isAfter(DateTime.now())) {
           _needsRecovery.value = true;
           return;
         }
@@ -101,7 +100,7 @@ class TestQuestionsController extends GetxController {
         if (!lease.isCurrent) return;
         final nextIndex = _nextUnansweredIndex(questions, states);
         if (nextIndex == null ||
-            _hasExpired(previous.startedAt)) {
+            !_deadline(previous.startedAt).isAfter(DateTime.now())) {
           _needsRecovery.value = true;
           return;
         }
@@ -112,14 +111,10 @@ class TestQuestionsController extends GetxController {
         if (!lease.isCurrent) return;
       }
       selectedAnswers = List<int?>.filled(questions.length, null);
-      _startedAt = started;
-      final deadline = _deadline(started);
-      _endTime = deadline;
+      _endTime = _deadline(started);
       _ready = true;
-      if (deadline != null) {
-        _updateRemaining(deadline.difference(DateTime.now()));
-        startTimer();
-      }
+      _updateRemaining(_endTime.difference(DateTime.now()));
+      if (!_finishRequested) startTimer();
     } catch (error) {
       if (!lease.isCurrent) return;
       ErrorX.console(error);
@@ -133,11 +128,8 @@ class TestQuestionsController extends GetxController {
     }
   }
 
-  DateTime? _deadline(DateTime started) =>
-      quiz.hasTimeLimit ? started.add(Duration(seconds: quiz.timelimit)) : null;
-
-  bool _hasExpired(DateTime started) =>
-      _deadline(started)?.isAfter(DateTime.now()) == false;
+  DateTime _deadline(DateTime started) =>
+      started.add(Duration(seconds: quiz.timelimit));
 
   /// The quiz only advances forward. Do not replay a saved slot or guess
   /// selections when a server summary cannot establish that sequence.
@@ -257,18 +249,13 @@ class TestQuestionsController extends GetxController {
   }
 
   void startTimer() {
-    final deadline = _endTime;
-    if (deadline == null ||
-        !ownsCurrentSession ||
-        !_ready ||
-        needsRecovery ||
-        _finishRequested) {
+    if (!ownsCurrentSession || !_ready || needsRecovery || _finishRequested) {
       return;
     }
     _timer?.cancel();
     _timer = Timer.periodic(
       const Duration(seconds: 1),
-      (_) => _updateRemaining(deadline.difference(DateTime.now())),
+      (_) => _updateRemaining(_endTime.difference(DateTime.now())),
     );
   }
 
@@ -286,7 +273,6 @@ class TestQuestionsController extends GetxController {
     if (!ownsCurrentSession || needsRecovery || _transitioned) return;
     _transitioned = true;
     _timer?.cancel();
-    final elapsed = DateTime.now().difference(_startedAt);
     Get.offAndToNamed(
       RouteNameX.testResults,
       arguments: [
@@ -294,7 +280,7 @@ class TestQuestionsController extends GetxController {
         quizId,
         quizStartAttempt,
         List<int?>.of(selectedAnswers),
-        elapsed.isNegative ? 0 : elapsed.inSeconds,
+        quiz.timelimit - remainingTime,
         courseId,
       ],
     );

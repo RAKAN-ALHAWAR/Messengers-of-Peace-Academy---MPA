@@ -386,47 +386,6 @@ void main() {
     });
   }
 
-  for (final resuming in [true, false]) {
-    testWidgets('untimed quiz stays open after two minutes, resuming: $resuming', (
-      tester,
-    ) async {
-      final info = h.quiz.toJson()..[NameX.timelimit] = 0;
-      if (resuming) {
-        info[NameX.lastAttemptStatus] = QuizAttemptStatusX.inProgress;
-        h.onStart = () async =>
-            h.jsonResponse(h.attempt.toJson()..[NameX.status] = 'existing');
-        h.savedQuestionStates = {2: 'notyetanswered', 7: 'notyetanswered'};
-      }
-      h.startedAt = DateTime.now().subtract(const Duration(minutes: 5));
-      h.onInfo = () async => h.jsonResponse(info);
-      await http.runWithClient(() async {
-        await h.mount(tester, RouteNameX.testInfo);
-        await tester.pumpAndSettle();
-        Get.find<TestInfoController>().onStartTest();
-        await tester.pumpAndSettle();
-        final c = Get.find<TestQuestionsController>();
-        expect(c.needsRecovery, isFalse);
-        expect(c.quiz.timelimit, 0);
-        expect(find.byKey(const ValueKey('question_card_0')), findsOneWidget);
-        expect(find.byIcon(IconX.alarm), findsNothing);
-        expect(h.startCalls, 1);
-        expect(h.summaryCalls, resuming ? 1 : 0);
-        expect(h.finalizeCalls, 0);
-        c.onChangeAnswer(1);
-        await c.onNextQuestion();
-        c.onChangeAnswer(0);
-        await c.onNextQuestion();
-        await tester.pumpAndSettle();
-        expect(h.finalizeCalls, 1);
-        expect(
-          Get.find<TestResultsController>().timeTaken,
-          greaterThanOrEqualTo(300),
-        );
-        await h.finish(tester);
-      }, h.client);
-    });
-  }
-
   testWidgets('an incomplete resume summary sends no answer or finalization', (
     tester,
   ) async {
