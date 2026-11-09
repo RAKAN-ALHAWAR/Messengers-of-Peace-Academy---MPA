@@ -2,13 +2,28 @@
 
 Updated: 2026-10-23 (Asia/Damascus).
 
+## Quiz fallback timing policy (2026-11-09)
+
+The owner specified one shared exam countdown when Moodle has no time limit:
+60 seconds per question, with the quiz finalized and results shown at zero.
+Reopening an existing attempt starts a new window for unanswered questions.
+Implemented in `379340d`. The fallback starts when questions are ready; it
+never uses the server attempt's age or resets between questions. The original
+server-based deadline remains in effect for quizzes with a time limit. The
+elapsed time reported for the fallback is the elapsed time of its current
+window. Focused checks passed 47 tests, including old attempts, resuming with
+saved answers, preserving the shared budget on navigation, expiry, and a
+partial question list. All 1,009 tests passed in the isolated suite. Static
+analysis reports the existing results-controller warning. Native device and
+live submission were not exercised.
+
 ## Untimed quiz attempt follow-up (2026-11-09)
 
 The owner requested that the previous countdown be restored. `2746c56`
 reverts the timing change, restoring the 120-second fallback and its prior
 behavior. Forty-six focused tests passed, including checks of the countdown
 on entry, resuming within the fallback, and the known recovery screen when
-an older attempt exceeds it. No new timing policy was approved.
+an older attempt exceeds it. At that point, no replacement policy had been approved.
 
 The owner reported the recovery screen persisted and supplied `timelimit: 0`
 plus an `existing`, `inprogress` attempt with both questions. Authorized
