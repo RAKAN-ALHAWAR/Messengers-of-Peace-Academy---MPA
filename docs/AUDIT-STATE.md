@@ -2,6 +2,25 @@
 
 Updated: 2026-10-23 (Asia/Damascus).
 
+## Course lesson visibility (2026-11-09)
+
+Owner approved displaying the lesson when its video link is unavailable.
+Implemented in `ce661d5` on `main`. The saved response confirms that Moodle
+can provide a named activity with a module ID and an empty `video_url`.
+The course screen lists that activity by name as a disabled lesson when no
+quiz or download identifies it. An open activity without a link is unavailable,
+and a closed activity shows a lock. A playable video requires both `is_open`
+and a nonempty `video_url`. Navigation and progress still use their existing
+content rules because the response does not identify linkless activity types.
+The quiz regression failed before the change at the missing lesson row and
+then passed, including opening the video from Next and by tapping the row
+when the refreshed course returned its link.
+All 1,001 tests passed in the isolated checkout with the same dependency lock.
+The primary checkout had 12 shader decoding failures, which did not reproduce
+in the isolated checkout. Static analysis reported the same existing warning
+in the quiz results controller before and after the fix. No native device or
+remote validation was performed.
+
 ## Current continuation
 
 Handoff request2026-10-23: owner asked for a detailed record so another agent can
