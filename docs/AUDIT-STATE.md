@@ -24,6 +24,20 @@ points remaining. All 80 focused checks and 1,022 tests in an isolated Flutter
 The existing AccountDeletion view edit stayed outside scope. Native devices,
 remote CI and live account behavior remain pending.
 
+## Points card layout follow-up (2026-11-09)
+
+The owner asked to preserve the original card design. `14b8f34` restores its
+160 logical-pixel minimum height, artwork, glass track, and footer placement
+on Profile and Achievements. An unavailable target leaves the track empty and
+uses a dash in the counter's existing location. A valid target fills the same
+track and shows attained points first using an LTR isolate within the label.
+
+The regression detected the shortened 74-pixel card before the correction.
+Arabic renders using the bundled font at 350 pixels matched the original card
+rectangle and track placement in both the unavailable and positive goal cases.
+All 80 focused checks and 1,022 full-suite tests passed. The existing
+AccountDeletion edit stayed outside scope. Native checks remain pending.
+
 ## Course lesson counts and progress (2026-11-09)
 
 The owner reported 2/3 and 66% on the catalog card versus 2/13 and 21% on
