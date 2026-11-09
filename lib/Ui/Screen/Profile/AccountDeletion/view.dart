@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+import '../../../../Config/config.dart';
 import '../../../../Core/Service/session_lease.dart';
 import '../../../../Core/Service/academy_support.dart';
 import '../../../../Core/core.dart';
 import '../../../../Data/Database/account_deletion.dart';
+import '../../../Widget/widget.dart';
 
 class AccountDeletionView extends StatefulWidget {
   const AccountDeletionView({
@@ -244,60 +246,63 @@ class _AccountDeletionViewState extends State<AccountDeletionView> {
     final resend = _secondsUntil(_resendAt);
     final expires = _secondsUntil(_expiresAt);
     final theme = Theme.of(context);
+    final canGoBack = !_confirming && !_uncertain;
     // This screen must follow system accessibility settings even though the
     // surrounding application fixes text scale for older layouts.
     final systemScale = MediaQueryData.fromView(View.of(context)).textScaler;
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(textScaler: systemScale),
       child: PopScope(
-        canPop: !_confirming && !_uncertain,
+        canPop: canGoBack,
         child: Scaffold(
-          appBar: AppBar(
-            title: Text('Delete account'.tr),
-            automaticallyImplyLeading: !_confirming && !_uncertain,
+          appBar: AppBarX(
+            title: 'Delete account',
+            isBack: canGoBack,
+            leading: canGoBack ? null : const SizedBox.shrink(),
+            leadingWidth: canGoBack ? null : 0,
+            onBack: () => Navigator.of(context).maybePop(),
           ),
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: StyleX.paddingApp,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    'delete.explanation'.tr,
-                    style: theme.textTheme.bodyLarge,
+                  ContainerX(
+                    isBorder: true,
+                    child: TextX(
+                      'delete.explanation',
+                      style: TextStyleX.bodyMedium,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   if (!_blocked && !_uncertain && _challenge == null)
                     CheckboxListTile(
                       contentPadding: EdgeInsets.zero,
                       controlAffinity: ListTileControlAffinity.leading,
-                      title: Text('delete.consent'.tr),
+                      title: const TextX('delete.consent'),
                       value: _consent,
                       onChanged: _busy
                           ? null
                           : (value) => setState(() => _consent = value == true),
                     ),
                   if (_challenge != null) ...[
-                    Text('delete.sent'.tr),
+                    TextX('delete.sent', style: TextStyleX.bodyMedium),
                     const SizedBox(height: 12),
-                    TextField(
+                    TextFieldX(
                       controller: _code,
-                      enabled: !_busy,
-                      keyboardType: TextInputType.number,
-                      textDirection: TextDirection.ltr,
-                      autocorrect: false,
-                      enableSuggestions: false,
-                      autofillHints: const [AutofillHints.oneTimeCode],
+                      disabled: _busy,
+                      hint: 'delete.code',
+                      errorText: _codeError,
+                      errorMaxLines: 4,
+                      textInputType: TextInputType.number,
+                      textInputAction: TextInputAction.done,
+                      isOneTimeCode: true,
                       inputFormatters: [
                         _digits,
                         FilteringTextInputFormatter.digitsOnly,
                         LengthLimitingTextInputFormatter(6),
                       ],
-                      decoration: InputDecoration(
-                        labelText: 'delete.code'.tr,
-                        errorText: _codeError?.tr,
-                        border: const OutlineInputBorder(),
-                      ),
                       onChanged: (_) {
                         if (_codeError != null) {
                           setState(() => _codeError = null);
@@ -305,29 +310,44 @@ class _AccountDeletionViewState extends State<AccountDeletionView> {
                       },
                     ),
                     const SizedBox(height: 8),
-                    Text('delete.expires'.trParams({'seconds': '$expires'})),
+                    TextX(
+                      'delete.expires'.trParams({'seconds': '$expires'}),
+                      style: TextStyleX.bodySmall,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                     const SizedBox(height: 16),
-                    FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: theme.colorScheme.error,
-                        foregroundColor: theme.colorScheme.onError,
-                      ),
-                      onPressed: _busy ? null : _confirmDeletion,
-                      child: Text('delete.confirm'.tr),
+                    ButtonStateX(
+                      text: 'delete.confirm',
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      onTap: _confirmDeletion,
+                      disabled: _busy,
+                      colorButton: Colors.transparent,
+                      borderColor: theme.colorScheme.error,
+                      colorText: theme.colorScheme.error,
+                      colorDisabledText: theme.colorScheme.onSurfaceVariant,
                     ),
                   ],
-                  if (!_blocked && !_uncertain)
-                    OutlinedButton(
+                  if (!_blocked && !_uncertain && _resendAt == null)
+                    ButtonStateX(
+                      text: 'delete.send',
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      onTap: _requestCode,
+                      disabled: _busy || !_consent,
+                      colorDisabledText: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  if (!_blocked && !_uncertain && _resendAt != null)
+                    TextButton(
                       onPressed: _busy || !_consent || resend > 0
                           ? null
                           : _requestCode,
-                      child: Text(
+                      child: TextX(
                         resend > 0
                             ? 'delete.resendIn'.trParams({'seconds': '$resend'})
-                            : (_resendAt == null
-                                      ? 'delete.send'
-                                      : 'delete.resend')
-                                  .tr,
+                            : 'delete.resend',
+                        style: TextStyleX.bodySmall,
+                        color: resend > 0
+                            ? theme.colorScheme.onSurfaceVariant
+                            : null,
                       ),
                     ),
                   if (_busy)
@@ -340,23 +360,25 @@ class _AccountDeletionViewState extends State<AccountDeletionView> {
                       padding: const EdgeInsets.only(top: 12),
                       child: Semantics(
                         liveRegion: true,
-                        child: Text(
-                          _message!.tr,
-                          style: TextStyle(color: theme.colorScheme.error),
+                        child: TextX(
+                          _message!,
+                          style: TextStyleX.bodyMedium,
+                          color: theme.colorScheme.error,
                         ),
                       ),
                     ),
                   if (_uncertain)
-                    FilledButton(
-                      onPressed: () => widget.app.returnToSignIn(
+                    ButtonStateX(
+                      text: 'delete.returnToSignIn',
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      onTap: () => widget.app.returnToSignIn(
                         widget.session,
                         'delete.unknown',
                       ),
-                      child: Text('delete.returnToSignIn'.tr),
                     ),
                   TextButton(
                     onPressed: _openSupport,
-                    child: Text('delete.support'.tr),
+                    child: TextX('delete.support', style: TextStyleX.bodySmall),
                   ),
                 ],
               ),

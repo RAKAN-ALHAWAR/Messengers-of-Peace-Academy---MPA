@@ -18,6 +18,7 @@ import 'package:messengersofpeace/Data/Database/account_deletion.dart';
 import 'package:messengersofpeace/Data/data.dart';
 import 'package:messengersofpeace/Ui/Screen/Profile/AccountDeletion/view.dart';
 import 'package:messengersofpeace/Ui/Screen/Profile/ProfileDetails/controller/controller.dart';
+import 'package:messengersofpeace/Ui/Widget/widget.dart';
 
 const requestFunction = 'local_user_anonymizer_request_self_anonymisation';
 const confirmFunction = 'local_user_anonymizer_confirm_self_anonymisation';
@@ -106,6 +107,7 @@ void main() {
     await tester.pumpWidget(
       GetMaterialApp(
         locale: const Locale('en'),
+        theme: ThemeX.light,
         translations: TranslationX(),
         initialRoute: '/account',
         getPages: [
@@ -148,7 +150,7 @@ void main() {
   }
 
   Future<void> enter(WidgetTester tester, String code) async {
-    await tester.enterText(find.byType(TextField), code);
+    await tester.enterText(find.byType(TextFieldX), code);
     await tester.pumpAndSettle();
   }
 
@@ -165,11 +167,12 @@ void main() {
     await http.runWithClient(() async {
       await open(tester, profileButton: true);
       expect(find.textContaining('encrypted recovery copy'), findsOneWidget);
-      final sendButton = tester.widget<OutlinedButton>(
-        find.widgetWithText(OutlinedButton, 'Send confirmation code'),
+      expect(find.widgetWithText(AppBarX, 'Delete account'), findsOneWidget);
+      final sendButton = tester.widget<ButtonStateX>(
+        find.widgetWithText(ButtonStateX, 'Send confirmation code'),
       );
-      expect(sendButton.onPressed, isNull);
-      Get.back();
+      expect(sendButton.disabled, isTrue);
+      await tester.tap(find.byType(BackButtonX));
       await tester.pumpAndSettle();
       expect(calls, isEmpty);
       expect(LocalDataX.userid, 'user-A');
@@ -283,7 +286,7 @@ void main() {
             );
           }
         }
-        expect(find.byType(TextField), findsNothing);
+        expect(find.byType(TextFieldX), findsNothing);
         expect(
           find.textContaining('The code expired or reached'),
           findsOneWidget,
@@ -308,12 +311,16 @@ void main() {
         await open(tester);
         await send(tester);
         expect(
-          tester.widget<OutlinedButton>(find.byType(OutlinedButton)).onPressed,
+          tester
+              .widget<TextButton>(
+                find.widgetWithText(TextButton, 'Resend in 60 s'),
+              )
+              .onPressed,
           isNull,
         );
         now = now.add(const Duration(minutes: 5, seconds: 1));
         await tester.pump(const Duration(seconds: 1));
-        expect(find.byType(TextField), findsNothing);
+        expect(find.byType(TextFieldX), findsNothing);
         await tester.tap(find.text('Send a new code'));
         await tester.pumpAndSettle();
         expect(calls, [requestFunction, requestFunction]);
@@ -322,7 +329,11 @@ void main() {
           findsOneWidget,
         );
         expect(
-          tester.widget<OutlinedButton>(find.byType(OutlinedButton)).onPressed,
+          tester
+              .widget<TextButton>(
+                find.widgetWithText(TextButton, 'Resend in 60 s'),
+              )
+              .onPressed,
           isNull,
         );
       }, client);
@@ -378,9 +389,14 @@ void main() {
         await enter(tester, '012345');
         await pressConfirm(tester);
         expect(
-          tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
-          isNull,
+          tester
+              .widget<ButtonStateX>(
+                find.widgetWithText(ButtonStateX, 'Confirm account deletion'),
+              )
+              .disabled,
+          isTrue,
         );
+        expect(find.byType(BackButtonX), findsNothing);
         await tester.pump(const Duration(seconds: 21));
         await tester.pumpAndSettle();
         expect(calls, [requestFunction, confirmFunction]);
@@ -412,7 +428,7 @@ void main() {
         await open(tester);
         await tester.ensureVisible(find.byType(CheckboxListTile));
         await send(tester);
-        await tester.ensureVisible(find.byType(TextField));
+        await tester.ensureVisible(find.byType(TextFieldX));
         await enter(tester, '012345');
         tester.view.viewInsets = const FakeViewPadding(bottom: 260);
         await tester.pumpAndSettle();
