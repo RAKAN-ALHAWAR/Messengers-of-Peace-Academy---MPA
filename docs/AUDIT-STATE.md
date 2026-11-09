@@ -2,6 +2,28 @@
 
 Updated: 2026-11-09 (Asia/Damascus).
 
+## Profile points card (2026-11-09)
+
+The screenshot showed a balance of 7, remaining -7 and a 0/7 counter. The
+mobile contract documents zero `required_points` as an unavailable threshold,
+with `earned` independently provided by Moodle. Both points screens selected
+the last reward when no eligible target existed. The card subtracted the
+balance from zero, divided by zero and wrote the total before the balance.
+The Profile and Achievements widget checks failed against the old behavior.
+
+`2c87c87` uses the first unearned reward with a positive threshold above the
+balance. With no eligible target, both screens retain the balance and explain
+that there is no next points target. Valid targets show the attained points
+first and clamp the displayed progress and remaining value to valid bounds.
+The badge preview and catalog omit claims of a zero-point requirement.
+Moodle's earned flag continues to identify awarded rewards.
+
+Arabic renders verified the reported case and a 7-of-10 target, including 3
+points remaining. All 80 focused checks and 1,022 tests in an isolated Flutter
+3.47.7 checkout passed. Analysis retained the existing quiz-results warning.
+The existing AccountDeletion view edit stayed outside scope. Native devices,
+remote CI and live account behavior remain pending.
+
 ## Course lesson counts and progress (2026-11-09)
 
 The owner reported 2/3 and 66% on the catalog card versus 2/13 and 21% on
