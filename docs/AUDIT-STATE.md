@@ -6,8 +6,11 @@ Updated: 2026-10-23 (Asia/Damascus).
 
 The owner asked to use the `version + build` format below Delete account and
 to connect that button to the supplied mobile integration guide. `e3d3868`
-keeps dynamic version metadata and renders the Arabic build digits. All seven
-profile footer checks passed in the isolated checkout.
+kept dynamic version metadata and localized the build digits. The owner
+clarified that the build must use Latin digits in Arabic too. `d01ef67`
+displays `1.0.0 + 7` with bundled metadata and preserves the format for
+native build overrides. Both footer checks reproduced the bug and passed
+after the fix. All 18 focused profile and account deletion checks passed.
 
 `0928dab` opens the explanation and asks for consent before sending an email
 code. Only the final confirmation sends the deletion request. The two requests
