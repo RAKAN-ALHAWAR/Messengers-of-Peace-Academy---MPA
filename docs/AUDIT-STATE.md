@@ -32,12 +32,17 @@ session tokens in Hive. The guide's OS-protected storage requirement is a
 known deviation from the mobile implementation.
 
 The owner reported that the consent and code stages looked different from
-the rest of the app. Both stages now use the shared gradient app bar, button,
-text and form styles. The shared field supports the one-time-code autofill
-hint and server validation messages. The Arabic stages were rendered and
-reviewed locally with the light and dark application themes. The existing
-keyboard and larger-text regression passed. All 1,019 tests passed again in
-the isolated checkout. Analysis retained the existing quiz result warning.
+the rest of the app and asked to follow its controller and OTP conventions.
+The profile opens a protected named route with a bound GetX controller for
+the deletion session, deadlines, validation and requests. The `GetView`
+uses the profile app bar and consent control for the first step. The code
+step uses the same `AuthLayoutX` and six-box `OtpFieldsX` as account
+verification. The shared input preserves leading zeroes, normalizes Arabic
+and Persian digits, and supports the keyboard's one-time-code autofill hint.
+Both Arabic stages were rendered locally in the light and dark themes.
+`82b5e5b` shares the OTP field and `b6f5268` separates the deletion controller.
+All 1,019 tests passed in the isolated checkout, with 14 focused checks passing
+again after test cleanup. Analysis retains the existing quiz result warning.
 
 ## Account version footer follow-up (2026-11-09)
 
