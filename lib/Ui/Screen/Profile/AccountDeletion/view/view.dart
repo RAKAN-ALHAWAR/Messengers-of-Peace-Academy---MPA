@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../../Config/config.dart';
+import '../../../../../Core/core.dart' show FunctionX;
+import '../../../../../Data/data.dart' show ButtonStateEX;
+import '../../../../Animation/fade/fade_animation.dart';
 import '../../../../Section/AuthLayout/auth_layout.dart';
+import '../../../../Section/AuthLayout/otp_resend.dart';
+import '../../../../Section/AuthLayout/otp_verification_form.dart';
 import '../../../../Widget/Basic/Input/otp_fields.dart';
 import '../../../../Widget/widget.dart';
 import '../controller/controller.dart';
@@ -48,7 +53,10 @@ class _Consent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextX('delete.explanation', style: TextStyleX.titleMedium),
+              TextX(
+                'delete.explanation',
+                style: TextStyleX.titleMedium,
+              ),
               if (controller.showConsent) ...[
                 const SizedBox(height: 16),
                 AbsorbPointer(
@@ -62,18 +70,22 @@ class _Consent extends StatelessWidget {
                 ),
               ],
               const SizedBox(height: 16),
-              if (controller.showSend)
+              if (controller.showSend || controller.showResend)
                 ButtonStateX(
-                  text: 'delete.send',
+                  text: controller.showSend ? 'delete.send' : 'delete.resend',
                   onTap: controller.onRequestCode,
-                  disabled: !controller.canRequestCode,
+                  state: controller.requestingCode
+                      ? ButtonStateEX.loading
+                      : ButtonStateEX.normal,
+                  disabled:
+                      !controller.canRequestCode && !controller.requestingCode,
                 ),
               if (controller.uncertain)
                 ButtonStateX(
                   text: 'delete.returnToSignIn',
                   onTap: controller.onReturnToSignIn,
                 ),
-              _Actions(controller: controller),
+              _DeletionFooter(controller: controller),
             ],
           ),
         ),
@@ -95,53 +107,64 @@ class _Verification extends StatelessWidget {
       title: 'Delete account',
       subtitle: 'delete.sent',
       isBackIcon: controller.canGoBack,
-      child: Column(
-        children: [
-          Semantics(
-            label: 'delete.code'.tr,
-            child: OtpFieldsX(
-              pinKey: ValueKey(controller.otpInputVersion),
-              enabled: !controller.busy,
-              keyboardAutofill: true,
-              onChanged: controller.onCodeChanged,
-            ),
-          ),
-          if (error != null)
+      topSpacing: 56,
+      child: OtpVerificationFormX(
+        fields: Column(
+          children: [
             Semantics(
-              liveRegion: true,
-              child: TextX(
-                error,
-                style: TextStyleX.bodySmall,
-                color: theme.colorScheme.error,
-                textAlign: TextAlign.center,
+              label: 'delete.code'.tr,
+              child: OtpFieldsX(
+                pinKey: ValueKey(controller.otpInputVersion),
+                enabled: !controller.busy,
+                keyboardAutofill: true,
+                onChanged: controller.onCodeChanged,
               ),
+            ).fadeAnimation250,
+            if (error != null)
+              Semantics(
+                liveRegion: true,
+                child: TextX(
+                  error,
+                  style: TextStyleX.bodySmall,
+                  color: theme.colorScheme.error,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+          ],
+        ),
+        action: 'delete.confirm',
+        onVerify: controller.onConfirmDeletion,
+        state: controller.confirming
+            ? ButtonStateEX.loading
+            : ButtonStateEX.normal,
+        canVerify: controller.codeComplete && !controller.busy,
+        resend: Column(
+          children: [
+            OtpResendX(
+              seconds: controller.resendSeconds,
+              onResend: controller.canRequestCode
+                  ? controller.onRequestCode
+                  : null,
+              loading: controller.requestingCode,
             ),
-          const SizedBox(height: 8),
-          TextX(
-            'delete.expires'.trParams({
-              'seconds': '${controller.expirySeconds}',
-            }),
-            style: TextStyleX.bodySmall,
-          ),
-          const SizedBox(height: 16),
-          ButtonStateX(
-            text: 'delete.confirm',
-            onTap: controller.onConfirmDeletion,
-            disabled: controller.busy,
-            colorButton: Colors.transparent,
-            borderColor: theme.colorScheme.error,
-            colorText: theme.colorScheme.error,
-          ),
-          const SizedBox(height: 16),
-          _Actions(controller: controller),
-        ],
+            const SizedBox(height: 8),
+            TextX(
+              'delete.expires'.trParams({
+                'time': FunctionX.formatTime(controller.expirySeconds),
+              }),
+              style: TextStyleX.bodySmall,
+            ),
+            const SizedBox(height: 16),
+            _DeletionFooter(controller: controller),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _Actions extends StatelessWidget {
-  const _Actions({required this.controller});
+class _DeletionFooter extends StatelessWidget {
+  const _DeletionFooter({required this.controller});
 
   final AccountDeletionController controller;
 
@@ -149,28 +172,9 @@ class _Actions extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final message = controller.message;
-    final resend = controller.resendSeconds;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (controller.showResend)
-          TextButton(
-            onPressed: controller.canRequestCode
-                ? controller.onRequestCode
-                : null,
-            child: TextX(
-              resend > 0
-                  ? 'delete.resendIn'.trParams({'seconds': '$resend'})
-                  : 'delete.resend',
-              style: TextStyleX.bodySmall,
-              color: resend > 0 ? theme.colorScheme.onSurfaceVariant : null,
-            ),
-          ),
-        if (controller.busy)
-          Semantics(
-            label: 'Loading'.tr,
-            child: const LinearProgressIndicator(),
-          ),
         if (message != null)
           Padding(
             padding: const EdgeInsets.only(top: 12),
@@ -183,9 +187,10 @@ class _Actions extends StatelessWidget {
               ),
             ),
           ),
-        TextButton(
-          onPressed: controller.onOpenSupport,
-          child: TextX('delete.support', style: TextStyleX.bodySmall),
+        ButtonStateX.gray(
+          text: 'delete.support',
+          onTap: controller.onOpenSupport,
+          disabled: controller.busy,
         ),
       ],
     );

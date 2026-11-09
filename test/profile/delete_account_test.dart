@@ -20,6 +20,8 @@ import 'package:messengersofpeace/Ui/Screen/Profile/AccountDeletion/controller/c
 import 'package:messengersofpeace/Ui/Screen/Profile/AccountDeletion/view/view.dart';
 import 'package:messengersofpeace/Ui/Screen/Profile/ProfileDetails/controller/controller.dart';
 import 'package:messengersofpeace/Ui/Section/AuthLayout/auth_layout.dart';
+import 'package:messengersofpeace/Ui/Section/AuthLayout/otp_resend.dart';
+import 'package:messengersofpeace/Ui/Section/AuthLayout/otp_verification_form.dart';
 import 'package:messengersofpeace/Ui/Widget/Package/otp_pin_field_widget/otp_pin_field.dart';
 import 'package:messengersofpeace/Ui/Widget/widget.dart';
 
@@ -295,6 +297,37 @@ void main() {
   );
 
   testWidgets(
+    'countdowns start at full duration when the OTP step opens after a slow response',
+    (tester) async {
+      final pending = Completer<http.Response>();
+      requestCode = (_) => pending.future;
+      await http.runWithClient(() async {
+        await open(tester);
+        await send(tester);
+        now = now.add(const Duration(seconds: 12));
+        await tester.pump(const Duration(seconds: 12));
+        expect(find.byType(OtpVerificationFormX), findsNothing);
+        expect(find.byType(OtpResendX), findsNothing);
+        expect(find.textContaining('Code expires'), findsNothing);
+
+        pending.complete(
+          jsonResponse({'requestid': challengeId, 'expiresin': 300}),
+        );
+        await pumpPage(tester);
+        expect(find.byType(OtpVerificationFormX), findsOneWidget);
+        expect(find.text('Code expires in 05:00'), findsOneWidget);
+        expect(tester.widget<OtpResendX>(find.byType(OtpResendX)).seconds, 60);
+
+        now = now.add(const Duration(seconds: 1));
+        await tester.pump(const Duration(seconds: 1));
+        expect(find.text('Code expires in 04:59'), findsOneWidget);
+        expect(tester.widget<OtpResendX>(find.byType(OtpResendX)).seconds, 59);
+        expect(calls, [requestFunction]);
+      }, client);
+    },
+  );
+
+  testWidgets(
     'wrong code is shown on the field; five rejections require a new code',
     (tester) async {
       confirm = (_) => jsonResponse({
@@ -305,9 +338,15 @@ void main() {
         await open(tester);
         await send(tester);
         await enter(tester, '123');
-        await pressConfirm(tester);
         expect(calls, [requestFunction]);
-        expect(find.text('Enter all six digits.'), findsOneWidget);
+        expect(
+          tester
+              .widget<ButtonStateX>(
+                find.widgetWithText(ButtonStateX, 'Confirm account deletion'),
+              )
+              .disabled,
+          isTrue,
+        );
         for (var attempt = 0; attempt < 5; attempt++) {
           await enter(tester, '012345');
           await pressConfirm(tester);
@@ -344,11 +383,7 @@ void main() {
         await open(tester);
         await send(tester);
         expect(
-          tester
-              .widget<TextButton>(
-                find.widgetWithText(TextButton, 'Resend in 60 s'),
-              )
-              .onPressed,
+          tester.widget<OtpResendX>(find.byType(OtpResendX)).onResend,
           isNull,
         );
         now = now.add(const Duration(minutes: 5, seconds: 1));
@@ -365,11 +400,11 @@ void main() {
         );
         expect(
           tester
-              .widget<TextButton>(
-                find.widgetWithText(TextButton, 'Resend in 60 s'),
+              .widget<ButtonStateX>(
+                find.widgetWithText(ButtonStateX, 'Send a new code'),
               )
-              .onPressed,
-          isNull,
+              .disabled,
+          isTrue,
         );
       }, client);
     },
@@ -425,11 +460,9 @@ void main() {
         await pressConfirm(tester);
         expect(
           tester
-              .widget<ButtonStateX>(
-                find.widgetWithText(ButtonStateX, 'Confirm account deletion'),
-              )
-              .disabled,
-          isTrue,
+              .widget<OtpVerificationFormX>(find.byType(OtpVerificationFormX))
+              .state,
+          ButtonStateEX.loading,
         );
         expect(find.byType(BackButtonX), findsNothing);
         await tester.pump(const Duration(seconds: 21));

@@ -39,6 +39,9 @@ class AccountDeletionController extends GetxController {
 
   bool get consent => _consent;
   bool get busy => _busy;
+  bool get requestingCode => _busy && !_confirming;
+  bool get confirming => _confirming;
+  bool get codeComplete => _code.length == 6;
   bool get hasChallenge => _challenge != null;
   bool get uncertain => _uncertain;
   bool get canGoBack => !_confirming && !_uncertain;
@@ -67,8 +70,9 @@ class AccountDeletionController extends GetxController {
 
   void onCodeChanged(String code) {
     if (!_canAct || !hasChallenge) return;
+    final wasComplete = codeComplete;
     _code = code;
-    if (_codeError == null) return;
+    if (wasComplete == codeComplete && _codeError == null) return;
     _codeError = null;
     update();
   }
@@ -112,19 +116,17 @@ class AccountDeletionController extends GetxController {
   Future<void> onRequestCode() async {
     if (!canRequestCode || !_checkSession()) return;
     final origin = RouteOriginX.capture();
-    final requestedAt = now();
     _busy = true;
     _message = null;
     _codeError = null;
-    _resendAt = requestedAt.add(_resendDelay);
-    _watchDeadlines();
     update();
     try {
       final challenge = await _api.requestCode(_session);
       if (isClosed || !origin.isActive || !_checkSession()) return;
       _challenge = challenge;
-      _expiresAt = requestedAt.add(Duration(seconds: challenge.expiresIn));
-      _resendAt = now().add(_resendDelay);
+      // Publish the countdown with the verification stage. Moodle still
+      // validates the actual code expiry at confirmation.
+      _expiresAt = now().add(Duration(seconds: challenge.expiresIn));
       _wrongCodes = 0;
       _code = '';
       _otpInputVersion++;
@@ -134,6 +136,8 @@ class AccountDeletionController extends GetxController {
       }
     } finally {
       if (!isClosed && origin.isActive) {
+        _resendAt = now().add(_resendDelay);
+        _watchDeadlines();
         _busy = false;
         update();
       }
