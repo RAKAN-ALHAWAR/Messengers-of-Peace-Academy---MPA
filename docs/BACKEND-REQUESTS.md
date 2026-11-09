@@ -31,7 +31,7 @@
 
 - The supplied mobile account deletion guide reports these `mobapps` functions as enabled: `local_user_anonymizer_request_self_anonymisation` and `local_user_anonymizer_confirm_self_anonymisation`.
 - Flutter now requests an email code after explicit consent, then confirms with the code and the same session token. Local integration tests use synthetic Moodle responses.
-- Service acceptance still requires a separately authorized disposable account to verify email delivery, the deletion response, and token invalidation. The guide also requires moving session tokens to OS-protected storage, which is pending an owner decision on the separate migration.
+- Service acceptance still requires a separately authorized disposable account to verify email delivery, the deletion response, and token invalidation. The owner chose to keep session tokens in Hive, a documented deviation from the guide's OS-protected storage requirement.
 
 ### 3. اختبار القبول: الإكمال وإعادة المحاولة
 
