@@ -130,8 +130,9 @@ remain recovery-only. The app also needs a resume-only question read keyed by
 attempt ID to eliminate the race where the existing start-or-get function could
 create a new attempt if the old one closes between requests. Verify both
 existing and answered payloads against the current mobile service.
-Moodle `timelimit: 0` means the quiz has no per-attempt time limit. The app
-preserves zero and leaves separately scheduled close dates to Moodle. This was
+Moodle `timelimit: 0` means the quiz has no per-attempt time limit. This was
 confirmed against a live, unscheduled attempt that stayed in progress after
-more than an hour. The five-second route-dwell completion trigger remains
-pending the watched-time contract.
+more than an hour. The owner requested restoration of the app's previous
+120-second fallback. Older Moodle attempts can still be blocked by that
+client fallback even when Moodle reports them in progress. The five-second
+route-dwell completion trigger remains pending the watched-time contract.

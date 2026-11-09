@@ -4,6 +4,12 @@ Updated: 2026-10-23 (Asia/Damascus).
 
 ## Untimed quiz attempt follow-up (2026-11-09)
 
+The owner requested that the previous countdown be restored. `2746c56`
+reverts the timing change, restoring the 120-second fallback and its prior
+behavior. Forty-six focused tests passed, including checks of the countdown
+on entry, resuming within the fallback, and the known recovery screen when
+an older attempt exceeds it. No new timing policy was approved.
+
 The owner reported the recovery screen persisted and supplied `timelimit: 0`
 plus an `existing`, `inprogress` attempt with both questions. Authorized
 checks on the academy service confirmed the same attempt was still in progress
