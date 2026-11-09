@@ -38,6 +38,11 @@ rectangle and track placement in both the unavailable and positive goal cases.
 All 80 focused checks and 1,022 full-suite tests passed. The existing
 AccountDeletion edit stayed outside scope. Native checks remain pending.
 
+On the owner's wording follow-up, the empty-target state now shows
+"No current points target" above the track and "Progress unavailable" in the
+footer. All 39 catalog and card checks passed, and the Arabic render again
+matched the original card and track geometry. This change was local.
+
 ## Course lesson counts and progress (2026-11-09)
 
 The owner reported 2/3 and 66% on the catalog card versus 2/13 and 21% on

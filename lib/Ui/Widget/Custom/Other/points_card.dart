@@ -58,7 +58,7 @@ class PointsCardX extends StatelessWidget {
                     TextX(
                       hasTarget
                           ? "${"You have".tr} ${FunctionX.formatLargeNumber(targetPoints - progressPoints)} ${"points left to get".tr} ${target.name}"
-                          : "No next points target",
+                          : "No current points target",
                       style: TextStyleX.labelMedium,
                       color: ColorX.yellow.shade900,
                     ),
@@ -79,7 +79,7 @@ class PointsCardX extends StatelessWidget {
                   // Isolate the fraction so it keeps its order in RTL text.
                   hasTarget
                       ? '\u2066${FunctionX.formatLargeNumber(progressPoints)}/${FunctionX.formatLargeNumber(targetPoints)}\u2069 ${"points".tr}'
-                      : '–',
+                      : 'Points progress unavailable',
                   style: TextStyleX.labelMedium,
                   fontWeight: FontWeight.w600,
                   color: ColorX.yellow.shade900,

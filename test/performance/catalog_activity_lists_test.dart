@@ -428,7 +428,7 @@ void main() {
         await tester.pumpWidget(host(screen, locale: 'ar'));
         await tester.pumpAndSettle();
         expect(find.text('نقاطي الحالية 7'), findsOneWidget);
-        expect(find.text('لا يوجد هدف نقاط تالٍ'), findsOneWidget);
+        expect(find.text('لا يوجد هدف نقاط حاليًا'), findsOneWidget);
         expect(find.textContaining('-7'), findsNothing);
         expect(find.textContaining('0/7'), findsNothing);
         expect(tester.getSize(find.byType(PointsCardX)).height, 160);
@@ -436,7 +436,7 @@ void main() {
           find.byType(GradientProgressBar),
         );
         expect(track.value, 0);
-        expect(find.text('–'), findsOneWidget);
+        expect(find.text('التقدّم غير متاح'), findsOneWidget);
         expect(find.textContaining('مطلوب 0'), findsNothing);
         await tester.pumpWidget(const SizedBox());
       }, () => MockClient((request) async {
@@ -539,8 +539,8 @@ void main() {
         final factor = tester.widget<FractionallySizedBox>(bar).widthFactor;
         if (values.$2 <= 0) {
           expect(factor, 0);
-          expect(find.text('لا يوجد هدف نقاط تالٍ'), findsOneWidget);
-          expect(find.text('–'), findsOneWidget);
+          expect(find.text('لا يوجد هدف نقاط حاليًا'), findsOneWidget);
+          expect(find.text('التقدّم غير متاح'), findsOneWidget);
           continue;
         }
         final shownPoints = values.$1.clamp(0, values.$2);
